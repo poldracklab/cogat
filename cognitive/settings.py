@@ -22,11 +22,12 @@ graph = Graph("http://graphdb:7474/db/data/")
 #authenticate("127.0.0.1:7474", "neo4j", "neo4j")
 #graph = Graph()
 
+DOMAIN = "http://www.cognitiveatlas.org"
+
 # PATH vars
 here = lambda *x: join(abspath(dirname(__file__)), *x)
 PROJECT_ROOT = here(".")
 root = lambda *x: join(abspath(PROJECT_ROOT), *x)
-
 sys.path.insert(0, root('apps'))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -47,13 +48,30 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'cognitive.apps.main',
     'cognitive.apps.atlas',
     'cognitive.apps.users',
 ]
 
 THIRD_PARTY_APPS = [
-    'rest_framework'
+    'rest_framework',
+    'crispy_forms',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.dropbox',
+    'allauth.socialaccount.providers.dropbox_oauth2',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.gitlab',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.linkedin',
+    'allauth.socialaccount.providers.linkedin_oauth2',
+    'allauth.socialaccount.providers.openid',
+    'allauth.socialaccount.providers.orcid',
+    'allauth.socialaccount.providers.stackexchange',
+    'allauth.socialaccount.providers.twitter',
 ]
 
 INSTALLED_APPS += THIRD_PARTY_APPS
@@ -93,6 +111,14 @@ TEMPLATES = [
     },
 ]
 
+
+# CUSTOM CONTEXT PROCESSORS
+TEMPLATES[0]['OPTIONS']['context_processors'].append("main.context_processors.counts_processor")
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 
 WSGI_APPLICATION = 'cognitive.wsgi.application'
 
@@ -166,10 +192,6 @@ STATIC_URL = '/static/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-)
-
-STATICFILES_DIRS = (
-    "/var/www/static",
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'

@@ -1,22 +1,15 @@
 {% extends "main/base.html" %}
+{% load staticfiles %}
 {% block head %}
+<!--TODO: Add title with term name -->
 <style>
-.ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
+.ui-autocomplete-loading { background: white url("{% static "images/facebox/loading.gif" %}") right center no-repeat; }
 .asholder {position:relative;}
 </style>
 {% endblock %}
-{% load staticfiles %}
 
 {% block branding %}
-<div class="container">
-    <div id="brand">
-        <div id="logo">
-    	    <a href="/">
-                <img src="{% static "img/logo-front.png" %}" class="img" alt="Cognitive Atlas" style="width:400px;height:100px"></a>
-    	</div><!--logo-->
-    	<span id="tagline">a collaborative knowledge base characterizing the state of current thought in Cognitive Science.</span>
-    </div>
-</div>
+{% include 'atlas/branding.html'%}
 {% block navigation %}
 {% include "atlas/middle_navigation.html" %}
 {% endblock %}
@@ -25,7 +18,185 @@
 
 {% block content %}
 
-{{ concept }}
+<div id="block-definition" class="block-full"><div class="assertion">
+    <div class="CATerm concept">
+        <h1 class="termtext">
+            <a class="color-concept" href="">
+                <em>{{ concept.name }}</em>
+            </a>
+            <span class="typebutton concept_type"><a href="{% url 'all_concepts' %}">CONCEPT</a></span>
+        </h1>
+    </div><!-- .CATerm.concept -->
+
+    <div class="defn">{{ concept.definition }}</div><br>
+
+    {% if request.user.is_authenticated %}
+    <!-- Update definition -->
+    <div id="update_definition" class="hidden">
+            <form method="POST" action="{% url 'update_concept' concept.id %}">
+                <div class="modal-body">
+                    <textarea name="definition" rows="4" cols="50">{{ concept.definition }}</textarea>
+                </div>
+                {% csrf_token %}
+                <button id="cancel_button" type="button" class="btn btn-primary">Cancel</button>
+                <input type="submit" value="submit" class="btn btn-primary"></input>
+            </form>
+    </div>
+    {% endif %}
+
+</div><!-- .assertion -->
+
+<div>
+
+<div id='unterbutton_slide_def'>
+    <div class="defn">
+        {% if request.user.is_authenticated %}
+        <div class="unterbutton_left">
+            <a href="#" data-toggle="modal" id="update_definition_button" class="slide_def ">Update definition</a> 
+        </div>  
+        {% endif %}
+        <div class="unterbutton_left">
+            <a target="_blank" href="{% url 'concept_graph' concept.id %}">graph</a>
+        </div>
+        <div class="unterbutton_left">
+            <a target="_blank" href="{% url 'concept_json' concept.id %}">json</a>
+        </div>
+    </div><!-- .defn -->
+</div>
+
+<div class="clear_all"></div>
+</div><!-- #block-definition.block-full -->
+
+<div id="block-atlas" class="block-full">
+    <!--
+    <ul class="tabs">
+        <li><a href="#list-view">List View</a></li>
+    </ul>-->
+    <h2>Asserted <strong>relationships</strong> to other concepts</h2>
+
+    {% if request.user.is_authenticated %}
+    <div id="relation_box" style="padding-top:20px;border-radius: 4px;padding: 10px;">
+    <button id="add_relation_button" style="float:right">add relation</button>
+
+    <!-- Add relation -->
+    <div id="add_relation" class="hidden">
+
+            <form method="POST" action="{% url 'add_concept_relation' concept.id %}">
+
+            <table class='block-4t'>
+                <tr><td>
+                <div id="ttblock" style="padding-top:20px">
+                    <input type="radio" value="PARTOF" name="relation_type" title='You must select a relation type!' aria-label='type of relation' />
+                    <label>is a part of</label>
+                    <br/>
+                    <input type="radio" value="KINDOF" name="relation_type" title='You must select a relation type!' aria-label='type of relation' />
+                    <label>is a kind of</label>
+                    <br/><br>
+
+                    <!-- Concept Search Form -->
+                    <div id="relation_search_box" style="padding-bottom:20px">
+                        <div id="searchformwrap">
+                            <div class="ui-widget">
+                                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="relationterm" size="20" name="relationterm" aria-label="search for concept" title="Search for concept" placeholder="search for concept" />
+                            </div>
+                       </div>
+                    </div>
+                </div><!--/ttblock-->
+
+                {% csrf_token %}
+                <button id="cancel_relation_button" type="button" class="btn btn-primary">Cancel</button>
+                <input type="submit" value="submit" class="btn btn-primary"></input>
+
+                </td>
+
+                <td>
+
+                <!--Search results-->
+                <div>
+                    <h3>Concept Results</h3>
+                    <select name="concept_selection" id="relation_search_results" style="width:400px" class="hidden"></select>
+                </div>
+                </td>
+                </tr>
+</table>
+            </form>
+    </div>
+    </div>
+    {% endif %}
+
+
+    <div class="panes">
+
+    <div class="discdiv tablist">
+        <table class='block-4t'>
+        <tr>
+            <td class="block-4td"><br/><b>{{ concept.name }}<br/>
+            <span class="connector-lite">is a kind of</span></b><hr class="dotty" />
+            {% if "KINDOF" in concept.relations %}
+            <div>
+            {% for relation in concept.relations.KINDOF %}
+                <li class="hoverator-list" rel="{{ relation.id }}"><span style="float:right;width:10px;display:none;" id="list_hovercard_{{ relation.id }}"><a href="{% url 'concept' relation.id %}"><img src="{% static "img/assert.png"%}" title="Click to view concept {{ relation.name }}: {{ relation.definition }}"></a></span><a href="{% url 'concept' relation.id %}" id="options_{{ relation.id }}" class="optionator concept" title="Click to view the page for {{ relation.name }}">{{ relation.name }}</a></li>
+            {% endfor %}
+            </div>
+
+            {% else %}
+            <div>No associations</div></td>
+            {% endif %}
+
+            <td class="block-4td"><br /><b>{{ concept.name }}<br />
+
+            <span class="connector-lite">is a part of</span></b><hr class="dotty" />
+
+            {% if "PARTOF" in concept.relations %}
+            <div>
+            {% for relation in concept.relations.PARTOF %}
+                <li class="hoverator-list" rel="{{ relation.id }}"><span style="float:right;width:10px;display:none;" id="list_hovercard_{{ relation.id }}"><a href="{% url 'concept' relation.id %}"><img src="{% static "images/icons/assert.png"%}" title="Click to view concept {{ relation.name }}: {{ relation.definition }}"></a></span><a href="{% url 'concept' relation.id %}" id="options_{{ relation.id }}" class="optionator concept" title="Click to view the page for {{ relation.name }}">{{ relation.name }}</a></li>
+            {% endfor %}
+            </div>
+
+            {% else %}
+            <div>No associations</div></td>
+            {% endif %}
+
+        </tr>
+    </table></div></div></div></div><!-- #block-atlas.block-full -->
+<div class="clear_all">
+</div>
+
+<div id="block-holder" class="block-full"><div id="block-measurements" class="block-half">  
+    <h2><strong>Tasks</strong> that are asserted to measure <em class="dictionary">{{ concept.name }}</em></h2>
+    <div class="panes">
+        <div class="pane">
+            <div class="discdiv">
+                <table width='100%'>
+                    <tr>
+                       <td width='50%' valign='top'><b>Task</b></td>
+                       <td width='50%' valign='top'><b>Contrast Measure</b></td>
+                    </tr>
+                </table>
+                {% if "MEASUREDBY" in concept.relations %}
+                {% for task in concept.relations.MEASUREDBY %}
+                <table id="table_{{ task.id }}" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                        <td colspan="3"><div class="dotholder"><hr class="dotty"></div></td>
+                    </tr>
+                    <tr>
+                       {% if task.tasks|length > 0 %}
+                       <td width='50%' valign='top'><b><a href="{% url 'task' task.tasks.0.id %}" class="task">{{ task.tasks.0.name }}</a></b></td>
+                       {% else %}
+                       <td width='50%' valign='top'><b></b></td>
+                       {% endif %}
+                       <td width='50%' valign='top'>{{ task.name }}</td>
+                    </tr>
+                </table>
+                {% endfor %}
+                {% endif %}
+
+</div></div></div></div><!-- #block-measurements.block-half --><div id="block-appliances" class="block-half" style="">
+</div>
+
+</div><!-- #block-ephemera.block-full -->
+
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript">
@@ -34,6 +205,62 @@ $(document).ready(function() {
        $(".tooltip").tipsy({fade:false, gravity:"w", html:true});
        $("#masker").fadeOut("fast");
     });
+
+    // Show form to update definition
+    $("#update_definition_button").click(function(){
+        $("#update_definition").removeClass('hidden');
+    })
+    $("#cancel_button").click(function(){
+        $("#update_definition").addClass('hidden');
+    })
+
+    // Add a relation
+    $("#add_relation_button").click(function(){
+        $("#add_relation").removeClass('hidden');
+        $("#relation_box").css("background-color","#F7F7F7")
+    })
+
+    $("#cancel_relation_button").click(function(){
+        $("#add_relation").addClass('hidden');
+        $("#relation_box").css("background-color","")
+    })
+
+    // Add relation search
+    $(function() {
+
+    $('#relationterm').click(function() {
+        $("#relation_search_results").addClass("hidden")
+        $("#relation_search_results").html("")
+        $("#relation_search_results").attr("size","0")
+    });
+
+    $('#relationterm').keyup(function() {
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'search_concept' %}",
+            data: {
+                'relationterm' : $('#relationterm').val(),
+                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
+            },
+            complete: function (data, error){
+                  $("#relation_search_results").html("")
+                  var results = JSON.parse(data.responseText);
+                  $.each(results,function(i,e){
+                      $("#relation_search_results").append('<option value="' + e.id +'">'+ e.name +'</option>');
+                  });
+
+                  $("#relation_search_results").removeClass("hidden")
+                  $("#relation_search_results").attr("size","5")
+
+            },
+            dataType: 'html',
+        });
+
+    });
+
+    });
+
 });
 </script>
 {% endblock %}

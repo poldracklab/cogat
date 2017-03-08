@@ -18,6 +18,7 @@
     <link type="text/css" href="{% static "css/bootstrap-theme.min.css"%}" rel="stylesheet" media="screen">
     <link type="text/css" href="{% static "css/cogat_app.css"%}" rel="stylesheet" media="screen">
     <link type="text/css" href="{% static "css/print.css"%}" rel="stylesheet" media="print">
+    <link type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel='stylesheet'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Crimson+Text:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
 
@@ -33,29 +34,25 @@
     <div class="fullwrap" id="utility">
     <div class="container">
             <div id="userbar">
-                <input type="button" class="tsbutton" onclick="window.location.href=/login/" value="Login" title="Login" aria-label="Login"><small> to edit and comment </small>
+    
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'logout' %}"><input type="button" class="tsbutton" value="Logout" title="Logout" aria-label="Logout"></a><small> to end your session </small>
+                {% else %}
+                    <!--Don't show login on login pages-->
+                    {% if request.get_full_path == "/accounts/login/" %}
+                    {% elif request.get_full_path == "/accounts/create/" %}
+                    {% else %}
+                <a href="{% url 'login' %}"><input type="button" class="tsbutton" value="Login" title="Login" aria-label="Login"></a><small> to edit and comment </small>
+                    {% endif %}
+                {% endif %}
+
             </div>
 
-            <!-- Search Form -->
-            <div id="search-form-box" class=" pull-right">
-            <div id="searchformwrap">
-            <form method="post" action="/search/" name="searchform" id="searchform">
-            <input type="hidden" id="resmax" name="resmax" value="50">
-            <input type="hidden" id="ord" name="ord" value="alpha">
-            <input type="hidden" id="concepts" name="search_concepts" value="1">
-            <input type="hidden" id="tasks" name="search_tasks" value="1">
-            <input type="hidden" id="assertions" name="search_assertions" value="1">
-            <input type="hidden" id="batteries" name="search_batteries" value="1">
-            <input type="hidden" id="batteries" name="search_disorders" value="1">
-            <input type="hidden" id="theories" name="search_theories" value="1">
-            <input type="hidden" id="action_type" name="action_type" value="search">
-            <div class="ui-widget">
-                <input tabindex="1" type="text" class="fwidgettxt front searchterm" id="searchterm_front" size="20" name="searchterm" aria-label="Enter a search term" title="Enter a search term" placeholder="enter search term" />
-                <input tabindex="2" type="submit" value="Search" id="subji" class="button Search" title="submit search terms">
-            </div>
-            </form>
-        </div><!--/#sform -->
-        </div><!--/#search-form-box -->
+           {% include 'main/search.html' %}
+
+            <a href="{% url 'explore_graph' %}"><img id="explore_icon" src="{% static "img/graph.png" %}" class="img" alt="Explore the graph" width="30" style="padding-left:20px; padding-right:8px"></a><small style="position: relative; top:-10px"> explore the graph </small>
+
+
         </div><!--container-->
     </div><!--/#utility-->
 
@@ -84,26 +81,26 @@
                <a href="/" class="embiggen">cognitive<span id="logo-last">atlas</span><span id="address" class="small quiet pull-right"> NIMH Grant RO1MH082795, Russell Poldrack, PI.</span></a>
            </li>
            <li class="navlink concept">
-               <a href="/concepts" class="btn"><strong>Concepts</strong></a>
+               <a href="{% url 'all_concepts' %}" class="btn"><strong>Concepts</strong></a>
            </li>
            <li class="navlink task">
-               <a href="/tasks" class="btn"><strong>Tasks</strong></a>
+               <a href="{% url 'all_tasks' %}" class="btn"><strong>Tasks</strong></a>
            </li>
            <li class="navlink diso">
-               <a href="/disorders" class="btn"><strong>Disorders</strong></a>
+               <a href="{% url 'all_disorders' %}" class="btn"><strong>Disorders</strong></a>
            </li>    
            <li class="navlink coll">
-               <a href="/contrasts" class="btn"><strong>Contrasts</strong></a>
+               <a href="{% url 'all_theories' %}" class="btn"><strong>Theories</strong></a>
            </li>
            <li class="navlink about">
-               <a href="/about" class="btn quiet"><strong>About</strong></a>
+               <a href="{% url 'about' %}" class="btn quiet"><strong>About</strong></a>
            </li>
            <li class="navlink blog">
                <a href="http://blog.cognitiveatlas.org/" class="btn quiet" target="_blank"><strong>Blog</strong></a>
            </li>
            <ul class="pull-right">
                <li class="navlink sparql">
-                   <a href="/api/" class="btn quiet" style="margin-left: 80px;">REST API</a>
+                   <a href="{% url 'api' %}" class="btn quiet" style="margin-left: 80px;">REST API</a>
                </li>
            </ul>
         </ul>
@@ -118,10 +115,53 @@
 
     <script src="{% static "js/jquery-2.2.0.min.js"%}" type="text/javascript"></script>
     <script src="{% static "js/bootstrap.min.js"%}" type="text/javascript"></script>
-    <script src="{% static "js/jquery.validate.js"%}" type="text/javascript"></script>
     <script src="{% static "js/jquery.tipsy.js"%}" type="text/javascript"></script>
     <script src="{% static "js/jquery-ui-1.8.14.custom.min.js"%}" type="text/javascript"></script>
     <script src="{% static "js/jquery.html5-placeholder-shim.js"%}" type="text/javascript"></script>
+    <script>
+    $(function() {
+
+    $('#searchterm').click(function() {
+        $("#search_results").html("")
+    });
+
+    $('#searchterm').keyup(function() {
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'search' %}",
+            data: {
+                'searchterm' : $('#searchterm').val(),
+                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
+            },
+            complete: function (data, error){
+                  $("#search_results").html("")
+                  var results = JSON.parse(data.responseText);
+                  $.each(results,function(i,e){
+                      $("#search_results").append('<li class="ui-menu-item" role="menuitem"><a href="/' + e.label + '/id/' + e.id + '" class="ui-corner-all uia" tabindex="-1">' + e.name +'</a></li>');
+                  });
+
+                  // Search should highlight on mouseover
+                  $(".ui-menu-item").hover(function(){
+                      $(this).attr("id","ui-active-menuitem")
+                      $("#ui-active-menuitem").addClass("ui-state-hover")
+                  })
+
+                  $(".ui-menu-item").mouseleave(function(){
+                      $("#ui-active-menuitem").removeClass("ui-state-hover")
+                      $(this).attr("id","")
+                  })
+
+            },
+            dataType: 'html',
+        });
+
+    });
+
+    });
+
+    </script>
+
     {% block scripts %}{% endblock %}
 
 </body>

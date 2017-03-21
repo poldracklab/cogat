@@ -8,7 +8,7 @@ from cognitive.apps.users import urls as users_urls
 from cognitive.apps.atlas import urls as atlas_urls
 import cognitive.settings as settings
 
-urlpatterns = [ 
+urlpatterns = [
     url(r'^', include(main_urls)),
     url(r'^', include(atlas_urls)),
     url(r'^accounts/', include(users_urls)),

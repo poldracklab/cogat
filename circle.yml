@@ -1,7 +1,6 @@
 dependencies:
   override:
-    - pip install -r requirements.txt
-    - pip install coveralls
+    - pip install docker-compose
 
 machine:
     python:
@@ -11,7 +10,5 @@ machine:
 
 test:
   override:
-    - python manage.py makemigrations
-    - coverage run manage.py test
-  post:
-    - coveralls
+    - docker-compose run uwsgi python manage.py makemigrations
+    - docker-compose run uwsgi coverage run manage.py test

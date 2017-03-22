@@ -13,4 +13,4 @@ machine:
 test:
   override:
     - docker-compose run uwsgi python manage.py makemigrations
-    - docker-compose run uwsgi coverage run manage.py test
+    - docker-compose run uwsgi bash -c "pip install coverage && coverage run manage.py test"

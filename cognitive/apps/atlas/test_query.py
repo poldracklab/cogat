@@ -15,20 +15,20 @@ class NodeTest(TestCase):
         self.graph = Graph("http://graphdb:7474/db/data/")
 
     def tearDown(self):
-        self.graph.delete_all()
-        pass
+        if self.node1:
+            self.node1.delete()
+        if self.node2:
+            self.node2.delete()
 
     def test_create(self):
         self.node1 = self.node.create(name=self.node_name, properties=self.node_properties)
         self.assertEqual(self.node1.properties['name'], self.node_name)
         self.assertEqual(self.node1.properties['test_key'], self.node_properties['test_key'])
 
-    def test_count(self):
+    def test_count_delete(self):
         count = self.node.count()
-        self.assertEqual(count, 0)
         self.node1 = self.node.create(name=self.node_name, properties=self.node_properties)
-        count = self.node.count()
-        self.assertEqual(count, 1)
+        self.assertEqual(count + 1, self.node.count())
 
     def test_link(self):
         self.node1 = self.node.create(name=self.node_name, properties=self.node_properties)
@@ -36,7 +36,3 @@ class NodeTest(TestCase):
         relation = self.node.link(self.node1.properties['id'], self.node2.properties['id'], "GENERIC")
         self.assertEqual(relation.start_node.properties['id'], self.node1.properties['id'])
         self.assertEqual(relation.end_node.properties['id'], self.node2.properties['id'])
-
-
-    def test_delete(self):
-        pass

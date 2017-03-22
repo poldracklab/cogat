@@ -27,10 +27,10 @@
        <div class='inset padtop charstring'><a href='/{{ term_type }}s' class=' non-selected-letter '>ALL</a>
        {% for let in "abcdefghijklmnopqrstuvwxyz"|make_list %}
             <span class='finb'>&nbsp;</span>
-            {% if let = letter %}
-            <a href='/{{ term_type }}/{{ let }}' class=' selected-letter '>{{ let|capfirst }}</a>
+            {% if let == letter %}
+            <a href='/{{ term_type }}s/{{ let }}' class=' selected-letter '>{{ let|capfirst }}</a>
             {% else %}
-             <a href='/{{ term_type }}/{{ let }}' class=' non-selected-letter '>{{ let|capfirst }}</a>
+             <a href='/{{ term_type }}s/{{ let }}' class=' non-selected-letter '>{{ let|capfirst }}</a>
             {% endif %}
        {% endfor %}
        </div><br>

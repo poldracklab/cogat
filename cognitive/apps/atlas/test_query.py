@@ -36,3 +36,4 @@ class NodeTest(TestCase):
         relation = self.node.link(self.node1.properties['id'], self.node2.properties['id'], "GENERIC")
         self.assertEqual(relation.start_node.properties['id'], self.node1.properties['id'])
         self.assertEqual(relation.end_node.properties['id'], self.node2.properties['id'])
+        self.node1.delete_related()

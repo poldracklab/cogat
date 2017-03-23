@@ -164,7 +164,10 @@ class AtlasViewTestCase(TestCase):
         tsk = task.create("test_add_condition_task",
                           {"prop": "prop", "definition": "definition"})
         uid = tsk.properties['id']
-        response = self.client.post(reverse('add_condition', kwargs={'task_id': uid}), {'condition_name': 'test_add_condition'}) 
+        response = self.client.post(
+            reverse('add_condition', kwargs={'task_id': uid}),
+            {'condition_name': 'test_add_condition'}
+        )
         self.assertEqual(response.status_code, 200)
         relation = task.get_conditions(uid)
         self.assertEqual(len(relation), 1)
@@ -173,3 +176,61 @@ class AtlasViewTestCase(TestCase):
         tsk.delete_related()
         tsk.delete()
         con.delete()
+
+    def test_update_concept(self):
+        concept = Concept()
+        con = concept.create('test_update_concept', {'definition': 'old def'})
+        response = self.client.post(
+            reverse('update_concept', kwargs={'uid': con.properties['id']}),
+            {'definition': 'new def'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual('old def', response.context['concept']['definition'])
+        self.assertEqual('new def', response.context['concept']['definition'])
+        con.delete()
+
+    def test_update_concept_no_def(self):
+        concept = Concept()
+        con = concept.create('test_update_concept', {'prop': 'prop'})
+        response = self.client.post(
+            reverse('update_concept', kwargs={'uid': con.properties['id']}),
+            {'definition': 'new def'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual('new def', response.context['concept']['definition'])
+        con.delete()
+
+    def test_update_task(self):
+        task = Task()
+        tsk = task.create('test_update_task', {'prop': 'prop'})
+        response = self.client.post(
+            reverse('update_task', kwargs={'uid': tsk.properties['id']}),
+            {'definition': 'new def'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual('new def', response.context['task']['definition'])
+        tsk.delete()
+
+    def test_update_theory(self):
+        theory = Theory()
+        thry = theory.create('test_update_theory', {'prop': 'prop'})
+        response = self.client.post(
+            reverse('update_theory', kwargs={'uid': thry.properties['id']}),
+            {'theory_name': 'theory_name', 'theory_description': 'theory_description'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual('theory_name', response.context['theory']['name'])
+        self.assertEqual('theory_description', response.context['theory']['description'])
+        thry.delete()
+
+    def test_update_disorder(self):
+        disorder = Disorder()
+        dis = disorder.create('test_update_disorder', {'prop': 'prop'})
+        response = self.client.post(
+            reverse('update_disorder', kwargs={'uid': dis.properties['id']}),
+            {'disorder_name': 'disorder_name', 'disorder_definition': 'disorder_definition'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual('disorder_name', response.context['disorder']['name'])
+        self.assertEqual('disorder_definition', response.context['disorder']['definition'])
+        dis.delete()

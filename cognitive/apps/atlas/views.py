@@ -142,7 +142,7 @@ def view_task(request, uid, return_context=False):
     task = Task.get(uid)[0]
 
     # Replace newlines with <br>, etc.
-    task["definition"] = clean_html(task["definition"])
+    task["definition"] = clean_html(task.get("definition", "No definition provided"))
     contrasts = Task.get_contrasts(task["id"])
 
     # Make a lookup dictionary based on concept id
@@ -236,7 +236,7 @@ def contribute_disorder(request):
     return render(request, 'atlas/contribute_disorder.html', context)
 
 def add_condition(request, task_id):
-    '''add_condition will add a condition associated with a task
+    '''add_condition will associate a condition with the given task
     :param task_id: the uid of the task, to return to the correct page after creation
     '''
     if request.method == "POST":

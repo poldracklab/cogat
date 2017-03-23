@@ -165,7 +165,7 @@
                                 <ul style="margin-left:30px;margin-top:8px;list-style-image:url('/static/img/contrast-icon.jpg');">
                                 {% for concept_name,assertions in concepts.items %}
                                     {% for assertion in assertions %}
-                                    {% if assertion.concept_id = relation.id %}
+                                    {% if assertion.concept_id == relation.id %}
                                     <li class="contrastli">
                                         <a href="#" class="task">{{ assertion.contrast_name }}</a>
                                     </li>

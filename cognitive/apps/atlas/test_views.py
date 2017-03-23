@@ -234,3 +234,28 @@ class AtlasViewTestCase(TestCase):
         self.assertEqual('disorder_name', response.context['disorder']['name'])
         self.assertEqual('disorder_definition', response.context['disorder']['definition'])
         dis.delete()
+
+    def test_add_concept_relation(self):
+        concept = Concept()
+        con1 = concept.create('test_update_concept', {'prop': 'prop'})
+        con2 = concept.create('test_update_concept', {'prop': 'prop'})
+        response = self.client.post(
+            reverse('add_concept_relation', kwargs={'uid': con1.properties['id']}),
+            {'relation_type': 'PARTOF', 'concept_selection': con2.properties['id']}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['concept']['relations']['PARTOF'][0]['id'], con2.properties['id'])
+        con1.delete_related()
+        con1.delete()
+        con2.delete()
+
+    '''
+    def test_add_task_contrast(self):
+        # need a task with conditions
+        response = self.client.get(
+            reverse('add_concept_relation', kwargs={'uid': con1.properties['id']}),
+            {}
+        )
+        self.assertEqual(response.status_code, 200)
+        # test that all conditions appear in context
+    '''

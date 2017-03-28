@@ -249,13 +249,69 @@ class AtlasViewTestCase(TestCase):
         con1.delete()
         con2.delete()
 
-    '''
     def test_add_task_contrast(self):
-        # need a task with conditions
-        response = self.client.get(
-            reverse('add_concept_relation', kwargs={'uid': con1.properties['id']}),
-            {}
+        task = Task()
+        condition = Condition()
+        tsk = task.create('test_add_task_contrast', {'prop': 'prop'})
+        cond1 = condition.create('test_add_task_contrast_cond1', {'prop': 'prop'})
+        cond2 = condition.create('test_add_task_contrast_cond2', {'prop': 'prop'})
+        cond_names = ['test_add_task_contrast_cond1', 'test_add_task_contrast_cond2'] 
+        task.link(tsk.properties['id'], cond1.properties['id'], 'HASCONDITION', endnode_type='condition')
+        task.link(tsk.properties['id'], cond2.properties['id'], 'HASCONDITION', endnode_type='condition')
+        response = self.client.get(reverse('add_task_contrast',
+                                   kwargs={'uid': tsk.properties['id']}))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(response.context['conditions'][0]['condition_name'], cond_names)
+        self.assertIn(response.context['conditions'][1]['condition_name'], cond_names)
+        self.assertEqual(len(response.context['conditions']), 2)
+        tsk.delete_related()
+        tsk.delete()
+        cond1.delete()
+        cond2.delete()
+
+    ''' This view sets up a task -ASSERTS-> concept link and returns task_view 
+        task view uses get_contrasts to populate the concepts context variable
+        The only way a contrast is found to be associated with a task is by way
+        of a condition.
+
+    def test_add_task_concept(self):
+        task = Task()
+        concept = Concept()
+        contrast = Contrast()
+        tsk = task.create('test_add_task_concept', {'prop': 'prop'})
+        cont = contrast.create('test_add_task_concept', {'prop': 'prop'})
+        con = concept.create('test_add_task_concept', {'prop': 'prop'})
+        concept.link(con.properties['id'], cont.properties['id'], "HASCONTRAST", endnode_type='contrast')
+        response = self.client.post(
+            reverse('add_task_concept', kwargs={'uid': tsk.properties['id']}),
+            {'concept_selection': con.properties['id']}
         )
         self.assertEqual(response.status_code, 200)
-        # test that all conditions appear in context
+        self.assertEqual(len(response.context['concepts']), 1)
+        self.assertEqual(response.context['concepts'], con.properties['id'])
+        tsk.delete_related()
+        con.delete_related()
+        tsk.delete()
+        con.delete()
+        cont.delete()
+
+    def test_add_concept_contrast(self):
+        task = Task()
+        concept = Concept()
+        contrast = Contrast()
+        tsk = task.create('test_add_task_concept', {'prop': 'prop'})
+        cont = contrast.create('test_add_task_concept', {'prop': 'prop'})
+        con = concept.create('test_add_task_concept', {'prop': 'prop'})
+        task.link(tsk.properties['id'], con.properties['id'], "ASSERTS", endnode_type='concept')
+        response = self.client.post(
+            reverse('add_concept_contrast', kwargs={'uid': tsk.properties['id']}),
+            {'contrast_selection': cont.properties['id'], 'concept_id': con.properties['id']}
+        )
+        self.assertEqual(response.status_code, 200)
+        # self.assertEqual(response.context['concepts'], 1)
+        tsk.delete_related()
+        con.delete_related()
+        tsk.delete()
+        con.delete()
+        cont.delete()
     '''

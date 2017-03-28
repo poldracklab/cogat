@@ -124,7 +124,7 @@ class Node(object):
             return result, lookup
         return result
 
-    def graph(self, uid, fields=None):
+    def get_graph(self, uid, fields=None):
         '''graph returns a graph representation of one or more nodes, meaning a dictionary of nodes/links with
         (minimally) fields name, label, and id. Additional fields are included that are defined in the Node
         objects fields. THIS FUNCTION WILL LIKELY BE REMOVED.

@@ -175,18 +175,18 @@
                     </tr>
                 </table>
                 {% if "MEASUREDBY" in concept.relations %}
-                {% for task in concept.relations.MEASUREDBY %}
+                {% for condition in concept.relations.MEASUREDBY %}
                 <table id="table_{{ task.id }}" cellpadding="0" cellspacing="0" width="100%">
                     <tr>
                         <td colspan="3"><div class="dotholder"><hr class="dotty"></div></td>
                     </tr>
                     <tr>
-                       {% if task.tasks|length > 0 %}
-                       <td width='50%' valign='top'><b><a href="{% url 'task' task.tasks.0.id %}" class="task">{{ task.tasks.0.name }}</a></b></td>
+                       {% if condition.tasks %}
+                       <td width='50%' valign='top'><b><a href="{% url 'task' condition.tasks.0.task_id %}" class="task">{{ condition.tasks.0.task_name }}</a></b></td>
                        {% else %}
                        <td width='50%' valign='top'><b></b></td>
                        {% endif %}
-                       <td width='50%' valign='top'>{{ task.name }}</td>
+                       <td width='50%' valign='top'>{{ condition.name }}</td>
                     </tr>
                 </table>
                 {% endfor %}

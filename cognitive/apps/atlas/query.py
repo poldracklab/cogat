@@ -452,7 +452,7 @@ class Contrast(Node):
                    WITH DISTINCT t as task
                    RETURN {}'''.format(contrast_id, return_fields)
 
-        fields = fields.replace(".", "_")
+        fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"
         return do_query(query, fields=fields)
 

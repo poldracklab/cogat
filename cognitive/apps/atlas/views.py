@@ -2,7 +2,7 @@ import pickle
 import json
 import numpy
 
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 from django.template import loader
 
@@ -139,7 +139,10 @@ def view_concept(request, uid):
 
 
 def view_task(request, uid, return_context=False):
-    task = Task.get(uid)[0]
+    try:
+        task = Task.get(uid)[0]
+    except IndexError:
+        return HttpResponseNotFound('<h1>Task with uid {} not found.</h1>'.format(uid))
 
     # Replace newlines with <br>, etc.
     task["definition"] = clean_html(task.get("definition", "No definition provided"))

@@ -52,14 +52,42 @@ def find_node(nodetype,property_value,property_key='id'):
 
 
 # First we want to read in all of our data types
-concepts = cleancolumns(pandas.read_csv("scripts/data/Dump_concept_2015-12-25_567dd9b28fabb.csv",sep=";"))
-tasks = cleancolumns(pandas.read_csv("scripts/data/Dump_task_2015-12-25_567dd9bb7ff74.csv",sep=";"))
-contrasts = cleancolumns(pandas.read_csv("scripts/data/Dump_contrast_2015-12-25_567dd9c4b46c4.csv",sep=";"))
-batteries = cleancolumns(pandas.read_csv("scripts/data/Dump_battery_2015-12-25_567dd9d2866fd.csv",sep=";"))
-conditions = cleancolumns(pandas.read_csv("scripts/data/Dump_condition_2015-12-25_567dd9bf079bb.csv",sep=";"))
-disorders = cleancolumns(pandas.read_csv("scripts/data/Dump_disorder_2015-12-26_567f21649c2cb.csv",sep=";"))
-assertions = cleancolumns(pandas.read_csv("scripts/data/Dump_assertion_2015-12-25_567dd9cd411c5.csv",sep=";"))
-theories = cleancolumns(pandas.read_csv("scripts/data/Dump_theory_2015-12-25_567dd9d52f53b.csv",sep=";"))
+search_dir = "scripts/data/"
+files = [os.path.join(search_dir, x) 
+         for x in os.listdir(search_dir) 
+         if os.path.isfile(os.path.join(search_dir, x))]
+
+concept_files = [x for x in files if 'concept' in x]
+concept_files.sort(key=os.path.getmtime)
+concepts = cleancolumns(pandas.read_csv("concept_files",sep=";"))
+
+task_files = [x for x in files if 'task' in x]
+task_files.sort(key=os.path.getmtime)
+tasks = cleancolumns(pandas.read_csv(task_files[-1],sep=";"))
+
+contrast_files = [x for x in files if 'contrast' in x]
+contrast_files.sort(key=os.path.getmtime)
+contrasts = cleancolumns(pandas.read_csv(contrast_files[-1], sep=";"))
+
+battery_files = [x for x in files if 'battery' in x]
+battery_files.sort(key=os.path.getmtime)
+batteries = cleancolumns(pandas.read_csv(battery_files,sep=";"))
+
+conditions_files = [x for x in files if 'condition' in x]
+conditions_files.sort(key=os.path.getmtime)
+conditions = cleancolumns(pandas.read_csv(condition_files,sep=";"))
+
+disorder_files = [x for x in files if 'disorder' in x]
+disorder_files.sort(key=os.path.getmtime)
+disorders = cleancolumns(pandas.read_csv(disorder_files,sep=";"))
+
+assertion_files = [x for x in files if 'assertion' in x]
+assertion_files.sort(key=os.path.getmtime)
+assertions = cleancolumns(pandas.read_csv(assertion_files, sep=";"))
+
+theory_files = [x for x in files if 'theory' in x]
+theory_files.sort(key=os.path.getmtime)
+theories = cleancolumns(pandas.read_csv(theory_files,sep=";"))
 
 # connect to graph database
 graph = Graph("http://graphdb:7474/db/data/")

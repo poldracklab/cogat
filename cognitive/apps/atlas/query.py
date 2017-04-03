@@ -14,6 +14,7 @@ class Node(object):
         self.name = name
         self.graph = graph
         self.relations = ["GENERIC"]
+        self.color = None
         if fields is None:
             self.fields = ["id", "name"]
         else:

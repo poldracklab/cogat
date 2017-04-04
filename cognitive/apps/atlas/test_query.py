@@ -256,11 +256,10 @@ class GraphUtilsTest(TestCase):
         result = search('test_name')
         self.assertEqual(len(result), 5)
 
-    ''' get function is comparing on node name not id like its argument suggests
+    # get function is comparing on node name not id like its argument suggests
     def test_get(self):
         result = get(self.task1.properties['id'])
         self.assertEqual(len(result), 1)
-    '''
 
     ''' ignoring gist functions for now
     def test_cypher_node(self):

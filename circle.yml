@@ -12,5 +12,5 @@ machine:
 
 test:
   override:
-    - docker-compose run uwsgi python manage.py makemigrations
-    - docker-compose run uwsgi python manage.py test
+    - docker-compose run --rm uwsgi python manage.py makemigrations
+    - docker-compose run --rm uwsgi python manage.py test

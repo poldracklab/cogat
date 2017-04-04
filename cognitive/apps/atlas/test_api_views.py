@@ -95,16 +95,16 @@ class DisorderApiTest(TestCase):
 
     def test_disorderapidetail_by_id(self):
         disorder = Disorder()
-        response = self.client.get(reverse('disorder_api_list'), {'name': self.disorder.properties['id']})
+        response = self.client.get(reverse('disorder_api_list'), {'id': self.disorder.properties['id']})
         content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(content['disorder']['name'], self.disorder.properties['name'])
+        self.assertEqual(content[0]['name'], self.disorder.properties['name'])
         self.assertEqual(response.status_code, 200)
 
     def test_disorderapidetail_by_name(self):
         disorder = Disorder()
         response = self.client.get(reverse('disorder_api_list'), {'name': self.disorder.properties['name']})
         content = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(content['disorder']['name'], self.disorder.properties['id'])
+        self.assertEqual(content[0]['id'], self.disorder.properties['id'])
         self.assertEqual(response.status_code, 200)
 
 class SearchApiTest(TestCase):

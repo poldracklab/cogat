@@ -189,9 +189,9 @@ class NodeChildrenTest(TestCase):
 
     def test_contrast_get_tasks(self):
         contrast = Contrast()
-        tasks = contrast.get_concepts(self.cont.properties['id'])
+        tasks = contrast.get_tasks(self.cont.properties['id'])
         self.assertEqual(len(tasks), 1)
-        self.assertEqual(tasks[0]['id'], self.task1.properties['id'])
+        self.assertEqual(tasks[0]['task_id'], self.task1.properties['id'])
 
 
 class GraphUtilsTest(TestCase):
@@ -252,9 +252,9 @@ class GraphUtilsTest(TestCase):
         self.con.delete()
 
     def test_search(self):
+        # we create 5 nodes all with the same name, this should find them all
         result = search('test_name')
-        self.assertEqual(len(result), "Wat")
-        pass
+        self.assertEqual(len(result), 5)
 
     def test_get(self):
         pass

@@ -26,15 +26,19 @@ def make_node(nodetype, uid, name, properties=None, property_key="id"):
         print("Creating %s:%s, %s" % (nodetype, name, uid))
         timestamp = graph.cypher.execute("RETURN timestamp()").one
         node = Node(
-            nodetype,
-            name=name,
-            id=uid,
+            str(nodetype),
+            name=str(name),
+            id=str(uid),
             creation_time=timestamp,
             last_updated=timestamp)
         graph.create(node)
         if properties is not None:
             for property_name in properties.keys():
-                node.properties[property_name] = properties[property_name]
+                if properties[property_name]:
+                    node.properties[property_name] = properties[property_name]
+                else:
+                    node.properties[property_name] = "None"
+
             node.push()
     return node
 
@@ -81,7 +85,8 @@ files = [os.path.join(search_dir, x)
 
 concept_files = [x for x in files if 'concept' in x]
 concept_files.sort(key=os.path.getmtime)
-concepts = cleancolumns(pandas.read_csv("concept_files", sep=";"))
+  
+concepts = cleancolumns(pandas.read_csv(concept_files[-1], sep=";"))
 
 task_files = [x for x in files if 'task' in x]
 task_files.sort(key=os.path.getmtime)
@@ -93,23 +98,23 @@ contrasts = cleancolumns(pandas.read_csv(contrast_files[-1], sep=";"))
 
 battery_files = [x for x in files if 'battery' in x]
 battery_files.sort(key=os.path.getmtime)
-batteries = cleancolumns(pandas.read_csv(battery_files, sep=";"))
+batteries = cleancolumns(pandas.read_csv(battery_files[-1], sep=";"))
 
 conditions_files = [x for x in files if 'condition' in x]
 conditions_files.sort(key=os.path.getmtime)
-conditions = cleancolumns(pandas.read_csv(condition_files, sep=";"))
+conditions = cleancolumns(pandas.read_csv(conditions_files[-1], sep=";"))
 
 disorder_files = [x for x in files if 'disorder' in x]
 disorder_files.sort(key=os.path.getmtime)
-disorders = cleancolumns(pandas.read_csv(disorder_files, sep=";"))
+disorders = cleancolumns(pandas.read_csv(disorder_files[-1], sep=";"))
 
 assertion_files = [x for x in files if 'assertion' in x]
 assertion_files.sort(key=os.path.getmtime)
-assertions = cleancolumns(pandas.read_csv(assertion_files, sep=";"))
+assertions = cleancolumns(pandas.read_csv(assertion_files[-1], sep=";"))
 
 theory_files = [x for x in files if 'theory' in x]
 theory_files.sort(key=os.path.getmtime)
-theories = cleancolumns(pandas.read_csv(theory_files, sep=";"))
+theories = cleancolumns(pandas.read_csv(theory_files[-1], sep=";"))
 
 # connect to graph database
 graph = Graph("http://graphdb:7474/db/data/")

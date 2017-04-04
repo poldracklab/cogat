@@ -15,7 +15,6 @@ class ConceptAPI(APIView):
         id = request.GET.get("id", "")
         name = request.GET.get("name", "")
         contrast_id = request.GET.get("contrast_id", "")
-        print(len(request.GET))
         if id:
             concept = Concept.get_full(id, 'id')
         elif name:
@@ -41,7 +40,6 @@ class TaskAPI(APIView):
         else:
             task = Task.all()
         
-        print(task)
         if task is None:
             raise NotFound('Task not found')
         return Response(task)

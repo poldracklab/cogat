@@ -1,17 +1,16 @@
 dependencies:
   override:
-    - pip install -r requirements.txt
-    - pip install coveralls
+    - pip install docker-compose
 
 machine:
     python:
         version: 3.5.0
     environment:
         SECRET_KEY: CI
+    services:
+        - docker
 
 test:
   override:
-    - python manage.py makemigrations
-    - coverage run manage.py test
-  post:
-    - coveralls
+    - docker-compose run --rm uwsgi python manage.py makemigrations
+    - docker-compose run --rm uwsgi python manage.py test

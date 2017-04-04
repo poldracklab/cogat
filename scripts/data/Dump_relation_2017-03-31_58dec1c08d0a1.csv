@@ -1,4 +1,4 @@
-id;type_name;type_value;type_category;type_definition;type_example;display_order
+id, type_name, type_value, type_category, type_definition, type_example, display_order
 "T1";"is a kind of";"is-a-kind-of";"Foundational";"The subject is a subtype of the object.";"The 3-Back test is-a-kind-of N-Back test.";"100"
 "T2";"is a part of";"is-a-part-of";"Foundational";"The predicate is a constituent element of the subject (either integral or proper). ";"Cue specification is a part of memory retrieval.";"101"
 "T10";"is a synonym of";"has-synonym";"Terminological";"The two terms are transitively synonomous. ";"Declarative memory is a synonym of explicit memory..";"200"

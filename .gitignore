@@ -9,7 +9,7 @@ cognitive/local_settings.py
 cognitive/secrets.py
 cognitive/static/
 
-scripts/data/*
+scripts/data/
 
 # test data
 cognitive/apps/statmaps/tests/test_data/feat/*

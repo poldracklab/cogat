@@ -1,4 +1,4 @@
-id,id_user,id_subject,id_relation,id_predicate,id_type,confidence_level,text_description,event_stamp,id_subject_def,id_predicate_def,truth_value,flag_for_curator 
+id;id_user;id_subject;id_relation;id_predicate;id_type;confidence_level;text_description;event_stamp;id_subject_def;id_predicate_def;truth_value;flag_for_curator 
 "ass_4b4a2f02e3898";"usr_49a467bf4e0db";"trm_4a3fd79d0af66";"T16";"tsk_4a57abb949e1a";"concept-task";"100";"response inhibition is measured by the contrast of Stop Signal Reaction Time trials in the stop signal task";"2010-01-10 19:48:18";"NADA";"cnt_4b44a5321112e";"positive";"0"
 "ass_4b4a2f8c351cf";"usr_49a467bf4e0db";"trm_4a3fd79d0af66";"T16";"tsk_4a57abb949a93";"concept-task";"100";"response inhibition is measured by the contrast of Stop trial trials in the Go/no-go task";"2010-01-10 19:50:36";"NADA";"cnt_4b4a2f46e2faa";"positive";"0"
 "ass_4b4a5151af6cd";"usr_49a467bf4e0db";"trm_4a3fd79d0b5a7";"T1";"trm_4a3fd79d0a891";"concept-concept";"100";"working memory is a kind of memory";"2010-01-10 22:14:41";"NADA";"";"positive";"0"

@@ -7,6 +7,7 @@ machine:
         version: 3.5.0
     environment:
         SECRET_KEY: CI
+        COGAT_TESTING: True
     services:
         - docker
 

@@ -3,6 +3,7 @@
 import os
 import re
 import pandas
+import numpy as np
 
 from py2neo import Graph, Path, Node, Relationship, authenticate
 
@@ -15,6 +16,7 @@ from cognitiveatlas.api import get_task, get_concept
 
 def cleancolumns(df):
     df.columns = [x.strip() for x in df.columns]
+    df = df.replace(np.nan, 'None', regex=True)
     return df
 
 # Function to make a node
@@ -117,7 +119,10 @@ theory_files.sort(key=os.path.getmtime)
 theories = cleancolumns(pandas.read_csv(theory_files[-1], sep=";"))
 
 # connect to graph database
-graph = Graph("http://graphdb:7474/db/data/")
+try:
+    graph = Graph("http://0.0.0.0:7474/db/data/")
+except:
+    graph = Graph("http://graphdb:7474/db/data/")
 
 # Just for local development
 #authenticate("localhost:7474", "neo4j", "noodles")

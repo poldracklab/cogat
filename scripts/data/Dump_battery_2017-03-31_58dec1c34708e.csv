@@ -1,4 +1,4 @@
-id,battery,alias
+id;battery;alias
 "ADAScog";"Alzheimer&#39;s Disease Assessment Scale - Cognitive Subscale, ADAS-Cog";"http://35.163.30.225/id/tco_5798bc88b2bf2"
 "Alzheimer&#39;s Disease Neuroimaging Initiative 1";"ADNI 1";"http://35.163.30.225/id/tco_57965368237ec"
 "Cambridge Neuropsychological Test Automated Battery";"CANTAB";"http://35.163.30.225/id/tco_50ec58d050cf5"

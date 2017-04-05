@@ -1,4 +1,4 @@
-id, id_user, id_term, condition_text, condition_description, event_stamp
+id; id_user; id_term; condition_text; condition_description; event_stamp
 "con_4b1969ec123ec";"usr_0000000000";"trm_4b1968619b00b";"congruent";"The color and word names match";"2009-12-04 19:58:36"
 "con_4b1969ffa6857";"usr_0000000000";"trm_4b1968619b00b";"incongruent";"The color and word names conflict with one another";"2009-12-04 19:58:55"
 "con_4b196a106c24a";"usr_0000000000";"trm_4b1968619b00b";"neutral";"The word is not a color name";"2009-12-04 19:59:12"

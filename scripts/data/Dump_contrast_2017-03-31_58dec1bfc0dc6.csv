@@ -1,4 +1,4 @@
-id, id_user, id_term, contrast_text, event_stamp
+id; id_user; id_term; contrast_text; event_stamp
 "cnt_4b196a25d1671";"usr_0000000000";"trm_4b1968619b00b";"incongruent - congruent";"2009-12-04 19:59:33"
 "cnt_4b196a314e3c4";"usr_0000000000";"trm_4b1968619b00b";"incongruent - neutral";"2009-12-04 19:59:45"
 "cnt_4b44a4d544ee7";"usr_49a467bf4e0db";"tsk_4a57abb949e1a";"go trial";"2010-01-06 14:57:25"

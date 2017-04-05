@@ -1,4 +1,4 @@
-id, name, classification
+id; name; classification
 "dso_6088";"acute stress disorder";"anxiety disorder";
 "dso_507";"adjustment disorder";"disease of mental health";
 "dso_0050628";"advanced sleep phase syndrome";"sleep disorder";

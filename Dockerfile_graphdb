@@ -1,0 +1,19 @@
+FROM kbastani/docker-neo4j:latest
+
+RUN apt-get update && apt-get install -y bzip2
+RUN rm -rf /usr/local/miniconda && curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.2.12-Linux-x86_64.sh && \
+    bash Miniconda3-4.2.12-Linux-x86_64.sh -b -p /usr/local/miniconda && \
+    rm Miniconda3-4.2.12-Linux-x86_64.sh
+ENV PATH=/usr/local/miniconda/bin:$PATH \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Create conda environment
+RUN conda config --add channels conda-forge && \
+    conda install -y pandas 
+RUN pip install cognitiveatlas "py2neo<3"
+
+RUN mkdir /code
+ADD . /code
+WORKDIR /code
+RUN bash scripts/docker_import.sh

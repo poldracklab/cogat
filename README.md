@@ -7,7 +7,9 @@ Light Django application and containers for Spark and Neo4j to serve the Cogniti
 ## Getting started
 
 This project uses docker and docker-compose:
-Docker:  [https://docs.docker.com/installation/](https://docs.docker.com/installation/)
+
+
+Docker:  [https://docs.docker.com/installation/](https://docs.docker.com/installation/)<br />
 Docker Compose: [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
 
 ## Setting up social authentication

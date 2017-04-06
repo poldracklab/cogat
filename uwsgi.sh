@@ -7,7 +7,7 @@ python /code/manage.py collectstatic --noinput
 # Must be run manually, otherwise will redo each time docker-compose restart uwsgi
 #python /code/scripts/migrate_database.py
 
-if [[ -v MAKE_DEFAULT_USER ]]; then
+if [ "$MAKE_DEFAULT_USER" = True ]; then
     ./manage.py shell < /code/scripts/create_superuser.py
 fi
 

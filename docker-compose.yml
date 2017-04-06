@@ -26,6 +26,7 @@ uwsgi:
     image: rwblair/cogat
     command: /code/uwsgi.sh
     restart: always
+    env_file: .env
     volumes:
         - .:/code
         - /var/www/static

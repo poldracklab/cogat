@@ -12,6 +12,8 @@ This project uses docker and docker-compose:
 Docker:  [https://docs.docker.com/installation/](https://docs.docker.com/installation/)<br />
 Docker Compose: [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
 
+Docker file for neo4j taken from [https://github.com/kbastani/docker-neo4j](https://github.com/kbastani/docker-neo4j) and modified to do some data imports.
+
 ## Setting up social authentication
 
 To set up the social auth backend, after starting the server you will need to [follow these instructions](https://django-allauth.readthedocs.io/en/latest/installation.html#post-installation).

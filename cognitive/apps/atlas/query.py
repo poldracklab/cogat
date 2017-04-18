@@ -304,8 +304,8 @@ class Node(object):
 
 class Concept(Node):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.name = "concept"
         self.fields = ["id", "name", "definition"]
         self.relations = ["PARTOF", "KINDOF", "MEASUREDBY"]

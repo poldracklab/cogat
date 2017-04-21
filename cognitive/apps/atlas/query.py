@@ -307,7 +307,7 @@ class Node(object):
         query = '''MATCH (p:{})-[:{}]->(r)
                    WHERE p.id = '{}'
                    RETURN r'''.format(self.name, relation, id)
-        relations = do_query(query, "null", "list") 
+        relations = do_query(query, "null", "list")
         print(relations)
         relations = [x[0].properties for x in relations]
         return relations
@@ -331,8 +331,21 @@ class Task(Node):
         self.name = "task"
         self.fields = ["id", "name", "definition"]
         self.relations = ["HASCONDITION", "ASSERTS", "HASINDICATOR",
-                          "HASEXTERNALDATASET", "HASIMPLEMENTATION"]
+                          "HASEXTERNALDATASET", "HASIMPLEMENTATION", "HASCITATION"]
         self.color = "#63506D" #purple
+
+    def get_full(self, value, field):
+        ret = {}
+        task = self.graph.find_one(self.name, field, value)
+        ret = {**task.properties, **ret}
+        ret['conditions'] = self.get_relation(value, "HASCONDITION")
+        ret['concepts'] = self.get_relation(value, "ASSERTS")
+        ret['indicators'] = self.get_relation(value, "HASINDICATOR")
+        ret['external_datasets'] = self.get_relation(value, "HASEXTERNALDATASET")
+        ret['implementations'] = self.get_relation(value, "HASIMPLEMENTATION")
+        ret['citations'] = self.get_relation(value, "HASCITATION")
+        return ret
+
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts

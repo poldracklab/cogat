@@ -105,3 +105,39 @@ for implementation in implementations:
                             end_node))
         print(gret)
 
+# import citations
+print("citations...")
+sql = "select * from table_citation"
+cursor.execute(sql)
+citations = cursor.fetchall()
+
+for citation in citations:
+    found = graph.find_one("citation", property_key="id",
+                           property_value=citation[0])
+    if not found:
+        gret = graph.create(
+            Node("citation", id=citation[0], id_user=citation[1],
+                 citation_type=citation[2], citation_desc=citation[3],
+                 citation_url=citation[4], citation_source=citation[5],
+                 citation_pubdate=citation[6], citation_authors=citation[7],
+                 citation_pubname=citation[8], citation_comment=citation[9],
+                 citation_pmid=citation[10], event_stamp=citation[11])
+        )
+        print(gret)
+
+sql = "select * from match_citation_entity"
+cursor.execute(sql)
+cit_rels = cursor.fetchall()
+
+for cit_rel in cit_rels:
+    query = "match (n) where n.id = '{}' return n".format(cit_rel[2])
+    nodes = graph.cypher.execute(query)
+    if len(nodes) < 1:
+        continue
+    start_node = nodes[0]['n']
+    end_node = graph.find_one("citation", property_key='id', property_value=cit_rel[1])
+
+    match = graph.match_one(start_node=start_node, rel_type="HASCITATION", end_node=end_node)
+    if start_node and end_node and not match:
+        gret = graph.create(Relationship(start_node, "HASCITATION", end_node))
+        print(gret)

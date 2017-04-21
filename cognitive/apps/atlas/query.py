@@ -299,6 +299,19 @@ class Node(object):
                 i += 1
         return df.to_dict(orient="records")
 
+    def get_relation(self, id, relation):
+        ''' get nodes that are relatied to a given task
+            :param task_id: id of node to look for relations from
+            :relation: neo style relationship label ex. "ASSERTS"
+            :fields: fields to retrieve from nodes related to task_id'''
+        query = '''MATCH (p:{})-[:{}]->(r)
+                   WHERE p.id = '{}'
+                   RETURN r'''.format(self.name, relation, id)
+        relations = do_query(query, "null", "list") 
+        print(relations)
+        relations = [x[0].properties for x in relations]
+        return relations
+
 
 # Each type of Cognitive Atlas Class extends Node class
 
@@ -317,7 +330,8 @@ class Task(Node):
         super().__init__()
         self.name = "task"
         self.fields = ["id", "name", "definition"]
-        self.relations = ["HASCONDITION", "ASSERTS"]
+        self.relations = ["HASCONDITION", "ASSERTS", "HASINDICATOR",
+                          "HASEXTERNALDATASET", "HASIMPLEMENTATION"]
         self.color = "#63506D" #purple
 
     def get_contrasts(self, task_id):

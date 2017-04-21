@@ -13,7 +13,7 @@ class Node(object):
         '''
         self.name = name
         self.graph = graph
-        self.relations = ["GENERIC"]
+        self.relations = {"GENERIC": "node"}
         self.color = None
         if fields is None:
             self.fields = ["id", "name"]
@@ -308,9 +308,21 @@ class Node(object):
                    WHERE p.id = '{}'
                    RETURN r'''.format(self.name, relation, id)
         relations = do_query(query, "null", "list")
-        print(relations)
         relations = [x[0].properties for x in relations]
         return relations
+
+    def get_full(self, value, field):
+        ret = {}
+        node = self.graph.find_one(self.name, field, value)
+        if not node:
+            return None
+        ret = {**node.properties, **ret}
+        node_id = node.properties['id']
+
+        for rel in self.relations:
+            ret[self.relation_lookup[rel]] = self.get_relation(node_id, rel)
+
+        return ret
 
 
 # Each type of Cognitive Atlas Class extends Node class
@@ -321,7 +333,9 @@ class Concept(Node):
         super().__init__(**kwargs)
         self.name = "concept"
         self.fields = ["id", "name", "definition"]
-        self.relations = ["PARTOF", "KINDOF", "MEASUREDBY"]
+        self.relations = {
+            "PARTOF": "concept", "KINDOF": "concept", "MEASUREDBY": "concept"
+        }
         self.color = "#3C7263" # sea green
 
 class Task(Node):
@@ -330,22 +344,25 @@ class Task(Node):
         super().__init__()
         self.name = "task"
         self.fields = ["id", "name", "definition"]
+        '''
         self.relations = ["HASCONDITION", "ASSERTS", "HASINDICATOR",
                           "HASEXTERNALDATASET", "HASIMPLEMENTATION", "HASCITATION"]
+        '''
+        self.relations = {
+            "HASCONDITION": "condition",
+            "ASSERTS": "concept",
+            "HASINDICATOR": "indicator",
+            "HASEXTERNALDATASET": "dataset",
+            "HASIMPLEMENTATION": "implication",
+            "HASCITATION": "citation"
+        }
         self.color = "#63506D" #purple
 
     def get_full(self, value, field):
-        ret = {}
-        task = self.graph.find_one(self.name, field, value)
-        ret = {**task.properties, **ret}
-        ret['conditions'] = self.get_relation(value, "HASCONDITION")
-        ret['concepts'] = self.get_relation(value, "ASSERTS")
-        ret['indicators'] = self.get_relation(value, "HASINDICATOR")
-        ret['external_datasets'] = self.get_relation(value, "HASEXTERNALDATASET")
-        ret['implementations'] = self.get_relation(value, "HASIMPLEMENTATION")
-        ret['citations'] = self.get_relation(value, "HASCITATION")
+        ret = super().get_full(value, field)
+        ret['contrasts'] = self.get_contrasts(value)
         return ret
-
+        
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
@@ -407,7 +424,7 @@ class Condition(Node):
         self.name = "condition"
         self.fields = ["id", "name", "description"]
         self.color = "#BC1079" # dark pink
-        self.relations = ["HASCONTRAST"]
+        self.relations = {"HASCONTRAST": "contrast"}
 
 class Contrast(Node):
     def __init__(self):

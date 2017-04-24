@@ -141,3 +141,22 @@ for cit_rel in cit_rels:
     if start_node and end_node and not match:
         gret = graph.create(Relationship(start_node, "HASCITATION", end_node))
         print(gret)
+
+# import disorders
+print("disorders...")
+sql = "select * from disorder_import"
+cursor.execute(sql)
+disorders = cursor.fetchall()
+
+for disorder in disorders:
+    found = graph.find_one("disorder", property_key="id",
+                           property_value=disorder[2])
+
+    if not found:
+        gret = graph.create(
+            Node("disorder", id=disorder[2], id_protocol=disorder[3],
+                 name=disorder[4], definition=disorder[5], is_a=disorder[6],
+                 is_a_protocol=disorder[7], is_a_fulltext=disorder[8],
+                 id_user=disorder[9], event_stamp=disorder[10])
+        )
+        print(gret)

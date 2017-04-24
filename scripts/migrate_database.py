@@ -106,9 +106,9 @@ conditions_files = [x for x in files if 'condition' in x]
 conditions_files.sort(key=os.path.getmtime)
 conditions = cleancolumns(pandas.read_csv(conditions_files[-1], sep=";"))
 
-disorder_files = [x for x in files if 'disorder' in x]
-disorder_files.sort(key=os.path.getmtime)
-disorders = cleancolumns(pandas.read_csv(disorder_files[-1], sep=";"))
+#disorder_files = [x for x in files if 'disorder' in x]
+#disorder_files.sort(key=os.path.getmtime)
+#disorders = cleancolumns(pandas.read_csv(disorder_files[-1], sep=";"))
 
 assertion_files = [x for x in files if 'assertion' in x]
 assertion_files.sort(key=os.path.getmtime)
@@ -183,13 +183,13 @@ for row in conditions.iterrows():
 #    mentioned_in = models.Relationship('PMID',rel_type='MENTIONEDIN')
 
 # Bug in returning column index name
-disorders.columns = ["id", "term", "classification"]
-for row in disorders.iterrows():
-    uid = row[1].id
-    classification = row[1].classification
-    name = row[1].term
-    properties = {"classification": classification}
-    node = make_node("disorder", uid, name, properties)
+#disorders.columns = ["id", "term", "classification"]
+#for row in disorders.iterrows():
+#    uid = row[1].id
+#    classification = row[1].classification
+#    name = row[1].term
+#    properties = {"classification": classification, "id": id, "term": term}
+#    node = make_node("disorder", uid, name, properties)
 
 # class Contrast(models.NodeModel):
 #    name = models.StringProperty()

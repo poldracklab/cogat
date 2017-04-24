@@ -324,6 +324,8 @@ class Node(object):
                    RETURN p'''.format(relation, self.name, id)
         relations = do_query(query, "null", "list")
         relations = [x[0].properties for x in relations]
+        for rel in relations:
+            rel['relationship'] = relation
         return relations
 
 
@@ -354,16 +356,23 @@ class Concept(Node):
         }
         self.color = "#3C7263" # sea green
 
+    def get_full(self, value, field):
+        ret = super().get_full(value, field)
+        if not ret:
+            return None
+        # relationships is an old cogat api field for kindof and partofs
+        relationships = []
+        relationships.extend(self.get_reverse_relation(ret['id'], 'PARTOF'))
+        relationships.extend(self.get_reverse_relation(ret['id'], 'KINDOF'))
+        ret['relationships'] = relationships
+        return ret
+
 class Task(Node):
 
     def __init__(self):
         super().__init__()
         self.name = "task"
         self.fields = ["id", "name", "definition"]
-        '''
-        self.relations = ["HASCONDITION", "ASSERTS", "HASINDICATOR",
-                          "HASEXTERNALDATASET", "HASIMPLEMENTATION", "HASCITATION"]
-        '''
         self.relations = {
             "HASCONDITION": "condition",
             "ASSERTS": "concept",
@@ -430,7 +439,9 @@ class Disorder(Node):
     def __init__(self):
         super().__init__()
         self.name = "disorder"
-        self.fields = ["id", "name", "classification", "definition"]
+        self.fields = ["id", "name", "classification", "definition",
+                       "event_stamp", "id_user", "is_a", "id_protocol",
+                       "is_a_fulltext", "is_a_protocol"]
         self.color = "#337AB7" # neurovault blue
 
 class Condition(Node):

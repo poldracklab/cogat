@@ -300,7 +300,7 @@ class Node(object):
         return df.to_dict(orient="records")
 
     def get_relation(self, id, relation):
-        ''' get nodes that are relatied to a given task
+        ''' get nodes that are related to a given task
             :param task_id: id of node to look for relations from
             :relation: neo style relationship label ex. "ASSERTS"
             :fields: fields to retrieve from nodes related to task_id'''
@@ -309,10 +309,26 @@ class Node(object):
                    RETURN r'''.format(self.name, relation, id)
         relations = do_query(query, "null", "list")
         relations = [x[0].properties for x in relations]
+        for rel in relations:
+            rel['relationship'] = relation
         return relations
 
+    def get_reverse_relation(self, id, relation):
+        '''As opposed to get_relation this gets relations where the
+           given id is the subject in the relationship, not the predicate.
+           :param task_id: id of node to look for relations from
+           :relation: neo style relationship label ex. "ASSERTS"
+           :fields: fields to retrieve from nodes related to task_id'''
+        query = '''MATCH (p)-[:{}]->(s:{})
+                   WHERE s.id = '{}'
+                   RETURN p'''.format(relation, self.name, id)
+        relations = do_query(query, "null", "list")
+        relations = [x[0].properties for x in relations]
+        return relations
+
+
     def get_full(self, value, field):
-        ret = {}
+        ret = {'type': self.name}
         node = self.graph.find_one(self.name, field, value)
         if not node:
             return None
@@ -320,7 +336,7 @@ class Node(object):
         node_id = node.properties['id']
 
         for rel in self.relations:
-            ret[self.relation_lookup[rel]] = self.get_relation(node_id, rel)
+            ret[self.relations[rel]] = self.get_relation(node_id, rel)
 
         return ret
 
@@ -334,7 +350,7 @@ class Concept(Node):
         self.name = "concept"
         self.fields = ["id", "name", "definition"]
         self.relations = {
-            "PARTOF": "concept", "KINDOF": "concept", "MEASUREDBY": "concept"
+            "PARTOF": "concept", "KINDOF": "concept", "MEASUREDBY": "contrast"
         }
         self.color = "#3C7263" # sea green
 
@@ -353,7 +369,7 @@ class Task(Node):
             "ASSERTS": "concept",
             "HASINDICATOR": "indicator",
             "HASEXTERNALDATASET": "dataset",
-            "HASIMPLEMENTATION": "implication",
+            "HASIMPLEMENTATION": "implementation",
             "HASCITATION": "citation"
         }
         self.color = "#63506D" #purple
@@ -362,7 +378,7 @@ class Task(Node):
         ret = super().get_full(value, field)
         ret['contrasts'] = self.get_contrasts(value)
         return ret
-        
+
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
@@ -473,9 +489,14 @@ class Contrast(Node):
 
         fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"
-
         return do_query(query, fields=fields)
 
+    def api_get_concepts(self, contrast_id):
+        concepts = self.get_reverse_relation(contrast_id, "MEASUREDBY")
+        concept_ids = [x['id'] for x in concepts]
+        concept = Concept()
+        concepts = [concept.get_full(x, 'id') for x in concept_ids]
+        return concepts
 
     def get_tasks(self, contrast_id, fields=None):
         '''get_task looks up the task(s) associated with a contrast

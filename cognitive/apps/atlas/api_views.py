@@ -20,7 +20,7 @@ class ConceptAPI(APIView):
         elif name:
             concept = Concept.get_full(name, 'name')
         elif contrast_id:
-            concept = Contrast.get_by_relation(contrast_id, "id", "concept", "MEASUREDBY")
+            concept = Contrast.api_get_concepts(contrast_id)
         else:
             concept = Concept.all()
         
@@ -50,9 +50,9 @@ class DisorderAPI(APIView):
         name = request.GET.get("name", "")
         
         if id:
-            disorder = Disorder.get(id, 'id')
+            disorder = Disorder.get_full(id, 'id')
         elif name:
-            disorder = Disorder.get(name, 'name')
+            disorder = Disorder.get_full(name, 'name')
         else:
             disorder = Disorder.all()
         

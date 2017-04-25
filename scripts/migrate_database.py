@@ -119,10 +119,7 @@ theory_files.sort(key=os.path.getmtime)
 theories = cleancolumns(pandas.read_csv(theory_files[-1], sep=";"))
 
 # connect to graph database
-try:
-    graph = Graph("http://0.0.0.0:7474/db/data/")
-except:
-    graph = Graph("http://graphdb:7474/db/data/")
+graph = Graph("http://graphdb:7474/db/data/")
 
 # Just for local development
 #authenticate("localhost:7474", "neo4j", "noodles")

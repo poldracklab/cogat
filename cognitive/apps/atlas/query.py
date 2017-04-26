@@ -385,15 +385,21 @@ class Task(Node):
 
     def get_full(self, value, field):
         ret = super().get_full(value, field)
-        ret['contrasts'] = self.get_contrasts(value)
+        ret['contrasts'] = self.api_get_contrasts(value)
         return ret
 
+    def api_get_contrasts(self, task_id):
+        query = '''MATCH(t:task)-[:HASCONDITION]->(c:condition)-[:HASCONTRAST]->(cont:contrast)
+                   WHERE t.id='{}' RETURN cont'''.format(task_id)
+        contrasts = do_query(query, "null", "list")
+        return [x[0].properties for x in contrasts]
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
         :param task_id: the task unique id (trm|tsk_*) for the task
         '''
 
+        
         fields = ["contrast.id", "contrast.creation_time", "contrast.name",
                   "contrast.last_updated", "ID(contrast)"]
 

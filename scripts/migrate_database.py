@@ -204,6 +204,10 @@ for row in contrasts.iterrows():
 
     # id_term in the database dumps appears to point at a task, where should
     # that relation be mapped?
+    term_node = find_node("task", property_key='id', property_value=id_term)
+    if term_node: 
+        make_relation(term_node, "HASCONTRAST", node)
+        continue
     for condition in conditions.iterrows():
         if id_term == condition[1].id_term:
             condition_node = find_node(

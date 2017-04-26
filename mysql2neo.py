@@ -195,4 +195,5 @@ sql = "select * from type_concept"
 cursor.execute(sql)
 types = cursor.fetchall()
 for type in types:
+    pass
     #found = graph.find_one("concept_class", property_key="id",

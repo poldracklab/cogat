@@ -188,33 +188,6 @@ for row in conditions.iterrows():
 #    properties = {"classification": classification, "id": id, "term": term}
 #    node = make_node("disorder", uid, name, properties)
 
-# class Contrast(models.NodeModel):
-#    name = models.StringProperty()
-#    uid = models.StringProperty(indexed=True)
-#    measured_by_phenomenon = models.Relationship(Phenomenon,rel_type='MEASUREDBYPHENOMENON')
-#    measured_by_trait = models.Relationship(Trait,rel_type='MEASUREDBYTRAIT')
-
-for row in contrasts.iterrows():
-    uid = row[1].id
-    user = row[1].id_user
-    name = row[1].contrast_text
-    id_term = row[1].id_term
-    timestamp = row[1].event_stamp
-    node = make_node("contrast", uid, name)
-
-    # id_term in the database dumps appears to point at a task, where should
-    # that relation be mapped?
-    term_node = find_node("task", property_key='id', property_value=id_term)
-    if term_node: 
-        make_relation(term_node, "HASCONTRAST", node)
-        continue
-    for condition in conditions.iterrows():
-        if id_term == condition[1].id_term:
-            condition_node = find_node(
-                "condition", property_value=condition[1].id)
-            if condition_node is not None:
-                make_relation(condition_node, "HASCONTRAST", node)
-
 # class Concept(models.NodeModel):
 #    name = models.StringProperty()
 #    uid = models.StringProperty(indexed=True)
@@ -235,6 +208,34 @@ for row in concepts.iterrows():
         definition = ""
     properties = {"definition": definition}
     node = make_node("concept", uid, name, properties)
+
+
+# class Contrast(models.NodeModel):
+#    name = models.StringProperty()
+#    uid = models.StringProperty(indexed=True)
+#    measured_by_phenomenon = models.Relationship(Phenomenon,rel_type='MEASUREDBYPHENOMENON')
+#    measured_by_trait = models.Relationship(Trait,rel_type='MEASUREDBYTRAIT')
+
+for row in contrasts.iterrows():
+    uid = row[1].id
+    user = row[1].id_user
+    name = row[1].contrast_text
+    id_term = row[1].id_term
+    timestamp = row[1].event_stamp
+    node = make_node("contrast", uid, name)
+
+    # id_term in the database dumps appears to point at a task, where should
+    # that relation be mapped?
+    term_node = find_node("task", property_key='id', property_value=id_term)
+    if term_node: 
+        make_relation(term_node, "HASCONTRAST", node)
+
+    for condition in conditions.iterrows():
+        if id_term == condition[1].id_term:
+            condition_node = find_node(
+                "condition", property_value=condition[1].id)
+            if condition_node is not None:
+                make_relation(condition_node, "HASCONTRAST", node)
 
 # Assertions!
 # We will store the old uid as a property, in case we need to map back to

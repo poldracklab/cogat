@@ -7,9 +7,37 @@ cursor = conn.cursor()
 graph = Graph("http://192.168.99.100:7474/db/data/")
 
 # import tasks
-#sql = "select * from table_term where term_type='task'"
-#cursor.execute(sql)
-#mysql_tasks = cursor.fetchall()
+sql = "select id, id_user, term_alias, event_stamp from table_term where term_type='task'"
+cursor.execute(sql)
+tasks = cursor.fetchall()
+
+print("filling in additional task/concept details...")
+for task in tasks:
+    gtask = graph.find_one("task", property_key="id", property_value=task[0])
+    if not gtask:
+        raise Exception(task)
+    gtask.properties['id_user'] = task[1]
+    gtask.properties['alias'] = task[2]
+    gtask.properties['event_stamp'] = task[3]
+    gtask.push()
+
+print("filling in additional definition details...")
+sql = "select * from table_definition"
+cursor.execute(sql)
+definitions = cursor.fetchall()
+for definition in definitions:
+    gtask = graph.find_one("task", property_key="id", property_value=definition[2])
+    if not gtask:
+        gtask = graph.find_one("concept", property_key="id", property_value=definition[2])
+    if not gtask:
+        print(definition)
+        continue
+    gtask.properties['def_id'] = definition[0]
+    gtask.properties['def_id_user'] = definition[1]
+    gtask.properties['def_event_stamp'] = definition[4]
+    gtask.properties['id_concept_class'] = definition[5]
+    gtask.push()
+    
 
 # import indicators
 print("indicators...")
@@ -160,3 +188,11 @@ for disorder in disorders:
                  id_user=disorder[9], event_stamp=disorder[10])
         )
         print(gret)
+
+# import concept class
+print("concept class types...")
+sql = "select * from type_concept"
+cursor.execute(sql)
+types = cursor.fetchall()
+for type in types:
+    #found = graph.find_one("concept_class", property_key="id",

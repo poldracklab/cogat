@@ -67,10 +67,9 @@ for indicator in indicators:
                             end_node=end_node)
     if start_node and end_node and not match:
         gret = graph.create(Relationship(start_node, "HASINDICATOR", end_node,
-                                          id=indicator[0], id_user=indicator[1],
-                                          event_stamp=indicator[4]))
+                                         id=indicator[0], id_user=indicator[1],
+                                         event_stamp=indicator[4]))
         print(gret)
-
 
 # import external datasets
 print("external datasets...")
@@ -187,6 +186,19 @@ for disorder in disorders:
                  is_a_protocol=disorder[7], is_a_fulltext=disorder[8],
                  id_user=disorder[9], event_stamp=disorder[10])
         )
+        print(gret)
+
+sql = "select * from match_disorder_assertions"
+cursor.execute(sql)
+dis_asserts = cursor.fetchall()
+
+for dis_assert in dis_asserts:
+    end_node = graph.find_one("disorder", property_key='id', property_value=dis_assert[2])
+    start_node = graph.find_one("contrast", property_key='id', property_value=dis_assert[4])
+    match = graph.match_one(start_node=start_node, rel_type="HASDIFFERENCE", end_node=end_node)
+    if start_node and end_node and not match:
+        gret = graph.create(Relationship(start_node, "HASDIFFERENCE", end_node,
+                            id_task=[dis_assert[3]]))
         print(gret)
 
 # import concept class

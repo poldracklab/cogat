@@ -164,7 +164,7 @@ for row in conditions.iterrows():
     description = row[1].condition_description
     timestamp = row[1].event_stamp
     if not str(name) == "nan":
-        properties = {"description": description}
+        properties = {"condition_description": description, "event_stamp": timestamp, "id_user": user, "codnition_text": name}
         node = make_node("condition", uid, name, properties)
         tasknode = find_node("task", property_value=task)
         # If the tasknode is node found, then we do not create the relation,
@@ -222,7 +222,9 @@ for row in contrasts.iterrows():
     name = row[1].contrast_text
     id_term = row[1].id_term
     timestamp = row[1].event_stamp
-    node = make_node("contrast", uid, name)
+    node = make_node("contrast", uid, name,
+                     {'id_user': user, 'contrast_text': name,
+                      'event_stamp': timestamp, 'event_uri': ''})
 
     # id_term in the database dumps appears to point at a task, where should
     # that relation be mapped?

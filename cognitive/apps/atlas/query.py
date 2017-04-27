@@ -397,7 +397,10 @@ class Task(Node):
     # the relationship itself contains data that should be presented in api
     # no functions right now for getting end node and relation properties
     def api_get_indicators(self, task_id):
-        pass
+        query = '''MATCH (t:task)-[rel:HASINDICATOR]->(i:indicator)
+                   WHERE t.id = '{}' return rel, c)
+        
+
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
         :param task_id: the task unique id (trm|tsk_*) for the task

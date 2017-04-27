@@ -389,20 +389,15 @@ class Task(Node):
         return ret
 
     def api_get_contrasts(self, task_id):
-#        query = '''MATCH (t:task)-[:HASCONDITION]->(c:condition)-[:HASCONTRAST]->(cont:contrast)
-#                   WHERE t.id='{}' RETURN cont'''.format(task_id)
-#        contrasts = do_query(query, "null", "list")
-#        cond_contrasts = [x[0].properties for x in contrasts]
-#        query = '''MATCH (t:task)-[:ASSERTS]->(c:concept)-[:MEASUREDBY]->(cont:contrast)
-#                   WHERE t.id='{}' RETURN cont'''.format(task_id)
-#        contrasts = do_query(query, "null", "list")
-#        concept_contrasts = [x[0].properties for x in contrasts]
-#        return list(set(cond_contrasts + concept_contrasts))
         query = '''MATCH (t:task)-[:HASCONTRAST]->(c:contrast) WHERE t.id='{}'
                    RETURN c'''.format(task_id)
         contrasts = do_query(query, "null", "list")
         return [x[0].properties for x in contrasts]
 
+    # the relationship itself contains data that should be presented in api
+    # no functions right now for getting end node and relation properties
+    def api_get_indicators(self, task_id):
+        pass
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
         :param task_id: the task unique id (trm|tsk_*) for the task

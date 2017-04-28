@@ -148,7 +148,7 @@ for row in tasks.iterrows():
     except BaseException:
         definition = ""
     if not str(name) == "nan":
-        properties = {"definition": definition}
+        properties = {"definition_text": definition}
         node = make_node("task", uid, name, properties)
 
 # class Condition(models.NodeModel):

@@ -39,7 +39,7 @@ class TaskAPI(APIView):
             task = Task.get_full(name, 'name')
         else:
             task = Task.all()
-        
+
         if task is None:
             raise NotFound('Task not found')
         return Response(task)

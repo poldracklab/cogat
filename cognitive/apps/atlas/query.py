@@ -352,7 +352,9 @@ class Concept(Node):
         self.name = "concept"
         self.fields = ["id", "name", "definition"]
         self.relations = {
-            "PARTOF": "concept", "KINDOF": "concept", "MEASUREDBY": "contrast"
+            "PARTOF": "concepts",
+            "KINDOF": "concepts",
+            "MEASUREDBY": "contrasts"
         }
         self.color = "#3C7263" # sea green
 
@@ -374,12 +376,12 @@ class Task(Node):
         self.name = "task"
         self.fields = ["id", "name", "definition"]
         self.relations = {
-            "HASCONDITION": "condition",
-            "ASSERTS": "concept",
-            "HASINDICATOR": "indicator",
-            "HASEXTERNALDATASET": "dataset",
-            "HASIMPLEMENTATION": "implementation",
-            "HASCITATION": "citation"
+            "HASCONDITION": "conditions",
+            "ASSERTS": "concepts",
+            "HASINDICATOR": "indicators",
+            "HASEXTERNALDATASET": "external_datasets",
+            "HASIMPLEMENTATION": "implemntations",
+            "HASCITATION": "citations"
         }
         self.color = "#63506D" #purple
 
@@ -398,7 +400,7 @@ class Task(Node):
     # no functions right now for getting end node and relation properties
     def api_get_indicators(self, task_id):
         query = '''MATCH (t:task)-[rel:HASINDICATOR]->(i:indicator)
-                   WHERE t.id = '{}' return rel, c)
+                   WHERE t.id = '{}' return rel, c)'''
         
 
     def get_contrasts(self, task_id):
@@ -464,7 +466,7 @@ class Condition(Node):
         self.name = "condition"
         self.fields = ["id", "name", "description"]
         self.color = "#BC1079" # dark pink
-        self.relations = {"HASCONTRAST": "contrast"}
+        self.relations = {"HASCONTRAST": "contrasts"}
 
 class Contrast(Node):
     def __init__(self):

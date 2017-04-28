@@ -58,9 +58,12 @@ api_urls = [
     url(r'^api/concept$',api_views.ConceptAPI.as_view(), name='concept_api_list'),
     url(r'^api/task$', api_views.TaskAPI.as_view(), name='task_api_list'),
     url(r'^api/disorder', api_views.DisorderAPI.as_view(), name='disorder_api_list'),
+    url(r'^api/v-alpha/search$', api_views.SearchAPI.as_view(), name='search_api_list'),
+    url(r'^api/v-alpha/concept$',api_views.ConceptAPI.as_view(), name='concept_api_list'),
+    url(r'^api/v-alpha/task$', api_views.TaskAPI.as_view(), name='task_api_list'),
+    url(r'^api/v-alpha/disorder', api_views.DisorderAPI.as_view(), name='disorder_api_list'),
     url(r'^task/json/(?P<uid>[\w\+%_& ]+)/$', graph.task_json, name="task_json"),
     url(r'^concept/json/(?P<uid>[\w\+%_& ]+)/$', graph.concept_json, name="concept_json"),
-
 ]
 
 urlpatterns += api_urls

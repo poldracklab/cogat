@@ -1,12 +1,14 @@
+''' functions to help with comparing the old cognitive atlas api with
+    the new one '''
 import json
 
-from cognitiveatlas.api import get_task, get_concept, generate_url
+from cognitiveatlas.api import get_task, get_concept
 from cognitiveatlas.utils import get_json
-from jsoncompare import jsoncompare
 
-base_ep = "http://192.168.99.100/api/"
+BASE_EP = "http://192.168.99.100/api/"
 
 def task_json_dump():
+    ''' use cognitiveatlas library to dump tasks to a json file '''
     all_tasks = []
     tasks = get_task().json
     for task in tasks:
@@ -15,6 +17,7 @@ def task_json_dump():
         json.dump(all_tasks, fp)
 
 def concept_json_dump():
+    ''' use cognitiveatlas library to dump concepts to a json file '''
     all_concepts = []
     concepts = get_concept().json
     for concept in concepts:
@@ -22,46 +25,58 @@ def concept_json_dump():
     with open("all_concepts.json", 'w') as fp:
         json.dump(all_concepts, fp)
 
-def compare_elems(file, url):
-    missing_keys = {}
-    all_mismatched_keys = {}
+def dict_in_list(old_dict, new_list):
+    ''' See if a given dictionary from the old api appears in a list of
+        dictionaries from the new api.'''
+    for new_dict in new_list:
+        compare_dicts(old_dict, new_dict)
 
+def compare_dicts(old_dict, new_dict, ignore_keys=[]):
+    ''' iterate over the keys of the old api dictionary and compare_values
+        with the new dict. If the key is missing add an entry to a dictionary
+        with the old dict key as the key, and append the id of the new api
+        object missing the key as/to the value'''
+    missing_keys = {}
+    mismatched_value = []
+    mismatched_types = []
+    old_dict = old_dict[0]
+    for old_key in old_dict:
+        if old_key in ignore_keys:
+            continue
+        try:
+            old_value = old_dict[old_key]
+            new_value = new_dict[old_key]
+            if type(old_value).__name__ == 'list' and type(new_value).__name__ == 'list':
+                pass
+            elif type(old_value).__name__ == 'str' and type(new_value).__name__ == 'str':
+                if old_value != new_value:
+                    mismatched_value.append((old_dict['id'], old_key, old_value, new_value))
+            else:
+                mismatched_types.append((old_dict['id'], old_key, old_value, new_value))
+        except KeyError as error:
+            if missing_keys.get(error.args[0], None):
+                missing_keys[error.args[0]].append(new_dict['id'])
+            else:
+                missing_keys[error.args[0]] = [new_dict['id']]
+    print(missing_keys)
+    print(mismatched_value)
+    print(mismatched_types)
+
+def compare_api_elems(file, url, ignore_keys=[]):
+    ''' iterate over a  json file and attempt to lookup each element at
+        a remote url and see what differences there are between the two
+        elements'''
     with open(file, 'r') as fp:
         old_elems = json.load(fp)
 
     for old_elem in old_elems:
         new_elem = json.loads(get_json("{}?id={}".format(url, old_elem[0]['id'])))
-        break
-    '''
-        mismatched_keys = []
-        for elem in old_elem[0]:
-            try:
-                print(type(new_elem[str(elem)]))
-                if type(old_elem[0][str(elem)]).__name__ == 'list':
-                    for nested_elem in old_elem[0][str(elem)]:
-                        if new_elem[str(elem)][nested_elem] != old_elem[0][str(elem)][nested_elem]:
-                            mismatched_keys.append((str(new_elem[str(elem)][nested_elem]), str(old_elem[0][elem][nested_elem])))
-                elif type(old_elem[0][str(elem)]).__name__ == 'str':
-                    if new_elem[str(elem)] != old_elem[0][elem]:
-                        mismatched_keys.append((str(new_elem[str(elem)]), str(old_elem[0][elem])))
-            except KeyError as e:
-                if missing_keys.get(e.args[0], None):
-                    missing_keys[e.args[0]].append(new_elem['id'])
-                else:
-                    missing_keys[e.args[0]] = [new_elem['id']]
-        if len(mismatched_keys) > 0:
-            all_mismatched_keys[old_elem[0]['id']] = mismatched_keys
-        break
-    print(missing_keys.keys())
-
-    with open("missmatched{}".format(file), 'w') as fp:
-        json.dump(all_mismatched_keys, fp)
-    '''
-
+        compare_dicts(old_elem, new_elem, ignore_keys)
 
 if  __name__ == '__main__':
     #task_json_dump()
-    compare_elems("all_tasks.json", "{}{}".format(base_ep, "task"))
+    ignore_keys = ['concept_class', 'umark', 'umarkdef', 'conclass', 'event_stamp', 'def_event_stamp', 'discussion', 'history']
+    compare_api_elems("all_tasks.json", "{}{}".format(BASE_EP, "task"), ignore_keys)
 
     #concept_json_dump()
-    compare_elems("all_concepts.json", "{}{}".format(base_ep, "concept"))
+    #compare_api_elems("all_concepts.json", "{}{}".format(BASE_EP, "concept"))

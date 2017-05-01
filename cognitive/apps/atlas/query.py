@@ -380,14 +380,15 @@ class Task(Node):
             "ASSERTS": "concepts",
             "HASINDICATOR": "indicators",
             "HASEXTERNALDATASET": "external_datasets",
-            "HASIMPLEMENTATION": "implemntations",
-            "HASCITATION": "citations"
+            "HASIMPLEMENTATION": "implementations",
+            "HASCITATION": "citation"
         }
         self.color = "#63506D" #purple
 
     def get_full(self, value, field):
         ret = super().get_full(value, field)
         ret['contrasts'] = self.api_get_contrasts(value)
+        ret['disorders'] = self.api_get_disorders(value)
         return ret
 
     def api_get_contrasts(self, task_id):
@@ -395,6 +396,24 @@ class Task(Node):
                    RETURN c'''.format(task_id)
         contrasts = do_query(query, "null", "list")
         return [x[0].properties for x in contrasts]
+
+    def api_get_disorders(self, task_id):
+        query = '''
+            MATCH (t:task)-[:HASCONTRAST]->(c:contrast)-[dif:HASDIFFERENCE]->[d:disorder]
+            WHERE t.id='{}' RETURN dif, d'''
+        disorders = do_query(query, "null", "list")
+        ret_disorders = []
+        for disorder in disorders:
+            node = disorder[0]
+            rel = disorder[1]
+            ret_disorders.append({
+                'id': rel.properties.id,
+                'id_user': '',
+                'id_disorder': '',
+                'id_task': task_id,
+                'id_contrast': '',
+                'event_stamp': ''
+            
 
     # the relationship itself contains data that should be presented in api
     # no functions right now for getting end node and relation properties

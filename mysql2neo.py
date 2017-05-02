@@ -21,6 +21,21 @@ for task in tasks:
     gtask.properties['event_stamp'] = task[3]
     gtask.push()
 
+sql = "select id, id_user, term_alias, event_stamp from table_term where term_type='concept'"
+cursor.execute(sql)
+tasks = cursor.fetchall()
+
+print("filling in additional task/concept details...")
+for task in tasks:
+    gtask = graph.find_one("concept", property_key="id", property_value=task[0])
+    if not gtask:
+        raise Exception(task)
+    gtask.properties['id_user'] = task[1]
+    gtask.properties['alias'] = task[2]
+    gtask.properties['event_stamp'] = task[3]
+    gtask.push()
+
+
 print("filling in additional definition details...")
 sql = "select * from table_definition"
 cursor.execute(sql)
@@ -184,7 +199,8 @@ for disorder in disorders:
             Node("disorder", id=disorder[2], id_protocol=disorder[3],
                  name=disorder[4], definition=disorder[5], is_a=disorder[6],
                  is_a_protocol=disorder[7], is_a_fulltext=disorder[8],
-                 id_user=disorder[9], event_stamp=disorder[10])
+                 id_user=disorder[9], event_stamp=disorder[10],
+                 flag_for_curator=disorder[11])
         )
         print(gret)
 
@@ -198,7 +214,7 @@ for dis_assert in dis_asserts:
     match = graph.match_one(start_node=start_node, rel_type="HASDIFFERENCE", end_node=end_node)
     if start_node and end_node and not match:
         gret = graph.create(Relationship(start_node, "HASDIFFERENCE", end_node,
-                            id_task=[dis_assert[3]], id=dis_assert[0], event_stamp=dis_assert[5]))
+                            id_task=[dis_assert[3]], id_contrast=dis_assert[4], id=dis_assert[0], event_stamp=dis_assert[5]))
         print(gret)
 
 

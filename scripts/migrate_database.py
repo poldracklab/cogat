@@ -206,7 +206,7 @@ for row in concepts.iterrows():
         definition = concept[0]["definition_text"]
     except BaseException:
         definition = ""
-    properties = {"definition": definition}
+    properties = {"definition_text": definition}
     node = make_node("concept", uid, name, properties)
 
 

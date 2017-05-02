@@ -198,7 +198,7 @@ for dis_assert in dis_asserts:
     match = graph.match_one(start_node=start_node, rel_type="HASDIFFERENCE", end_node=end_node)
     if start_node and end_node and not match:
         gret = graph.create(Relationship(start_node, "HASDIFFERENCE", end_node,
-                            id_task=[dis_assert[3]], id=dis_assert[0], event_stamp=dis_assert[6]))
+                            id_task=[dis_assert[3]], id=dis_assert[0], event_stamp=dis_assert[5]))
         print(gret)
 
 

@@ -350,7 +350,7 @@ class Concept(Node):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = "concept"
-        self.fields = ["id", "name", "definition"]
+        self.fields = ["id", "name", "definition", "alias"]
         self.relations = {
             "PARTOF": "concepts",
             "KINDOF": "concepts",
@@ -363,10 +363,18 @@ class Concept(Node):
         if not ret:
             return None
         # relationships is an old cogat api field for kindof and partofs
-        relationships = []
-        relationships.extend(self.get_reverse_relation(ret['id'], 'PARTOF'))
-        relationships.extend(self.get_reverse_relation(ret['id'], 'KINDOF'))
-        ret['relationships'] = relationships
+        child_rel = []
+        child_rel.extend(self.get_reverse_relation(ret['id'], 'PARTOF'))
+        child_rel.extend(self.get_reverse_relation(ret['id'], 'KINDOF'))
+        for child in child_rel:
+            child['direction'] = "child"
+        parent_rel = []
+        parent_rel.extend(self.get_relation(ret['id'], 'PARTOF'))
+        parent_rel.extend(self.get_relation(ret['id'], 'KINDOF'))
+        for parent in parent_rel:
+            parent['direction'] = "parent"
+        child_rel.extend(parent_rel)
+        ret['relationships'] = child_rel
         return ret
 
 class Task(Node):
@@ -387,9 +395,23 @@ class Task(Node):
 
     def get_full(self, value, field):
         ret = super().get_full(value, field)
+        if not ret:
+            return None
         ret['contrasts'] = self.api_get_contrasts(value)
         ret['disorders'] = self.api_get_disorders(value)
+        ret['concepts'] = self.api_update_concepts(ret['concepts'], value)
         return ret
+
+
+    def api_update_concepts(self, concepts, task_id):
+        for concept in concepts:
+            concept['concept_id'] = concept.pop('id')
+            query = '''MATCH (con:contrast)<-[:HASCONTRAST]-(t:task)-[:ASSERTS]->(c:concept)-[:MEASUREDBY]->(con:contrast)
+                       WHERE c.id = '{}' AND t.id = '{}'
+                       RETURN con'''.format(concept['concept_id'], task_id)
+            contrast = do_query(query, "null", "list")
+            concept['contrast_id'] = contrast[0].properties.id
+        return concepts
 
     def api_get_contrasts(self, task_id):
         query = '''MATCH (t:task)-[:HASCONTRAST]->(c:contrast) WHERE t.id='{}'
@@ -399,35 +421,37 @@ class Task(Node):
 
     def api_get_disorders(self, task_id):
         query = '''
-            MATCH (t:task)-[:HASCONTRAST]->(c:contrast)-[dif:HASDIFFERENCE]->[d:disorder]
-            WHERE t.id='{}' RETURN dif, d'''
-        disorders = do_query(query, "null", "list")
+            MATCH (t:task)-[:HASCONTRAST]->(c:contrast)-[dif:HASDIFFERENCE]->(d:disorder)
+            WHERE t.id='{}' RETURN dif, d'''.format(task_id)
+        disorders = do_query(query, ["null", "null2"], "list")
         ret_disorders = []
         for disorder in disorders:
             node = disorder[0]
             rel = disorder[1]
+            # ret_disorders.append({**node.properties, 'id_disorder': node.properties.id})
             ret_disorders.append({
                 'id': rel.properties.id,
-                'id_user': '',
-                'id_disorder': '',
+                'id_user': node.properties.id_user,
+                'id_disorder': node.properties.id,
                 'id_task': task_id,
-                'id_contrast': '',
-                'event_stamp': ''
-            
+                'id_contrast': rel.properties.id_contrast,
+                'event_stamp': rel.properties.event_stamp
+            })
+        return ret_disorders
 
     # the relationship itself contains data that should be presented in api
     # no functions right now for getting end node and relation properties
     def api_get_indicators(self, task_id):
         query = '''MATCH (t:task)-[rel:HASINDICATOR]->(i:indicator)
                    WHERE t.id = '{}' return rel, c)'''
-        
+
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
         :param task_id: the task unique id (trm|tsk_*) for the task
         '''
 
-        
+
         fields = ["contrast.id", "contrast.creation_time", "contrast.name",
                   "contrast.last_updated", "ID(contrast)"]
 

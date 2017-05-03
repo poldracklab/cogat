@@ -54,7 +54,7 @@ RUN pip install cognitiveatlas "py2neo<3"
 RUN mkdir /code
 ADD . /code
 WORKDIR /code
-RUN bash scripts/docker_import.sh
+#RUN bash scripts/docker_import.sh
 
 # Mount a volume for persistent data
 VOLUME /opt/data

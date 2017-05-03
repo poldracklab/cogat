@@ -113,7 +113,7 @@ for external_dataset in external_datasets:
                             end_node=end_node)
     if start_node and end_node and not match:
         gret = graph.create(Relationship(start_node, "HASEXTERNALDATASET",
-                                          end_node))
+                                         end_node))
         print(gret)
 
 # import implementations
@@ -144,7 +144,7 @@ for implementation in implementations:
 
     if start_node and end_node and not match:
         gret = graph.create(Relationship(start_node, "HASIMPLEMENTATION",
-                            end_node))
+                                         end_node))
         print(gret)
 
 # import citations
@@ -213,10 +213,45 @@ for dis_assert in dis_asserts:
     start_node = graph.find_one("contrast", property_key='id', property_value=dis_assert[4])
     match = graph.match_one(start_node=start_node, rel_type="HASDIFFERENCE", end_node=end_node)
     if start_node and end_node and not match:
-        gret = graph.create(Relationship(start_node, "HASDIFFERENCE", end_node,
-                            id_task=[dis_assert[3]], id_contrast=dis_assert[4], id=dis_assert[0], event_stamp=dis_assert[5]))
+        gret = graph.create(
+            Relationship(start_node, "HASDIFFERENCE", end_node,
+                         id_task=[dis_assert[3]], id_contrast=dis_assert[4],
+                         id=dis_assert[0], event_stamp=dis_assert[5])
+        )
         print(gret)
 
+sql = "select * from disorder_synonym"
+cursor.execute(sql)
+synonyms = cursor.fetchall()
+
+for synonym in synonyms:
+    disorder = graph.find_one("disorder", property_key='id', property_value=synonym[1])
+    if disorder:
+        new_synonym = {'tid': synonym[0], 'synonym': synonym[2], 'spec': synonym[3]}
+        if disorder.properties.get('synonyms', None) and new_synonym not in disorder.properties['synonyms']:
+            disorder.properties['synonyms'].update(new_synonym)
+        else:
+            disorder.properties['synonyms'] = new_synonym
+
+sql = "select * from disorder_xrefs"
+for xref in xrefs:
+    disorder = graph.find_one("disorder", property_key='id', property_value=xref[1])
+    if disorder:
+        new_xref = {'tid': xref[0], 'protocol': xref[2], 'xref': xref[3]}
+        if disorder.properties.get('xrefs', None) and new_xref not in disorder.properties['xrefs']:
+            disorder.properties['xrefs'].update(new_xref)
+        else:
+            disorder.properties['xrefs'] = new_xref
+
+sql = "select * from disorder_altids"
+for altid in altids:
+    disorder = graph.find_one("disorder", property_key='id', property_value=altid[1])
+    if disorder:
+        new_altid = {'tid': altid[0], 'protocol': altid[2], 'altid': altid[3]}
+        if disorder.properties.get('alt_id', None) and new_altid not in disorder.properties['alt_id']:
+            disorder.properties['alt_id'].update(new_altid)
+        else:
+            disorder.properties['alt_id'] = new_altid
 
 # import concept class
 print("concept class types...")
@@ -225,4 +260,4 @@ cursor.execute(sql)
 types = cursor.fetchall()
 for type in types:
     pass
-    #found = graph.find_one("concept_class", property_key="id",
+

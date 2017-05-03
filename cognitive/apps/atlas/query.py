@@ -397,6 +397,7 @@ class Task(Node):
         ret = super().get_full(value, field)
         if not ret:
             return None
+        value = ret['id']
         ret['contrasts'] = self.api_get_contrasts(value)
         ret['disorders'] = self.api_get_disorders(value)
         ret['concepts'] = self.api_update_concepts(ret['concepts'], value)

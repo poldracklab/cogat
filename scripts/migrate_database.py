@@ -106,9 +106,9 @@ conditions_files = [x for x in files if 'condition' in x]
 conditions_files.sort(key=os.path.getmtime)
 conditions = cleancolumns(pandas.read_csv(conditions_files[-1], sep=";"))
 
-disorder_files = [x for x in files if 'disorder' in x]
-disorder_files.sort(key=os.path.getmtime)
-disorders = cleancolumns(pandas.read_csv(disorder_files[-1], sep=";"))
+#disorder_files = [x for x in files if 'disorder' in x]
+#disorder_files.sort(key=os.path.getmtime)
+#disorders = cleancolumns(pandas.read_csv(disorder_files[-1], sep=";"))
 
 assertion_files = [x for x in files if 'assertion' in x]
 assertion_files.sort(key=os.path.getmtime)
@@ -119,10 +119,7 @@ theory_files.sort(key=os.path.getmtime)
 theories = cleancolumns(pandas.read_csv(theory_files[-1], sep=";"))
 
 # connect to graph database
-try:
-    graph = Graph("http://0.0.0.0:7474/db/data/")
-except:
-    graph = Graph("http://graphdb:7474/db/data/")
+graph = Graph("http://graphdb:7474/db/data/")
 
 # Just for local development
 #authenticate("localhost:7474", "neo4j", "noodles")
@@ -151,7 +148,7 @@ for row in tasks.iterrows():
     except BaseException:
         definition = ""
     if not str(name) == "nan":
-        properties = {"definition": definition}
+        properties = {"definition_text": definition}
         node = make_node("task", uid, name, properties)
 
 # class Condition(models.NodeModel):
@@ -167,7 +164,7 @@ for row in conditions.iterrows():
     description = row[1].condition_description
     timestamp = row[1].event_stamp
     if not str(name) == "nan":
-        properties = {"description": description}
+        properties = {"condition_description": description, "event_stamp": timestamp, "id_user": user, "codnition_text": name}
         node = make_node("condition", uid, name, properties)
         tasknode = find_node("task", property_value=task)
         # If the tasknode is node found, then we do not create the relation,
@@ -183,36 +180,13 @@ for row in conditions.iterrows():
 #    mentioned_in = models.Relationship('PMID',rel_type='MENTIONEDIN')
 
 # Bug in returning column index name
-disorders.columns = ["id", "term", "classification"]
-for row in disorders.iterrows():
-    uid = row[1].id
-    classification = row[1].classification
-    name = row[1].term
-    properties = {"classification": classification}
-    node = make_node("disorder", uid, name, properties)
-
-# class Contrast(models.NodeModel):
-#    name = models.StringProperty()
-#    uid = models.StringProperty(indexed=True)
-#    measured_by_phenomenon = models.Relationship(Phenomenon,rel_type='MEASUREDBYPHENOMENON')
-#    measured_by_trait = models.Relationship(Trait,rel_type='MEASUREDBYTRAIT')
-
-for row in contrasts.iterrows():
-    uid = row[1].id
-    user = row[1].id_user
-    name = row[1].contrast_text
-    id_term = row[1].id_term
-    timestamp = row[1].event_stamp
-    node = make_node("contrast", uid, name)
-
-    # id_term in the database dumps appears to point at a task, where should
-    # that relation be mapped?
-    for condition in conditions.iterrows():
-        if id_term == condition[1].id_term:
-            condition_node = find_node(
-                "condition", property_value=condition[1].id)
-            if condition_node is not None:
-                make_relation(condition_node, "HASCONTRAST", node)
+#disorders.columns = ["id", "term", "classification"]
+#for row in disorders.iterrows():
+#    uid = row[1].id
+#    classification = row[1].classification
+#    name = row[1].term
+#    properties = {"classification": classification, "id": id, "term": term}
+#    node = make_node("disorder", uid, name, properties)
 
 # class Concept(models.NodeModel):
 #    name = models.StringProperty()
@@ -232,8 +206,38 @@ for row in concepts.iterrows():
         definition = concept[0]["definition_text"]
     except BaseException:
         definition = ""
-    properties = {"definition": definition}
+    properties = {"definition_text": definition}
     node = make_node("concept", uid, name, properties)
+
+
+# class Contrast(models.NodeModel):
+#    name = models.StringProperty()
+#    uid = models.StringProperty(indexed=True)
+#    measured_by_phenomenon = models.Relationship(Phenomenon,rel_type='MEASUREDBYPHENOMENON')
+#    measured_by_trait = models.Relationship(Trait,rel_type='MEASUREDBYTRAIT')
+
+for row in contrasts.iterrows():
+    uid = row[1].id
+    user = row[1].id_user
+    name = row[1].contrast_text
+    id_term = row[1].id_term
+    timestamp = row[1].event_stamp
+    node = make_node("contrast", uid, name,
+                     {'id_user': user, 'contrast_text': name,
+                      'event_stamp': timestamp, 'event_uri': ''})
+
+    # id_term in the database dumps appears to point at a task, where should
+    # that relation be mapped?
+    term_node = find_node("task", property_key='id', property_value=id_term)
+    if term_node: 
+        make_relation(term_node, "HASCONTRAST", node)
+
+    for condition in conditions.iterrows():
+        if id_term == condition[1].id_term:
+            condition_node = find_node(
+                "condition", property_value=condition[1].id)
+            if condition_node is not None:
+                make_relation(condition_node, "HASCONTRAST", node)
 
 # Assertions!
 # We will store the old uid as a property, in case we need to map back to

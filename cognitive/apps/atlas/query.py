@@ -13,7 +13,7 @@ class Node(object):
         '''
         self.name = name
         self.graph = graph
-        self.relations = ["GENERIC"]
+        self.relations = {"GENERIC": "node"}
         self.color = None
         if fields is None:
             self.fields = ["id", "name"]
@@ -299,17 +299,83 @@ class Node(object):
                 i += 1
         return df.to_dict(orient="records")
 
+    def get_relation(self, id, relation):
+        ''' get nodes that are related to a given task
+            :param task_id: id of node to look for relations from
+            :relation: neo style relationship label ex. "ASSERTS"
+            :fields: fields to retrieve from nodes related to task_id'''
+        query = '''MATCH (p:{})-[:{}]->(r)
+                   WHERE p.id = '{}'
+                   RETURN r'''.format(self.name, relation, id)
+        relations = do_query(query, "null", "list")
+        relations = [x[0].properties for x in relations]
+        for rel in relations:
+            rel['relationship'] = relation
+        return relations
+
+    def get_reverse_relation(self, id, relation):
+        '''As opposed to get_relation this gets relations where the
+           given id is the subject in the relationship, not the predicate.
+           :param task_id: id of node to look for relations from
+           :relation: neo style relationship label ex. "ASSERTS"
+           :fields: fields to retrieve from nodes related to task_id'''
+        query = '''MATCH (p)-[:{}]->(s:{})
+                   WHERE s.id = '{}'
+                   RETURN p'''.format(relation, self.name, id)
+        relations = do_query(query, "null", "list")
+        relations = [x[0].properties for x in relations]
+        for rel in relations:
+            rel['relationship'] = relation
+        return relations
+
+
+    def get_full(self, value, field):
+        ret = {'type': self.name}
+        node = self.graph.find_one(self.name, field, value)
+        if not node:
+            return None
+        ret = {**node.properties, **ret}
+        node_id = node.properties['id']
+
+        for rel in self.relations:
+            ret[self.relations[rel]] = self.get_relation(node_id, rel)
+
+        return ret
+
 
 # Each type of Cognitive Atlas Class extends Node class
 
 class Concept(Node):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.name = "concept"
-        self.fields = ["id", "name", "definition"]
-        self.relations = ["PARTOF", "KINDOF", "MEASUREDBY"]
+        self.fields = ["id", "name", "definition", "alias"]
+        self.relations = {
+            "PARTOF": "concepts",
+            "KINDOF": "concepts",
+            "MEASUREDBY": "contrasts"
+        }
         self.color = "#3C7263" # sea green
+
+    def get_full(self, value, field):
+        ret = super().get_full(value, field)
+        if not ret:
+            return None
+        # relationships is an old cogat api field for kindof and partofs
+        child_rel = []
+        child_rel.extend(self.get_reverse_relation(ret['id'], 'PARTOF'))
+        child_rel.extend(self.get_reverse_relation(ret['id'], 'KINDOF'))
+        for child in child_rel:
+            child['direction'] = "child"
+        parent_rel = []
+        parent_rel.extend(self.get_relation(ret['id'], 'PARTOF'))
+        parent_rel.extend(self.get_relation(ret['id'], 'KINDOF'))
+        for parent in parent_rel:
+            parent['direction'] = "parent"
+        child_rel.extend(parent_rel)
+        ret['relationships'] = child_rel
+        return ret
 
 class Task(Node):
 
@@ -317,13 +383,75 @@ class Task(Node):
         super().__init__()
         self.name = "task"
         self.fields = ["id", "name", "definition"]
-        self.relations = ["HASCONDITION", "ASSERTS"]
+        self.relations = {
+            "HASCONDITION": "conditions",
+            "ASSERTS": "concepts",
+            "HASINDICATOR": "indicators",
+            "HASEXTERNALDATASET": "external_datasets",
+            "HASIMPLEMENTATION": "implementations",
+            "HASCITATION": "citation"
+        }
         self.color = "#63506D" #purple
+
+    def get_full(self, value, field):
+        ret = super().get_full(value, field)
+        if not ret:
+            return None
+        value = ret['id']
+        ret['contrasts'] = self.api_get_contrasts(value)
+        ret['disorders'] = self.api_get_disorders(value)
+        ret['concepts'] = self.api_update_concepts(ret['concepts'], value)
+        return ret
+
+
+    def api_update_concepts(self, concepts, task_id):
+        for concept in concepts:
+            concept['concept_id'] = concept.pop('id')
+            query = '''MATCH (con:contrast)<-[:HASCONTRAST]-(t:task)-[:ASSERTS]->(c:concept)-[:MEASUREDBY]->(con:contrast)
+                       WHERE c.id = '{}' AND t.id = '{}'
+                       RETURN con'''.format(concept['concept_id'], task_id)
+            contrast = do_query(query, "null", "list")
+            concept['contrast_id'] = contrast[0].properties.id
+        return concepts
+
+    def api_get_contrasts(self, task_id):
+        query = '''MATCH (t:task)-[:HASCONTRAST]->(c:contrast) WHERE t.id='{}'
+                   RETURN c'''.format(task_id)
+        contrasts = do_query(query, "null", "list")
+        return [x[0].properties for x in contrasts]
+
+    def api_get_disorders(self, task_id):
+        query = '''
+            MATCH (t:task)-[:HASCONTRAST]->(c:contrast)-[dif:HASDIFFERENCE]->(d:disorder)
+            WHERE t.id='{}' RETURN dif, d'''.format(task_id)
+        disorders = do_query(query, ["null", "null2"], "list")
+        ret_disorders = []
+        for disorder in disorders:
+            node = disorder[0]
+            rel = disorder[1]
+            # ret_disorders.append({**node.properties, 'id_disorder': node.properties.id})
+            ret_disorders.append({
+                'id': rel.properties.id,
+                'id_user': node.properties.id_user,
+                'id_disorder': node.properties.id,
+                'id_task': task_id,
+                'id_contrast': rel.properties.id_contrast,
+                'event_stamp': rel.properties.event_stamp
+            })
+        return ret_disorders
+
+    # the relationship itself contains data that should be presented in api
+    # no functions right now for getting end node and relation properties
+    def api_get_indicators(self, task_id):
+        query = '''MATCH (t:task)-[rel:HASINDICATOR]->(i:indicator)
+                   WHERE t.id = '{}' return rel, c)'''
+
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
         :param task_id: the task unique id (trm|tsk_*) for the task
         '''
+
 
         fields = ["contrast.id", "contrast.creation_time", "contrast.name",
                   "contrast.last_updated", "ID(contrast)"]
@@ -370,7 +498,9 @@ class Disorder(Node):
     def __init__(self):
         super().__init__()
         self.name = "disorder"
-        self.fields = ["id", "name", "classification", "definition"]
+        self.fields = ["id", "name", "classification", "definition",
+                       "event_stamp", "id_user", "is_a", "id_protocol",
+                       "is_a_fulltext", "is_a_protocol"]
         self.color = "#337AB7" # neurovault blue
 
 class Condition(Node):
@@ -380,7 +510,7 @@ class Condition(Node):
         self.name = "condition"
         self.fields = ["id", "name", "description"]
         self.color = "#BC1079" # dark pink
-        self.relations = ["HASCONTRAST"]
+        self.relations = {"HASCONTRAST": "contrasts"}
 
 class Contrast(Node):
     def __init__(self):
@@ -429,9 +559,14 @@ class Contrast(Node):
 
         fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"
-
         return do_query(query, fields=fields)
 
+    def api_get_concepts(self, contrast_id):
+        concepts = self.get_reverse_relation(contrast_id, "MEASUREDBY")
+        concept_ids = [x['id'] for x in concepts]
+        concept = Concept()
+        concepts = [concept.get_full(x, 'id') for x in concept_ids]
+        return concepts
 
     def get_tasks(self, contrast_id, fields=None):
         '''get_task looks up the task(s) associated with a contrast

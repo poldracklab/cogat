@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from cognitive.apps.users.models import User
 username = 'admin'
 password = 'adminpassword'
 if not User.objects.get(username):

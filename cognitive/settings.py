@@ -190,4 +190,5 @@ CACHES = {
             }
 }
 
+AUTH_USER_MODEL = 'users.User'
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')

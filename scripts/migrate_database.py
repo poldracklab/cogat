@@ -2,6 +2,8 @@
 # see russ_ubergraph.pdf and quasi models below
 import os
 import re
+import sys
+
 import pandas
 import numpy as np
 
@@ -25,7 +27,8 @@ def cleancolumns(df):
 def make_node(nodetype, uid, name, properties=None, property_key="id"):
     node = None
     if graph.find_one(nodetype, property_key='id', property_value=uid) is None:
-        print("Creating %s:%s, %s" % (nodetype, name, uid))
+        info = "Creating {}:{}, {}".format(nodetype, name, uid)
+        print(info.encode('utf-8'))
         timestamp = graph.cypher.execute("RETURN timestamp()").one
         node = Node(
             str(nodetype),
@@ -55,10 +58,12 @@ def make_relation(startnode, rel_type, endnode, properties=None):
             end_node=endnode) is None:
         relation = Relationship(startnode, rel_type, endnode)
         print(
-            "Creating relation %s [%s] %s" %
-            (startnode.properties["name"],
-             rel_type,
-             endnode.properties["name"]))
+            "Creating relation {} [{}] {}".format(
+                startnode.properties["name"],
+                rel_type,
+                endnode.properties["name"]
+            ).encode('utf-8')
+        )
         graph.create(relation)
         if properties is not None:
             for property_name in properties.keys():

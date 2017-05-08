@@ -8,6 +8,7 @@ RUN \
   apt-get install -y python3 wget && rm -rf /var/lib/apt/lists/*
 
 ENV PYTHON_PIP_VERSION 9.0.1
+ENV MYSQL_ALLOW_EMPTY_PASSWORD true
 
 RUN set -ex; \
     \

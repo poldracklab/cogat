@@ -4,7 +4,7 @@ import pymysql
 conn = pymysql.connect(host='localhost', user='root', db='cogat')
 cursor = conn.cursor()
 
-graph = Graph("http://192.168.99.100:7474/db/data/")
+graph = Graph("http://graphdb:7474/db/data/")
 
 # import tasks
 sql = "select id, id_user, term_alias, event_stamp from table_term where term_type='task'"

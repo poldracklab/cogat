@@ -76,8 +76,9 @@ def user_imports():
             print(old_user)
             obfuscate = True if old_user[7] == 'show' else False
             is_active = True if old_user[6] == 'on' else False
+            password = "unsalted_sha1$$${}".format(old_user[4])
             new_user = insert_query.format(
-                old_user[4],
+                password,
                 old_user[5],
                 is_active,
                 obfuscate,

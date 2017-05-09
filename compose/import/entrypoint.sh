@@ -9,8 +9,8 @@ mysql_imports ()
     #echo "DROP DATABASE cogat;" | mysql -u root
     echo "CREATE DATABASE cogat;" | mysql -u root
     mysql -u root cogat < $MYSQL_DUMP
-    #python /code/scripts/mysql2neo.py
-    #python3 /code/scripts/user_import.py
+    #python3 /code/scripts/mysql2neo.py
+    python3 /code/scripts/user_import.py
 }
 
 cd /code

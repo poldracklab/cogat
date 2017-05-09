@@ -6,6 +6,6 @@ class User(AbstractUser):
     obfuscate = models.BooleanField(default=False)
     interest_tags = models.TextField(blank=True)
     specialist_tags = models.TextField(blank=True)
-    org_id = models.CharField(max_length=36, blank=True)
     old_id = models.CharField(max_length=36, blank=True)
-    title = models.Charfield(max_length=255, blank=True)
+    org_id = models.CharField(max_length=36, blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True)

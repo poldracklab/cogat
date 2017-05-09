@@ -50,8 +50,8 @@ def user_imports():
     post_conn = psycopg2.connect(
         dbname=os.environ.get('POSTGRES_NAME'),
         user=os.environ.get('POSTGRES_USER'),
-        password=os.environ('POSTGRES_PASS'),
-        host=os.environ('POSTGRES_HOST')
+        password=os.environ.get('POSTGRES_PASSWORD'),
+        host=os.environ.get('POSTGRES_HOST')
     )
     post_cur = post_conn.cursor()
 
@@ -59,12 +59,12 @@ def user_imports():
     my_cur = my_conn.cursor()
 
     select_query = '''select id, user_first_name, user_last_name, user_interest_tags,
-               user_pass, user_email, user_accepted, user_obfuscate, title, specialist_tags
+               user_pass, user_email, user_accepted, user_obfuscate, user_title, user_specialist_tags, user_handle, event_stamp
                FROM table_user'''
 
     insert_query = '''INSERT INTO users_user (password, email, is_active,
-                      obfuscate, interest_tags, old_id, title, specialist_tags, first_name, last_name)
-                      VALUES({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})'''
+                      obfuscate, interest_tags, old_id, title, specialist_tags, first_name, last_name, is_superuser, username, is_staff, date_joined)
+                      VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', False, '{}', False, '{}')'''
 
     old_user_lookup = "SELECT old_id from users_user where old_id='{}'"
 
@@ -72,22 +72,27 @@ def user_imports():
     old_users = my_cur.fetchall()
     for old_user in old_users:
         post_cur.execute(old_user_lookup.format(old_user[0]))
-        if not post_cur.fetch_one():
+        if not post_cur.fetchone():
+            print(old_user)
+            obfuscate = True if old_user[7] == 'show' else False
+            is_active = True if old_user[6] == 'on' else False
             new_user = insert_query.format(
                 old_user[4],
                 old_user[5],
-                old_user[6],
-                old_user[7],
+                is_active,
+                obfuscate,
                 old_user[3],
                 old_user[0],
                 old_user[8],
                 old_user[9],
                 old_user[1],
-                old_user[2]
+                old_user[2],
+                old_user[5],
+                old_user[11]
             )
             print(new_user)
-            #post_cur.execute(new_user)
-            #post_cur.commit()
+            post_cur.execute(new_user)
+            post_conn.commit()
 
 if __name__ == '__main__':
     user_imports()

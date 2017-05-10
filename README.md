@@ -21,3 +21,7 @@ To set up the social auth backend, after starting the server you will need to [f
 ## Create default user
 
 Add `MAKE_DEFAULT_USER=True` to the `.env` file in the root of the project. The user specificed in scripts/create_superuser.py will then be created on startup of the uwsgi container.
+
+## Old users
+
+The import contianer looks for an environment variable named `MYSQL_DUMP` and uses its value as the sql dump file to import into mysql. This variable should be defined in `.env`. The users will be imported when the import container is started. It should be started with docker-compose using the `docker-compose-import.yml` config file.

@@ -59,12 +59,15 @@ def user_imports():
     my_cur = my_conn.cursor()
 
     select_query = '''select id, user_first_name, user_last_name, user_interest_tags,
-               user_pass, user_email, user_accepted, user_obfuscate, user_title, user_specialist_tags, user_handle, event_stamp
+               user_pass, user_email, user_accepted, user_obfuscate, user_title, user_specialist_tags, user_handle, event_stamp, user_rank
                FROM table_user'''
 
     insert_query = '''INSERT INTO users_user (password, email, is_active,
-                      obfuscate, interest_tags, old_id, title, specialist_tags, first_name, last_name, is_superuser, username, is_staff, date_joined)
-                      VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', False, '{}', False, '{}')'''
+                      obfuscate, interest_tags, old_id, title, specialist_tags,
+                      first_name, last_name, is_superuser, username, is_staff,
+                      date_joined, rank)
+                      VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}',
+                      '{}', '{}', False, '{}', False, '{}', '{}')'''
 
     old_user_lookup = "SELECT old_id from users_user where old_id='{}'"
 
@@ -89,7 +92,8 @@ def user_imports():
                 old_user[1],
                 old_user[2],
                 old_user[5],
-                old_user[11]
+                old_user[11],
+                old_user[12]
             )
             print(new_user)
             post_cur.execute(new_user)

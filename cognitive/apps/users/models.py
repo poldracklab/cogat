@@ -9,3 +9,4 @@ class User(AbstractUser):
     old_id = models.CharField(max_length=36, blank=True)
     org_id = models.CharField(max_length=36, blank=True, null=True)
     title = models.CharField(max_length=255, blank=True)
+    rank = models.CharField(max_length=10)

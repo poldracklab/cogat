@@ -96,14 +96,14 @@
 
         <div class="defn">
             {{ task.definition | safe }}<br><br>
-        {% if request.user.is_authenticated %}
+        {% if user.is_authenticated %}
         <a id="update_definition_button"><button>update definition</button></a>
         {% endif %}
         <a target="_blank" href="http://portal.graphgist.org/graph_gists/by_url?url={{ domain }}{% url 'task_gist' task.id %}"><button>graph</button></a>
         <a target="_blank" href="{% url 'download_task_gist' task.id %}"><button>gist</button></a>
         </div><!-- .defn -->
 
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
     <!-- Update definition -->
     <div id="update_definition" class="hidden">
         <form method="POST" action="{% url 'update_task' task.id %}">
@@ -127,7 +127,7 @@
 <div id="block-measurements" class="block-halfwide block-back">
     <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em> has been asserted to measure the following <strong>CONCEPTS</strong>
   
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
     <button style="float:right;margin-top:10px" id="add_concept_button">ADD CONCEPT</button>		
 
     <!-- add concept box -->
@@ -175,7 +175,7 @@
                                 </ul>
 
                                 <!-- Add contrast association -->
-                                {% if request.user.is_authenticated %}
+                                {% if user.is_authenticated %}
                                 <button style="border-radius:15px;float:right" id="add_contrast_button_{{ relation.id }}">+</button>		
                                 <div id="contrast_search_box_{{ relation.id }}" style="padding-left:13px;padding-bottom:20px" class="hidden">
                                     <div>
@@ -346,7 +346,7 @@ $(document).ready(function() {
         $("#concept_search_box").addClass('hidden');
     })
         
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
     // Add condition
     $(function() {
 

@@ -30,7 +30,7 @@
 
     <div class="defn">{{ concept.definition }}</div><br>
 
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
     <!-- Update definition -->
     <div id="update_definition" class="hidden">
             <form method="POST" action="{% url 'update_concept' concept.id %}">
@@ -50,7 +50,7 @@
 
 <div id='unterbutton_slide_def'>
     <div class="defn">
-        {% if request.user.is_authenticated %}
+        {% if user.is_authenticated %}
         <div class="unterbutton_left">
             <a href="#" data-toggle="modal" id="update_definition_button" class="slide_def ">Update definition</a> 
         </div>  
@@ -74,7 +74,7 @@
     </ul>-->
     <h2>Asserted <strong>relationships</strong> to other concepts</h2>
 
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
     <div id="relation_box" style="padding-top:20px;border-radius: 4px;padding: 10px;">
     <button id="add_relation_button" style="float:right">add relation</button>
 

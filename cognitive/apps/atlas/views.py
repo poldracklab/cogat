@@ -148,18 +148,13 @@ def view_task(request, uid, return_context=False):
     task["definition"] = clean_html(task.get("definition", "No definition provided"))
     contrasts = Task.get_contrasts(task["id"])
 
-    # Make a lookup dictionary based on concept id
-    concept_lookup = dict()
-    for contrast in contrasts:
-        contrast_concepts = Contrast.get_concepts(contrast["contrast_id"])
-        for concept in contrast_concepts:
-            concept_lookup = update_lookup(concept_lookup, concept["concept_id"], contrast)
+    concepts = Task.get_relation(uid, "ASSERTS")
 
     # Retrieve conditions, make associations with contrasts
     conditions = Task.get_conditions(uid)
 
     context = {"task":task,
-               "concepts":concept_lookup,
+               "concepts":concepts,
                "contrasts":contrasts,
                "conditions":conditions,
                "domain":DOMAIN}

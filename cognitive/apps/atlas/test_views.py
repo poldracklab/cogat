@@ -273,6 +273,7 @@ class AtlasViewTestCase(TestCase):
         task view uses get_contrasts to populate the concepts context variable
         The only way a contrast is found to be associated with a task is by way
         of a condition.
+    '''
 
     def test_add_task_concept(self):
         task = Task()
@@ -288,7 +289,8 @@ class AtlasViewTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['concepts']), 1)
-        self.assertEqual(response.context['concepts'], con.properties['id'])
+        self.assertEqual(response.context['concepts'][0]['id'],
+                         con.properties['id'])
         tsk.delete_related()
         con.delete_related()
         tsk.delete()
@@ -314,4 +316,3 @@ class AtlasViewTestCase(TestCase):
         tsk.delete()
         con.delete()
         cont.delete()
-    '''

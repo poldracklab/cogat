@@ -16,10 +16,10 @@ RUN wget -q -O /tmp/neo4j-$NEO4j_VERSION-unix.tar.gz http://dist.neo4j.org/neo4j
 WORKDIR /var/lib/neo4j
 
 # Copy graph analytics plugin
-COPY neo4j/plugins /var/lib/neo4j/plugins
+COPY ./compose/graphdb/neo4j/plugins /var/lib/neo4j/plugins
 
 # Copy configurations
-COPY neo4j /var/lib/neo4j/conf
+COPY ./compose/graphdb/neo4j/conf /var/lib/neo4j/conf
 
 # Copy the bootstrap shell script and set permissions
 # COPY sbin/bootstrap.sh /etc/bootstrap.sh
@@ -42,9 +42,7 @@ RUN apt-get update && apt-get install -y bzip2
 RUN rm -rf /usr/local/miniconda && curl -sSLO https://repo.continuum.io/miniconda/Miniconda3-4.2.12-Linux-x86_64.sh && \
     bash Miniconda3-4.2.12-Linux-x86_64.sh -b -p /usr/local/miniconda && \
     rm Miniconda3-4.2.12-Linux-x86_64.sh
-ENV PATH=/usr/local/miniconda/bin:$PATH \
-    LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8
+ENV PATH=/usr/local/miniconda/bin:$PATH
 
 # Create conda environment
 RUN conda config --add channels conda-forge && \

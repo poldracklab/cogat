@@ -47,3 +47,16 @@ nginx:
         - uwsgi
     ports:
         - "80:80"
+
+import:
+    build: .
+    dockerfile: ./compose/import/Dockerfile
+    command: /code/compose/import/entrypoint.sh
+    env_file: .env
+    volumes:
+        - .:/code
+    links:
+        - nginx
+        - uwsgi
+        - graphdb
+        - postgres

@@ -19,7 +19,7 @@ class ConceptApiTest(TestCase):
 
     def tearDown(self):
         self.con1.delete()
-        self.con1.delete()
+        self.con2.delete()
 
     def test_conceptapilist(self):
         concept = Concept()

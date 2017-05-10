@@ -1,0 +1,6 @@
+pymysql
+psycopg2
+py2neo<3
+cognitiveatlas
+pandas
+numpy

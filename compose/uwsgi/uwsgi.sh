@@ -8,7 +8,7 @@ python /code/manage.py collectstatic --noinput
 #python /code/scripts/migrate_database.py
 
 if [ "$MAKE_DEFAULT_USER" = True ]; then
-    ./manage.py shell < /code/scripts/create_superuser.py
+    /code/manage.py shell < /code/scripts/create_superuser.py
 fi
 
-uwsgi --ini /code/uwsgi.ini
+uwsgi --ini /code/compose/uwsgi/uwsgi.ini

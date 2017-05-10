@@ -76,3 +76,4 @@ target/
 
 # sqlite database
 *.db
+*.sql

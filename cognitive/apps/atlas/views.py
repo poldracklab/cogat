@@ -146,15 +146,19 @@ def view_task(request, uid, return_context=False):
 
     # Replace newlines with <br>, etc.
     task["definition"] = clean_html(task.get("definition", "No definition provided"))
-    contrasts = Task.get_contrasts(task["id"])
+    contrasts = Task.api_get_contrasts(task["id"])
 
-    concepts = Task.get_relation(uid, "ASSERTS")
+    concept_lookup = dict()
+    for contrast in contrasts:
+        contrast_concepts = Contrast.get_concepts(contrast["id"])
+        for concept in contrast_concepts:
+            concept_lookup = update_lookup(concept_lookup, concept["concept_id"], contrast)
 
     # Retrieve conditions, make associations with contrasts
     conditions = Task.get_conditions(uid)
 
     context = {"task":task,
-               "concepts":concepts,
+               "concepts":concept_lookup,
                "contrasts":contrasts,
                "conditions":conditions,
                "domain":DOMAIN}
@@ -335,22 +339,22 @@ def add_contrast(request, task_id):
     if request.method == "POST":
         relation_type = "HASCONTRAST" #condition --HASCONTRAST-> contrast
 
-        # Get fields from post
-        post = dict(request.POST)
         #pickle.dump(post, open('result.pkl', 'wb'))
-        contrast_name = post.get('contrast_name', '')
+        contrast_name = request.POST.get('contrast_name', '')
         skip = ["contrast_name", "csrfmiddlewaretoken"]
 
         # Get dictionary with new conditions with nonzero weights
         conditions = dict()
-        condition_ids = [x for x in post.keys() if x not in skip]
+        condition_ids = [x for x in request.POST.keys() if x not in skip]
         for condition_id in condition_ids:
-            weight = int(post.get(condition_id, 0)[0])
+            weight = int(request.POST.get(condition_id, 0)[0])
             if weight != 0:
                 conditions[condition_id] = weight
 
         if contrast_name != "" and len(conditions) > 0:
             node = Contrast.create(name=contrast_name)
+            # Associate task and contrast so we can look it up for task view
+            Task.link(task_id, node.properties["id"], relation_type, endnode_type="contrast")
 
             # Make a link between contrast and conditions, specify side as property of relation
             for condition_id, weight in conditions.items():

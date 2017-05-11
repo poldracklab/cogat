@@ -389,7 +389,8 @@ class Task(Node):
             "HASINDICATOR": "indicators",
             "HASEXTERNALDATASET": "external_datasets",
             "HASIMPLEMENTATION": "implementations",
-            "HASCITATION": "citation"
+            "HASCITATION": "citation",
+            "HASCONTRAST": "contrasts"
         }
         self.color = "#63506D" #purple
 
@@ -449,9 +450,7 @@ class Task(Node):
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
-        :param task_id: the task unique id (trm|tsk_*) for the task
-        '''
-
+        :param task_id: the task unique id (trm|tsk_*) for the task'''
 
         fields = ["contrast.id", "contrast.creation_time", "contrast.name",
                   "contrast.last_updated", "ID(contrast)"]

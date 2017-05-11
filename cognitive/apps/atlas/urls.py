@@ -6,7 +6,7 @@ from . import api_views, views, graph
 
 urlpatterns = [
 
-    # All views
+    # List views
     url(r'^concepts$', views.all_concepts, name="all_concepts"),
     url(r'^disorders$', views.all_disorders, name="all_disorders"),
     url(r'^batteries$', views.all_batteries, name="all_batteries"),
@@ -21,7 +21,7 @@ urlpatterns = [
     url(r'^concepts/(?P<letter>[a-z]|[A-Z]{1})/$', views.concepts_by_letter, name="concepts_by_letter"),
     url(r'^tasks/(?P<letter>[a-z]|[A-Z]{1})/$', views.tasks_by_letter, name="tasks_by_letter"),
 
-    # Single View
+    # Detail View
     url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="disorder"),
     url(r'^battery/id/(?P<uid>[\w\+%_& ]+)/$', views.view_battery, name="battery"),
     url(r'^theory/id/(?P<uid>[\w\+%_& ]+)/$', views.view_theory, name="theory"),
@@ -43,6 +43,11 @@ urlpatterns = [
     url(r'^task/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_task_contrast, name="add_task_contrast"),
     url(r'^contrast/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_contrast, name="add_contrast"),
     url(r'^condition/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_condition, name="add_condition"),
+    url(
+        r'^task/add/implementation/(?P<task_id>[\w\+%_& ]+)/$',
+        views.add_task_implementation,
+        name="add_task_implementation"
+    ), 
 
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),

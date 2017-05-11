@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 from django.template import loader
 
+from cognitive.apps.atlas.forms import ImplementationForm
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
                                         Battery, Theory, Condition, search)
 from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
@@ -157,11 +158,14 @@ def view_task(request, uid, return_context=False):
     # Retrieve conditions, make associations with contrasts
     conditions = Task.get_conditions(uid)
 
-    context = {"task":task,
-               "concepts":concept_lookup,
-               "contrasts":contrasts,
-               "conditions":conditions,
-               "domain":DOMAIN}
+    context = {
+        "task": task,
+        "concepts": concept_lookup,
+        "contrasts": contrasts,
+        "conditions": conditions,
+        "domain": DOMAIN,
+        "implementation_form": ImplementationForm()
+    }
 
     if return_context is True:
         return context
@@ -362,6 +366,9 @@ def add_contrast(request, task_id):
                 Condition.link(condition_id, node["id"], relation_type, endnode_type="contrast", properties=properties)
 
     return view_task(request, task_id)
+
+def add_task_implementation(request, task_id):
+    return
 
 
 # SEARCH TERMS ####################################################################

@@ -131,7 +131,7 @@ for implementation in implementations:
                                  implementation_uri=implementation[3],
                                  id_user=implementation[4],
                                  event_stamp=implementation[5],
-                                 implementation_description=implementation[5]))
+                                 implementation_description=implementation[6]))
         #print(str.encode(str(gret), 'utf-8'))
 
     start_node = graph.find_one("task", property_key="id",

@@ -1,4 +1,5 @@
 {% extends "main/base.html" %}
+{% load crispy_forms_tags %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
@@ -161,8 +162,10 @@
 
 <!-- IMPLEMENTATIONS -->
 <div id="block-implementors" class="block-halfwide block-back ">
+    <button style="float:right;margin-top:10px" id="add_implementation_button">ADD IMPLEMENTATION</button>		
     <div class="pane">
         <div class="discdiv"><b>IMPLEMENTATIONS</b> of <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
+            {% crispy implementation_form implementation_form.helper %}
             <div style="margin-top:10px;">
                 <table style="cell-padding:10px;"></table>
             </div><span class="noassoc">No implementations have been added.</span><br>
@@ -298,6 +301,16 @@ $(document).ready(function() {
     $("#condition_cancel_button").click(function(){
         $("#condition_box").addClass('hidden');
     })
+
+    // Show input to add implementation
+    $("#add_implementation_button").click(function(){
+        $("#id-implementationform").removeClass('hidden');
+    })
+    $("#reset-id-implementation-cancel").click(function(){
+        $("#id-implementationform").addClass('hidden');
+    })
+
+   
 
 
     {% if user.is_authenticated %}

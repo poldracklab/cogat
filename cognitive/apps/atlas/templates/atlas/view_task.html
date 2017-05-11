@@ -103,7 +103,7 @@
                                     {% if concept == relation.id %}
                                     {% for assertion in assertions %}
                                     <li class="contrastli">
-                                        <a href="#" class="task">{{ assertion.contrast_name }}</a>
+                                        <a href="#" class="task">{{ assertion.name }}</a>
                                     </li>
                                     {% endfor %}
                                     {% endif %}
@@ -119,7 +119,7 @@
                                     <form style="padding-top:20px" method="post" action="{% url 'add_concept_contrast' task.id %}">
                                         <select name="contrast_selection" id="add_contrast_{{ relation.id }}" style="width:220px" size="3" style="padding-left:10px;">
                                         {% for contrast in contrasts %}
-                                        <option value="{{ contrast.contrast_id }}">{{ contrast.contrast_name }}</option>
+                                        <option value="{{ contrast.id }}">{{ contrast.name }}</option>
                                         {% endfor %}
                                         </select>
                                         <input type="hidden" name="concept_id" value="{{ relation.id }}" />
@@ -218,20 +218,20 @@
         {% endif %}
 
         {% for contrast in contrasts %}
-        <div id="contrast_container_{{ contrast.contrast_id }}">
+        <div id="contrast_container_{{ contrast.id }}">
             <div class="conblock-inner-wide">
-                <a name="{{ contrast.contrast_name }}" class="task" href="http://portal.graphgist.org/graph_gists/by_url?url={{ domain }}{% url 'contrast' contrast.contrast_id %}">{{ contrast.contrast_name }}</a>
+                <a name="{{ contrast.name }}" class="task" href="http://portal.graphgist.org/graph_gists/by_url?url={{ domain }}{% url 'contrast' contrast.id %}">{{ contrast.name }}</a>
             </div>
-            <div id="editcont_{{ contrast.contrast_id }}" style="display:none" class="popstar marbot"><br/>
+            <div id="editcont_{{ contrast.id}}" style="display:none" class="popstar marbot"><br/>
             <form method="post" action="/post/" name="conteditform">
                 <input type="hidden" name="form_type" value="contrast_update" />
                 <input type="hidden" name="return_page" value="task/id" />
                 <input type="hidden" name="id_object" value="{{ task.id }}" />	
-                <input type="hidden" name="id" value="{{ contrast.contrast_id }}" />	
+                <input type="hidden" name="id" value="{{ contrast.id }}" />	
 
                 <table>
                     <tr><td><strong>Edit Contrast:</strong><br/>
-                        <input type="text" name="contrast_text" value="{{ contrast.contrast_name }}" size="28" title="contrast text" aria-label="contrast text">
+                        <input type="text" name="contrast_text" value="{{ contrast.name }}" size="28" title="contrast text" aria-label="contrast text">
                     </td></tr>
                     <tr><td><strong>Contrast URI:</strong><br/>
                         <input type="text" name="contrast_uri" value="" size="28" title="contrast uri" aria-label="contrast uri">
@@ -239,7 +239,7 @@
                     <tr><td style="text-align:right">
                         <input type="button" onclick="javascript:window.location.reload();" value="cancel" title="cancel submission" aria-label="cancel submission"/>
                         <input type="submit" value="update" title="submit form" aria-label="submit form" />
-                        <input type="button" rel="{{ contrast.contrast_id }}" class="contrast-delete" value="delete" title="delete contrast" aria-label="delete contrast" />
+                        <input type="button" rel="{{ contrast.id }}" class="contrast-delete" value="delete" title="delete contrast" aria-label="delete contrast" />
                      </td></tr>
                 </table>
             </form>

@@ -1,16 +1,15 @@
-import pickle
 import json
-import numpy
 
-from django.http import JsonResponse, HttpResponse, HttpResponseNotFound
+from django.contrib import messages
+from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
-from django.template import loader
 
 from cognitive.apps.atlas.forms import ImplementationForm
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
-                                        Battery, Theory, Condition, search)
+                                        Battery, Theory, Condition,
+                                        Implementation, search)
 from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
-from cognitive.settings import DOMAIN
+from cognitive.settings import DOMAIN, graph
 
 Concept = Concept()
 Task = Task()
@@ -19,6 +18,7 @@ Contrast = Contrast()
 Battery = Battery()
 Theory = Theory()
 Condition = Condition()
+Implementation = Implementation()
 
 # Needed on all pages
 counts = {
@@ -60,7 +60,7 @@ def all_batteries(request):
     '''all_collections returns page with list of all collections'''
 
     batteries = Battery.all(order_by="name")
-    return all_nodes(request, tasks, "batteries")
+    return all_nodes(request, batteries, "batteries")
 
 
 def all_theories(request):
@@ -156,13 +156,16 @@ def view_task(request, uid, return_context=False):
             concept_lookup = update_lookup(concept_lookup, concept["concept_id"], contrast)
 
     # Retrieve conditions, make associations with contrasts
-    conditions = Task.get_conditions(uid)
+    conditions = Task.get_conditions(task["id"])
+
+    implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
 
     context = {
         "task": task,
         "concepts": concept_lookup,
         "contrasts": contrasts,
         "conditions": conditions,
+        "implementations": implementations,
         "domain": DOMAIN,
         "implementation_form": ImplementationForm()
     }
@@ -171,10 +174,8 @@ def view_task(request, uid, return_context=False):
         return context
     return render(request, 'atlas/view_task.html', context)
 
-
 def view_battery(request, uid):
     return render(request, 'atlas/view_battery.html', context)
-
 
 def view_theory(request, uid):
     theory = Theory.get(uid)[0]
@@ -237,9 +238,10 @@ def add_term(request):
             node = Task.create(name=term_name, properties=properties)
             return view_task(request, node["id"])
 
-
+'''
 def contribute_disorder(request):
     return render(request, 'atlas/contribute_disorder.html', context)
+'''
 
 def add_condition(request, task_id):
     '''add_condition will associate a condition with the given task
@@ -302,8 +304,9 @@ def add_concept_relation(request, uid):
     return view_concept(request, uid)
 
 def add_task_contrast(request, uid):
-    '''add_task_contrast will display the view to add a contrast to a task, meaning a set of conditions
-    and an operator over the conditions. This view is a box over the faded out view_task page
+    ''' add_task_contrast will display the view to add a contrast to a
+        task, meaning a set of conditions and an operator over the
+        conditions. This view is a box over the faded out view_task page
     :param uid: the unique id of the task
     '''
     context = view_task(request, uid, return_context=True)
@@ -312,8 +315,9 @@ def add_task_contrast(request, uid):
 
 
 def add_task_concept(request, uid):
-    '''add_task_concept will add a cognitive concept to the list on a task page, making the assertion that the concept
-    is associated with the task.
+    '''add_task_concept will add a cognitive concept to the list on a
+       task page, making the assertion that the concept is associated
+       with the task.
     :param uid: the unique id of the task, for returning to the task page when finished
     '''
     if request.method == "POST":
@@ -331,13 +335,14 @@ def add_concept_contrast(request, uid):
         relation_type = "MEASUREDBY" #concept --MEASUREDBY-> contrast
         contrast_selection = request.POST.get('contrast_selection', '')
         concept_id = request.POST.get('concept_id', '')
-        Concept.link(concept_id, contrast_selection, relation_type, endnode_type="contrast")
+        Concept.link(concept_id, contrast_selection, relation_type,
+                     endnode_type="contrast")
     return view_task(request, uid)
 
 
 def add_contrast(request, task_id):
-    '''add_contrast is the function called when the user submits a set of conditions and an operator to specify
-    a new contrast.
+    '''add_contrast is the function called when the user submits a set
+       of conditions and an operator to specify a new contrast.
     :param task_id: the id of the task, to return to the correct page after submission
     '''
     if request.method == "POST":
@@ -363,18 +368,43 @@ def add_contrast(request, task_id):
             # Make a link between contrast and conditions, specify side as property of relation
             for condition_id, weight in conditions.items():
                 properties = {"weight":weight}
-                Condition.link(condition_id, node["id"], relation_type, endnode_type="contrast", properties=properties)
+                Condition.link(condition_id, node["id"], relation_type,
+                               endnode_type="contrast", properties=properties)
 
     return view_task(request, task_id)
 
 def add_task_implementation(request, task_id):
-    return
-
+    ''' From the task view we can create an implementation that is associated
+        with a given task'''
+    if request.method == "POST":
+        implementation_form = ImplementationForm(request.POST)
+        if implementation_form.is_valid():
+            clean_data = implementation_form.cleaned_data
+            properties = {'implementation_description': clean_data['description'],
+                          'implementation_uri': clean_data['uri'],
+                          'implementation_name': clean_data['name']}
+            imp = Implementation.create(clean_data['name'], properties)
+            if imp is None:
+                messages.error(request, "Was unable to create implementation")
+                return view_task(request, task_id)
+            link_made = Task.link(task_id, imp.properties['id'],
+                                  "HASIMPLEMENTATION",
+                                  endnode_type="implementation")
+            if link_made is None:
+                graph.delete(imp)
+                messages.error(request, "Was unable to associate task and implementation")
+                return view_task(request, task_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_task(request, task_id, return_context=True)
+            context['implementation_form'] = implementation_form
+            return render(request, 'atlas/view_task.html', context)
+    # redirect back to task/id?
+    return view_task(request, task_id)
 
 # SEARCH TERMS ####################################################################
 
 def search_all(request):
-
     data = "no results"
     search_text = request.POST.get("searchterm", "")
     results = []
@@ -385,7 +415,7 @@ def search_all(request):
     return HttpResponse(data, mimetype)
 
 def search_concept(request):
-
+    ''' Used by ajax in the templates when adding concepts to a task '''
     data = "no results"
     search_text = request.POST.get("relationterm", "")
     results = []
@@ -394,4 +424,3 @@ def search_concept(request):
         data = json.dumps(results)
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
-

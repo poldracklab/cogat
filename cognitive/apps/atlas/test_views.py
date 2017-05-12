@@ -6,8 +6,14 @@ from django.test import TestCase
 from cognitive.apps.atlas import views
 from cognitive.apps.atlas.query import (Battery, Concept, Condition, Contrast,
                                         Disorder, Task, Theory)
+from cognitive.apps.users.models import User
 
 class AtlasViewTestCase(TestCase):
+    def setUp(self):
+        self.password = 'pass'
+        self.user = User.objects.create_user(
+            username='user', email='email@example.com', password=self.password,
+            first_name="fn", last_name="ln")
 
     ''' not currently linked
     def test_all_batteries(self):
@@ -111,6 +117,8 @@ class AtlasViewTestCase(TestCase):
         dis.delete()
 
     def test_contribute_term(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         term_name = 'test_contribute_term'
         response = self.client.post(reverse('contribute_term'),
                                     {'newterm': term_name})
@@ -121,6 +129,8 @@ class AtlasViewTestCase(TestCase):
    # to add: test trying to contribute existing term
 
     def test_add_term_concept(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         concept = Concept()
         concept_name = 'test_add_term_concept'
         definition = 'concept definition'
@@ -137,6 +147,8 @@ class AtlasViewTestCase(TestCase):
         con.delete()
 
     def test_add_term_task(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         task = Task()
         task_name = 'test_add_term_concept'
         definition = 'task definition'
@@ -159,6 +171,8 @@ class AtlasViewTestCase(TestCase):
     '''
 
     def test_add_condition(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         task = Task()
         condition = Condition()
         tsk = task.create("test_add_condition_task",
@@ -178,6 +192,8 @@ class AtlasViewTestCase(TestCase):
         con.delete()
 
     def test_update_concept(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         concept = Concept()
         con = concept.create('test_update_concept', {'definition': 'old def'})
         response = self.client.post(
@@ -190,6 +206,8 @@ class AtlasViewTestCase(TestCase):
         con.delete()
 
     def test_update_concept_no_def(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         concept = Concept()
         con = concept.create('test_update_concept', {'prop': 'prop'})
         response = self.client.post(
@@ -201,6 +219,8 @@ class AtlasViewTestCase(TestCase):
         con.delete()
 
     def test_update_task(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         task = Task()
         tsk = task.create('test_update_task', {'prop': 'prop'})
         response = self.client.post(
@@ -212,6 +232,8 @@ class AtlasViewTestCase(TestCase):
         tsk.delete()
 
     def test_update_theory(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         theory = Theory()
         thry = theory.create('test_update_theory', {'prop': 'prop'})
         response = self.client.post(
@@ -224,6 +246,8 @@ class AtlasViewTestCase(TestCase):
         thry.delete()
 
     def test_update_disorder(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         disorder = Disorder()
         dis = disorder.create('test_update_disorder', {'prop': 'prop'})
         response = self.client.post(
@@ -236,6 +260,8 @@ class AtlasViewTestCase(TestCase):
         dis.delete()
 
     def test_add_concept_relation(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         concept = Concept()
         con1 = concept.create('test_update_concept', {'prop': 'prop'})
         con2 = concept.create('test_update_concept', {'prop': 'prop'})
@@ -250,6 +276,8 @@ class AtlasViewTestCase(TestCase):
         con2.delete()
 
     def test_add_task_contrast(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         task = Task()
         condition = Condition()
         tsk = task.create('test_add_task_contrast', {'prop': 'prop'})
@@ -276,20 +304,24 @@ class AtlasViewTestCase(TestCase):
     '''
 
     def test_add_task_concept(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
         task = Task()
         concept = Concept()
         contrast = Contrast()
         tsk = task.create('test_add_task_concept', {'prop': 'prop'})
-        cont = contrast.create('test_add_task_concept', {'prop': 'prop'})
         con = concept.create('test_add_task_concept', {'prop': 'prop'})
+        cont = contrast.create('test_add_task_concept', {'prop': 'prop'})
         concept.link(con.properties['id'], cont.properties['id'], "HASCONTRAST", endnode_type='contrast')
         response = self.client.post(
             reverse('add_task_concept', kwargs={'uid': tsk.properties['id']}),
             {'concept_selection': con.properties['id']}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['concepts']), 1)
-        self.assertEqual(response.context['concepts'][0]['id'],
+        response = self.client.get(reverse('task', kwargs={'uid': tsk.properties['id']}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['task']['relations']['ASSERTS']), 1)
+        self.assertEqual(response.context['task']['relations']['ASSERTS'][0]['id'],
                          con.properties['id'])
         tsk.delete_related()
         con.delete_related()
@@ -298,21 +330,32 @@ class AtlasViewTestCase(TestCase):
         cont.delete()
 
     def test_add_concept_contrast(self):
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
+        condition = Condition()
         task = Task()
         concept = Concept()
         contrast = Contrast()
-        tsk = task.create('test_add_task_concept', {'prop': 'prop'})
-        cont = contrast.create('test_add_task_concept', {'prop': 'prop'})
-        con = concept.create('test_add_task_concept', {'prop': 'prop'})
+        cond = condition.create('test_add_concept_contrast', {'prop': 'prop'})
+        cont = contrast.create('test_add_task_concept1', {'prop': 'prop'})
+        condition.link(cond.properties['id'], cont.properties['id'], "HASCONTRAST", endnode_type='contrast')
+        tsk = task.create('test_add_task_concept1', {'prop': 'prop'})
+        task.link(tsk.properties['id'], cont.properties['id'], "HASCONTRAST", endnode_type='contrast')
+        con = concept.create('test_add_task_concept1', {'prop': 'prop'})
         task.link(tsk.properties['id'], con.properties['id'], "ASSERTS", endnode_type='concept')
         response = self.client.post(
             reverse('add_concept_contrast', kwargs={'uid': tsk.properties['id']}),
             {'contrast_selection': cont.properties['id'], 'concept_id': con.properties['id']}
         )
         self.assertEqual(response.status_code, 200)
-        # self.assertEqual(response.context['concepts'], 1)
+        response = self.client.get(reverse('task', kwargs={'uid': tsk.properties['id']}))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['task']['relations']['ASSERTS']), 1)
         tsk.delete_related()
         con.delete_related()
         tsk.delete()
         con.delete()
         cont.delete()
+
+    def test_add_task_implementation(self):
+        pass

@@ -1,6 +1,7 @@
 import json
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 
@@ -191,6 +192,7 @@ def view_disorder(request, uid):
 
 # ADD NEW TERMS ###################################################################
 
+@login_required
 def contribute_term(request):
     '''contribute_term will return the contribution detail page for a term that is
     posted, or visiting the page without a POST will return the original form
@@ -217,6 +219,7 @@ def contribute_term(request):
     return render(request, 'atlas/contribute_term.html', context)
 
 
+@login_required
 def add_term(request):
     '''add_term will add a new term to the atlas
     '''
@@ -243,6 +246,7 @@ def contribute_disorder(request):
     return render(request, 'atlas/contribute_disorder.html', context)
 '''
 
+@login_required
 def add_condition(request, task_id):
     '''add_condition will associate a condition with the given task
     :param task_id: the uid of the task, to return to the correct page after creation
@@ -259,6 +263,7 @@ def add_condition(request, task_id):
 
 # UPDATE TERMS ####################################################################
 
+@login_required
 def update_concept(request, uid):
     if request.method == "POST":
         definition = request.POST.get('definition', '')
@@ -266,6 +271,7 @@ def update_concept(request, uid):
         Concept.update(uid, updates=updates)
     return view_concept(request, uid)
 
+@login_required
 def update_task(request, uid):
     if request.method == "POST":
         definition = request.POST.get('definition', '')
@@ -273,6 +279,7 @@ def update_task(request, uid):
         Task.update(uid, updates=updates)
     return view_task(request, uid)
 
+@login_required
 def update_theory(request, uid):
     if request.method == "POST":
         description = request.POST.get('theory_description', '')
@@ -282,6 +289,7 @@ def update_theory(request, uid):
         Theory.update(uid, updates=updates)
     return view_theory(request, uid)
 
+@login_required
 def update_disorder(request, uid):
     if request.method == "POST":
         definition = request.POST.get('disorder_definition', '')
@@ -293,6 +301,7 @@ def update_disorder(request, uid):
 
 # ADD RELATIONS ###################################################################
 
+@login_required
 def add_concept_relation(request, uid):
     '''add_concept_relation will add a relation from a concept to another concept (PARTOF or KINDOF)
     :param uid: the uid of the concept page, for returning to the page after creation
@@ -303,6 +312,7 @@ def add_concept_relation(request, uid):
         Concept.link(uid, concept_selection, relation_type)
     return view_concept(request, uid)
 
+@login_required
 def add_task_contrast(request, uid):
     ''' add_task_contrast will display the view to add a contrast to a
         task, meaning a set of conditions and an operator over the
@@ -314,6 +324,7 @@ def add_task_contrast(request, uid):
     return render(request, 'atlas/add_contrast.html', context)
 
 
+@login_required
 def add_task_concept(request, uid):
     '''add_task_concept will add a cognitive concept to the list on a
        task page, making the assertion that the concept is associated
@@ -327,6 +338,7 @@ def add_task_concept(request, uid):
     return view_task(request, uid)
 
 
+@login_required
 def add_concept_contrast(request, uid):
     '''add_concept_contrast will add a contrast associated with conditions--> task to the task view
     :param uid: the uid of the task, to return to the correct page after creation
@@ -340,6 +352,7 @@ def add_concept_contrast(request, uid):
     return view_task(request, uid)
 
 
+@login_required
 def add_contrast(request, task_id):
     '''add_contrast is the function called when the user submits a set
        of conditions and an operator to specify a new contrast.
@@ -373,6 +386,7 @@ def add_contrast(request, task_id):
 
     return view_task(request, task_id)
 
+@login_required
 def add_task_implementation(request, task_id):
     ''' From the task view we can create an implementation that is associated
         with a given task'''

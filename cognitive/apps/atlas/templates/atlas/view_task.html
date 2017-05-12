@@ -165,10 +165,25 @@
     <button style="float:right;margin-top:10px" id="add_implementation_button">ADD IMPLEMENTATION</button>		
     <div class="pane">
         <div class="discdiv"><b>IMPLEMENTATIONS</b> of <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
-            {% crispy implementation_form implementation_form.helper %}
+            <form class="hidden" action="{% url 'add_task_implementation' task.id %}" method="post" id='id-implementationform'
+                {% csrf_token %}
+                {% crispy implementation_form implementation_form.helper %}
+            </form>
             <div style="margin-top:10px;">
                 <table style="cell-padding:10px;"></table>
-            </div><span class="noassoc">No implementations have been added.</span><br>
+            </div>
+            {% for imp in implementations %}
+                <div clasws="row">
+                    <div class="col-md-6">
+                        <a href="{{ imp.implementation_uri }}">{{ imp.implementation_name }}</a>
+                    </div>
+                    <div class="col-md-6">
+                        {{ imp.implementation_description }}
+                    </div>
+                </div>
+            {% empty %}
+                <span class="noassoc">No implementations have been added.</span><br>
+            {% endfor %}
         </div>
     </div>
 </div>

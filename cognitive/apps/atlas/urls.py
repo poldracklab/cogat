@@ -18,8 +18,10 @@ urlpatterns = [
     url(r'^concepts/search$', views.search_concept, name="search_concept"),
 
     # View by letter
-    url(r'^concepts/(?P<letter>[a-z]|[A-Z]{1})/$', views.concepts_by_letter, name="concepts_by_letter"),
-    url(r'^tasks/(?P<letter>[a-z]|[A-Z]{1})/$', views.tasks_by_letter, name="tasks_by_letter"),
+    url(r'^concepts/(?P<letter>[a-z]|[A-Z]{1})/$', views.concepts_by_letter,
+        name="concepts_by_letter"),
+    url(r'^tasks/(?P<letter>[a-z]|[A-Z]{1})/$', views.tasks_by_letter,
+        name="tasks_by_letter"),
 
     # Detail View
     url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="disorder"),
@@ -37,9 +39,12 @@ urlpatterns = [
     url(r'^task/update/(?P<uid>[\w\+%_& ]+)/$', views.update_task, name="update_task"),
     url(r'^disorder/update/(?P<uid>[\w\+%_& ]+)/$', views.update_disorder, name="update_disorder"),
     url(r'^theory/update/(?P<uid>[\w\+%_& ]+)/$', views.update_theory, name="update_theory"),
-    url(r'^concept/assert/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_relation, name="add_concept_relation"),
-    url(r'^task/add/concept/(?P<uid>[\w\+%_& ]+)/$', views.add_task_concept, name="add_task_concept"),
-    url(r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_contrast, name="add_concept_contrast"),
+    url(r'^concept/assert/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_relation,
+        name="add_concept_relation"),
+    url(r'^task/add/concept/(?P<uid>[\w\+%_& ]+)/$', views.add_task_concept,
+        name="add_task_concept"),
+    url(r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_contrast,
+        name="add_concept_contrast"),
     url(r'^task/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_task_contrast, name="add_task_contrast"),
     url(r'^contrast/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_contrast, name="add_contrast"),
     url(r'^condition/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_condition, name="add_condition"),

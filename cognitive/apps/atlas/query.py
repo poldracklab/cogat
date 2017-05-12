@@ -73,6 +73,7 @@ class Node(object):
                             relation.properties[property_name] = properties[property_name]
                         relation.push()
                     return relation
+        return None
 
     def update(self, uid, updates):
         '''update will update a particular field of a node with a new entry
@@ -606,6 +607,14 @@ class Theory(Node):
         super().__init__()
         self.name = "theory"
         self.fields = ["id", "name", "description"]
+        self.color = "#BE0000" # dark red
+
+class Implementation(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "implementation"
+        self.fields = ["implementation_uri", "implementation_name", "implementation_description"]
         self.color = "#BE0000" # dark red
 
 

@@ -5,8 +5,9 @@ from django.test import TestCase
 
 from cognitive.apps.atlas import views
 from cognitive.apps.atlas.query import (Battery, Concept, Condition, Contrast,
-                                        Disorder, Task, Theory)
+                                        Disorder, Implementation, Task, Theory)
 from cognitive.apps.users.models import User
+from cognitive.settings import graph
 
 class AtlasViewTestCase(TestCase):
     def setUp(self):
@@ -358,4 +359,24 @@ class AtlasViewTestCase(TestCase):
         cont.delete()
 
     def test_add_task_implementation(self):
-        pass
+        task = Task()
+        tsk = task.create('test_add_task_implementation', {'prop': 'prop'})
+        implementation = Implementation
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
+        data = {
+            'uri': 'http://example.com',
+            'name': 'add_task_implementation',
+            'description': 'task imp desc'
+        }
+        response = self.client.post(
+            reverse('add_task_implementation', kwargs={'task_id': tsk.properties['id']}),
+            data
+        )
+        self.assertEqual(response.status_code, 200)
+        imp = task.get_relation(tsk.properties['id'], "HASIMPLEMENTATION")
+        self.assertEqual(len(imp), 1)
+        self.assertEqual(imp[0]['name'], 'add_task_implementation')
+        tsk.delete_related()
+        tsk.delete()
+        imp = graph.find_one("implementation", "id", imp[0]['id'])

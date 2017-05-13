@@ -165,7 +165,7 @@
     <button style="float:right;margin-top:10px" id="add_implementation_button">ADD IMPLEMENTATION</button>		
     <div class="pane">
         <div class="discdiv"><b>IMPLEMENTATIONS</b> of <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
-            <form class="hidden" action="{% url 'add_task_implementation' task.id %}" method="post" id='id-implementationform'
+            <form class="hidden" action="{% url 'add_task_implementation' task.id %}" method="post" id='id-implementationform'>
                 {% csrf_token %}
                 {% crispy implementation_form implementation_form.helper %}
             </form>

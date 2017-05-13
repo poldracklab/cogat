@@ -19,7 +19,8 @@ def generate_uid(node_type):
         "disorder": "dso",
         "collection": "tco",
         "condition": "con",
-        "implementation": "imp"
+        "implementation": "imp",
+        "external_dataset": "dst"
     }
 
     # generate new node uid that doesn't exist

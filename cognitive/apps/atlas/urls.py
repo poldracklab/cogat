@@ -53,6 +53,11 @@ urlpatterns = [
         views.add_task_implementation,
         name="add_task_implementation"
     ), 
+    url(
+        r'^task/add/dataset/(?P<task_id>[\w\+%_& ]+)/$',
+        views.add_task_dataset,
+        name="add_task_dataset"
+    ),
 
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),

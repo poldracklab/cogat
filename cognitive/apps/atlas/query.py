@@ -617,6 +617,14 @@ class Implementation(Node):
         self.fields = ["implementation_uri", "implementation_name", "implementation_description"]
         self.color = "#BE0000" # dark red
 
+class ExternalDataset(Node):
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "external_dataset"
+        self.fields = ["dataset_name", "dataset_uri"]
+        self.color = "#BE0000" # dark red
+
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

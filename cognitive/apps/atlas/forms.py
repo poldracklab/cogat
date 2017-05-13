@@ -15,3 +15,14 @@ class ImplementationForm(forms.Form):
         self.helper.form_tag = False
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('implementation-cancel', 'Cancel'))
+
+class ExternalDatasetForm(forms.Form):
+    name = forms.CharField(required=True)
+    description = forms.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(ExternalDatasetForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('dataset-cancel', 'Cancel'))

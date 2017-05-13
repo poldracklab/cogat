@@ -5,10 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 
-from cognitive.apps.atlas.forms import ImplementationForm
+from cognitive.apps.atlas.forms import ImplementationForm, ExternalDatasetForm
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
                                         Battery, Theory, Condition,
-                                        Implementation, search)
+                                        Implementation, ExternalDataset,
+                                        search)
 from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
 from cognitive.settings import DOMAIN, graph
 
@@ -20,6 +21,7 @@ Battery = Battery()
 Theory = Theory()
 Condition = Condition()
 Implementation = Implementation()
+ExternalDataset = ExternalDataset()
 
 # Needed on all pages
 counts = {
@@ -160,6 +162,7 @@ def view_task(request, uid, return_context=False):
     conditions = Task.get_conditions(task["id"])
 
     implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
+    external_datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
 
     context = {
         "task": task,
@@ -167,6 +170,7 @@ def view_task(request, uid, return_context=False):
         "contrasts": contrasts,
         "conditions": conditions,
         "implementations": implementations,
+        "external_datasets": external_datasets,
         "domain": DOMAIN,
         "implementation_form": ImplementationForm()
     }
@@ -415,6 +419,37 @@ def add_task_implementation(request, task_id):
             return render(request, 'atlas/view_task.html', context)
     # redirect back to task/id?
     return view_task(request, task_id)
+
+@login_required
+def add_task_dataset(request, task_id):
+    ''' From the task view we can create a link to dataset that is associated 
+        with a given task'''
+    if request.method == "POST":
+        dataset_form = ExternalDatasetForm(request.POST)
+        if dataset_form.is_valid():
+            clean_data = dataset_form.cleaned_data
+            properties = {'dataset_uri': clean_data['uri'],
+                          'dataset_name': clean_data['name']}
+            ext_d = ExternalDataset.create(clean_data['name'], properties)
+            if ext_d is None:
+                messages.error(request, "Was unable to create external dataset")
+                return view_task(request, task_id)
+            link_made = Task.link(task_id, ext_d.properties['id'],
+                                  "HASEXTERNALDATASET",
+                                  endnode_type="external_dataset")
+            if link_made is None:
+                graph.delete(ext_d)
+                messages.error(request, "Was unable to associate task and external dataset")
+                return view_task(request, task_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_task(request, task_id, return_context=True)
+            context['dataset_form'] = dataset_form
+            return render(request, 'atlas/view_task.html', context)
+    # redirect back to task/id?
+    return view_task(request, task_id)
+
+
 
 # SEARCH TERMS ####################################################################
 

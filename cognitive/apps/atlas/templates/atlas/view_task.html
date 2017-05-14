@@ -173,7 +173,7 @@
                 <table style="cell-padding:10px;"></table>
             </div>
             {% for imp in implementations %}
-                <div clasws="row">
+                <div class="row">
                     <div class="col-md-6">
                         <a href="{{ imp.implementation_uri }}">{{ imp.implementation_name }}</a>
                     </div>
@@ -190,9 +190,25 @@
 
 <!-- EXTERNAL DATASETS -->
 <div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
+    <button style="float:right;margin-top:10px" id="add_dataset_button">ADD EXTERNAL DATASET</button>		
     <div class="pane">
         <div class="discdiv"><b>EXTERNAL DATASETS</b> for <a href="javascript:void(0)" class="task">{{ task.name }}</a><br />
-            <span class="noassoc">No external datasets have been added.</span><br/>
+            <form class="hidden" action="{% url 'add_task_dataset' task.id %}" method="post" id='id-datasetform'>
+                {% csrf_token %}
+                {% crispy dataset_form dataset_form.helper %}
+            </form>
+            {% for ds in datasets %}
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ ds.dataset_name }}</a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ ds.dataset_uri }}">{{ ds.dataset_uri }}</a>
+                    </div>
+                </div>
+            {% empty %}
+                <span class="noassoc">No implementations have been added.</span><br>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -325,7 +341,15 @@ $(document).ready(function() {
         $("#id-implementationform").addClass('hidden');
     })
 
-   
+    // Show input to add dataset
+    $("#add_dataset_button").click(function(){
+        $("#id-datasetform").removeClass('hidden');
+    })
+    $("#reset-id-dataset-cancel").click(function(){
+        $("#id-datasetform").addClass('hidden');
+    })
+
+  
 
 
     {% if user.is_authenticated %}

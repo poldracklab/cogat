@@ -5,7 +5,8 @@ from django.test import TestCase
 
 from cognitive.apps.atlas import views
 from cognitive.apps.atlas.query import (Battery, Concept, Condition, Contrast,
-                                        Disorder, Implementation, Task, Theory)
+                                        Disorder, ExternalDataset,
+                                        Implementation, Task, Theory)
 from cognitive.apps.users.models import User
 from cognitive.settings import graph
 
@@ -285,10 +286,12 @@ class AtlasViewTestCase(TestCase):
         cond1 = condition.create('test_add_task_contrast_cond1', {'prop': 'prop'})
         cond2 = condition.create('test_add_task_contrast_cond2', {'prop': 'prop'})
         cond_names = ['test_add_task_contrast_cond1', 'test_add_task_contrast_cond2'] 
-        task.link(tsk.properties['id'], cond1.properties['id'], 'HASCONDITION', endnode_type='condition')
-        task.link(tsk.properties['id'], cond2.properties['id'], 'HASCONDITION', endnode_type='condition')
+        task.link(tsk.properties['id'], cond1.properties['id'], 'HASCONDITION',
+                  endnode_type='condition')
+        task.link(tsk.properties['id'], cond2.properties['id'], 'HASCONDITION',
+                  endnode_type='condition')
         response = self.client.get(reverse('add_task_contrast',
-                                   kwargs={'uid': tsk.properties['id']}))
+                                           kwargs={'uid': tsk.properties['id']}))
         self.assertEqual(response.status_code, 200)
         self.assertIn(response.context['conditions'][0]['condition_name'], cond_names)
         self.assertIn(response.context['conditions'][1]['condition_name'], cond_names)
@@ -313,7 +316,8 @@ class AtlasViewTestCase(TestCase):
         tsk = task.create('test_add_task_concept', {'prop': 'prop'})
         con = concept.create('test_add_task_concept', {'prop': 'prop'})
         cont = contrast.create('test_add_task_concept', {'prop': 'prop'})
-        concept.link(con.properties['id'], cont.properties['id'], "HASCONTRAST", endnode_type='contrast')
+        concept.link(con.properties['id'], cont.properties['id'],
+                     "HASCONTRAST", endnode_type='contrast')
         response = self.client.post(
             reverse('add_task_concept', kwargs={'uid': tsk.properties['id']}),
             {'concept_selection': con.properties['id']}
@@ -361,7 +365,6 @@ class AtlasViewTestCase(TestCase):
     def test_add_task_implementation(self):
         task = Task()
         tsk = task.create('test_add_task_implementation', {'prop': 'prop'})
-        implementation = Implementation
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         data = {
@@ -380,3 +383,24 @@ class AtlasViewTestCase(TestCase):
         tsk.delete_related()
         tsk.delete()
         imp = graph.find_one("implementation", "id", imp[0]['id'])
+
+    def test_add_task_dataset(self):
+        task = Task()
+        tsk = task.create('test_add_task_dataset', {'prop': 'prop'})
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
+        data = {
+            'uri': 'http://example.com',
+            'name': 'add_task_dataset',
+        }
+        response = self.client.post(
+            reverse('add_task_dataset', kwargs={'task_id': tsk.properties['id']}),
+            data
+        )
+        self.assertEqual(response.status_code, 200)
+        ds = task.get_relation(tsk.properties['id'], "HASEXTERNALDATASET")
+        self.assertEqual(len(ds), 1)
+        self.assertEqual(ds[0]['name'], 'add_task_dataset')
+        tsk.delete_related()
+        tsk.delete()
+        ds = graph.find_one("external_dataset", "id", ds[0]['id'])

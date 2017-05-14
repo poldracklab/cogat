@@ -190,7 +190,7 @@
 
 <!-- EXTERNAL DATASETS -->
 <div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
-    <button style="float:right;margin-top:10px" id="add_dataset_button">ADD EXTERNAL DATASET</button>		
+    <button style="float:right;margin-top:10px" id="add_dataset_button">ADD EXTERNAL DATASET</button>
     <div class="pane">
         <div class="discdiv"><b>EXTERNAL DATASETS</b> for <a href="javascript:void(0)" class="task">{{ task.name }}</a><br />
             <form class="hidden" action="{% url 'add_task_dataset' task.id %}" method="post" id='id-datasetform'>
@@ -286,7 +286,30 @@
 
 <p class="subinfo">In the Cognitive Atlas, we define a contrast as any function over experimental conditions. The simplest contrast is the indicator value for a specific condition; more complex contrasts include linear or nonlinear functions of the indicator across different experimental conditions.</p>
 
-</div></div>
+</div>
+
+<!-- INDICATORS -->
+<div class="block-thirdwide block-back block-margin">
+    <strong>INDICATORS</strong>
+    {% for indicator in indicators %}
+        <div class="conblock-inner-wide">
+            {{ indicator.type }}
+        </div>
+    {% empty %}
+        <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
+    {% endfor %}
+    <button style="margin-top:10px;margin-bottom:10px" id="add_indicator_button">ADD INDICATOR</button>
+    <form class="hidden" action="{% url 'add_task_indicator' task.id %}" method="post" id='id-indicatorform'>
+        {% csrf_token %}
+        {% crispy indicator_form indicator_form.helper %}
+    </form>
+
+    <p class="subinfo">An indicator is a specific quantitative or qualitative variable that is recorded for analysis. These may include behavioral variables (such as response time, accuracy, or other measures of performance) or physiological variables (including genetics, psychophysiology, or brain imaging data).</p>
+</div>
+
+
+
+</div>
 
 <br clear="all"><div class="clear_all"></div>
 
@@ -349,7 +372,15 @@ $(document).ready(function() {
         $("#id-datasetform").addClass('hidden');
     })
 
-  
+     // Show input to add indicator
+    $("#add_indicator_button").click(function(){
+        $("#id-indicatorform").removeClass('hidden');
+    })
+    $("#reset-id-indicator-cancel").click(function(){
+        $("#id-indicatorform").addClass('hidden');
+    })
+
+ 
 
 
     {% if user.is_authenticated %}

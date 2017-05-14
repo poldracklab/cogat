@@ -6,7 +6,7 @@ from django.test import TestCase
 from cognitive.apps.atlas import views
 from cognitive.apps.atlas.query import (Battery, Concept, Condition, Contrast,
                                         Disorder, ExternalDataset,
-                                        Implementation, Task, Theory)
+                                        Implementation, Task, Theory, Indicator)
 from cognitive.apps.users.models import User
 from cognitive.settings import graph
 
@@ -404,3 +404,23 @@ class AtlasViewTestCase(TestCase):
         tsk.delete_related()
         tsk.delete()
         ds = graph.find_one("external_dataset", "id", ds[0]['id'])
+
+def test_add_task_indicator(self):
+        task = Task()
+        tsk = task.create('test_add_task_indicator', {'prop': 'prop'})
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
+        data = {
+            'type': 'add_task_indicator',
+        }
+        response = self.client.post(
+            reverse('add_task_indicator', kwargs={'task_id': tsk.properties['id']}),
+            data
+        )
+        self.assertEqual(response.status_code, 200)
+        ind = task.get_relation(tsk.properties['id'], "HASINDICATOR")
+        self.assertEqual(len(ind), 1)
+        self.assertEqual(ind[0]['name'], 'add_task_indicator')
+        tsk.delete_related()
+        tsk.delete()
+        ind = graph.find_one("indicator", "id", ind[0]['id'])

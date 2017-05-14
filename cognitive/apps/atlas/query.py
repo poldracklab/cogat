@@ -615,7 +615,6 @@ class Implementation(Node):
         super().__init__()
         self.name = "implementation"
         self.fields = ["implementation_uri", "implementation_name", "implementation_description"]
-        self.color = "#BE0000" # dark red
 
 class ExternalDataset(Node):
     
@@ -623,7 +622,13 @@ class ExternalDataset(Node):
         super().__init__()
         self.name = "external_dataset"
         self.fields = ["dataset_name", "dataset_uri"]
-        self.color = "#BE0000" # dark red
+
+class Indicator(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "indicator"
+        self.fields = ["type"]
 
 
 # General search function across nodes

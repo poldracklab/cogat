@@ -5,11 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 
-from cognitive.apps.atlas.forms import ImplementationForm, ExternalDatasetForm
+from cognitive.apps.atlas.forms import ImplementationForm, ExternalDatasetForm, IndicatorForm
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
                                         Battery, Theory, Condition,
-                                        Implementation, ExternalDataset,
-                                        search)
+                                        Implementation, Indicator,
+                                        ExternalDataset, search)
 from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
 from cognitive.settings import DOMAIN, graph
 
@@ -22,6 +22,7 @@ Theory = Theory()
 Condition = Condition()
 Implementation = Implementation()
 ExternalDataset = ExternalDataset()
+Indicator = Indicator()
 
 # Needed on all pages
 counts = {
@@ -163,6 +164,7 @@ def view_task(request, uid, return_context=False):
 
     implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
+    indicators = Task.get_relation(task["id"], "HASINDICATOR")
 
     context = {
         "task": task,
@@ -173,7 +175,9 @@ def view_task(request, uid, return_context=False):
         "datasets": datasets,
         "domain": DOMAIN,
         "implementation_form": ImplementationForm(),
-        "dataset_form": ExternalDatasetForm()
+        "dataset_form": ExternalDatasetForm(),
+        "indicator_form": IndicatorForm(),
+        "indicators": indicators,
     }
 
     if return_context is True:
@@ -449,6 +453,35 @@ def add_task_dataset(request, task_id):
             return render(request, 'atlas/view_task.html', context)
     # redirect back to task/id?
     return view_task(request, task_id)
+
+@login_required
+def add_task_indicator(request, task_id):
+    ''' From the task view we can create a link to indicator that is associated
+        with a given task.'''
+    if request.method == "POST":
+        indicator_form = IndicatorForm(request.POST)
+        if indicator_form.is_valid():
+            clean_data = indicator_form.cleaned_data
+            properties = {'type': clean_data['type']}
+            ind = Indicator.create(clean_data['type'], properties)
+            if ind is None:
+                messages.error(request, "Was unable to create indicator")
+                return view_task(request, task_id)
+            link_made = Task.link(task_id, ind.properties['id'],
+                                  "HASINDICATOR",
+                                  endnode_type="indicator")
+            if link_made is None:
+                graph.delete(ind)
+                messages.error(request, "Was unable to associate task and indicator")
+                return view_task(request, task_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_task(request, task_id, return_context=True)
+            context['indicator_form'] = indicator_form
+            return render(request, 'atlas/view_task.html', context)
+    # redirect back to task/id?
+    return view_task(request, task_id)
+
 
 
 

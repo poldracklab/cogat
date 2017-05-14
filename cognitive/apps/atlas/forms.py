@@ -18,7 +18,7 @@ class ImplementationForm(forms.Form):
 
 class ExternalDatasetForm(forms.Form):
     name = forms.CharField(required=True)
-    description = forms.CharField(required=True)
+    uri = forms.URLField(required=True)
 
     def __init__(self, *args, **kwargs):
         super(ExternalDatasetForm, self).__init__(*args, **kwargs)

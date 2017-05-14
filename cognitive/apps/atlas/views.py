@@ -162,7 +162,7 @@ def view_task(request, uid, return_context=False):
     conditions = Task.get_conditions(task["id"])
 
     implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
-    external_datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
+    datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
 
     context = {
         "task": task,
@@ -170,9 +170,10 @@ def view_task(request, uid, return_context=False):
         "contrasts": contrasts,
         "conditions": conditions,
         "implementations": implementations,
-        "external_datasets": external_datasets,
+        "datasets": datasets,
         "domain": DOMAIN,
-        "implementation_form": ImplementationForm()
+        "implementation_form": ImplementationForm(),
+        "dataset_form": ExternalDatasetForm()
     }
 
     if return_context is True:

@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 
-from cognitive.apps.atlas.forms import ImplementationForm, ExternalDatasetForm, IndicatorForm
+from cognitive.apps.atlas.forms import (CitationForm, ExternalDatasetForm,
+                                       ImplementationForm, IndicatorForm)
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
                                         Battery, Theory, Condition,
                                         Implementation, Indicator,
-                                        ExternalDataset, search)
+                                        ExternalDataset, Citation, search)
 from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
 from cognitive.settings import DOMAIN, graph
 
@@ -23,6 +24,7 @@ Condition = Condition()
 Implementation = Implementation()
 ExternalDataset = ExternalDataset()
 Indicator = Indicator()
+Citation = Citation()
 
 # Needed on all pages
 counts = {
@@ -165,6 +167,7 @@ def view_task(request, uid, return_context=False):
     implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
+    citations = Task.get_relation(task["id"], "HASCITATION")
 
     context = {
         "task": task,
@@ -178,6 +181,8 @@ def view_task(request, uid, return_context=False):
         "dataset_form": ExternalDatasetForm(),
         "indicator_form": IndicatorForm(),
         "indicators": indicators,
+        "citations": citations,
+        "citation_form": CitationForm(),
     }
 
     if return_context is True:
@@ -481,6 +486,41 @@ def add_task_indicator(request, task_id):
             return render(request, 'atlas/view_task.html', context)
     # redirect back to task/id?
     return view_task(request, task_id)
+
+@login_required
+def add_task_citation(request, task_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    if request.method == "POST":
+        citation_form = CitationForm(request.POST)
+        if citation_form.is_valid():
+            cleaned_data = citation_form.cleaned_data
+            properties = {}
+            properties.update(cleaned_data)
+            cit = Citation.create(cleaned_data['citation_desc'], properties)
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print(cleaned_data)
+            print(properties)
+            print(cit)
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            if cit is None:
+                messages.error(request, "Was unable to create citation")
+                return view_task(request, task_id)
+            link_made = Task.link(task_id, cit.properties['id'],
+                                  "HASCITATION",
+                                  endnode_type="citation")
+            if link_made is None:
+                #graph.delete(cit)
+                messages.error(request, "Was unable to associate task and citation")
+                return view_task(request, task_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_task(request, task_id, return_context=True)
+            context['citation_form'] = citation_form
+            return render(request, 'atlas/view_task.html', context)
+    # redirect back to task/id?
+    return view_task(request, task_id)
+
 
 
 

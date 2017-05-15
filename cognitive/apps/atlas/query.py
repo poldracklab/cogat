@@ -632,12 +632,13 @@ class Indicator(Node):
 
 class Citation(Node):
 
-    def __init(self):
+    def __init__(self):
         super().__init__()
         self.name = "citation"
         self.fields = ["citation_url", "citation_comment", "citation_desc",
                        "citation_authors", "citation_type", "citation_pubname",
-                       "citation_pubdate", "citation_pmid", "citation_source"]
+                       "citation_pubdate", "citation_pmid", "citation_source",
+                       "id", "name"]
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

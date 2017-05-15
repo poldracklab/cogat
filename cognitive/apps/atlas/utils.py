@@ -20,7 +20,9 @@ def generate_uid(node_type):
         "collection": "tco",
         "condition": "con",
         "implementation": "imp",
-        "external_dataset": "dst"
+        "external_dataset": "dst",
+        "indicator": "ind",
+        "citation": "cit"
     }
 
     # generate new node uid that doesn't exist

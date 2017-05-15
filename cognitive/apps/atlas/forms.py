@@ -37,4 +37,21 @@ class IndicatorForm(forms.Form):
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('indicator-cancel', 'Cancel'))
 
+class CitationForm(forms.Form):
+    citation_url = forms.URLField(required=True)
+    citation_comment = forms.CharField(required=False)
+    citation_desc = forms.CharField(required=True)
+    citation_authors = forms.CharField(required=False)
+    citation_type = forms.CharField(required=False)
+    citation_pubname = forms.CharField(required=False)
+    citation_pubdate = forms.CharField(required=False)
+    citation_pmid = forms.CharField(required=False)
+    citation_source = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(CitationForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('citation-cancel', 'Cancel'))
 

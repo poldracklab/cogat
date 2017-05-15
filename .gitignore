@@ -74,6 +74,8 @@ target/
 
 .env
 
-# sqlite database
+# database files
 *.db
 *.sql
+compose/graphdb/data/*
+

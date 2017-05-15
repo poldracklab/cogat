@@ -162,7 +162,10 @@
 
 <!-- IMPLEMENTATIONS -->
 <div id="block-implementors" class="block-halfwide block-back ">
+
+    {% if user.is_authenticated %}
     <button style="float:right;margin-top:10px" id="add_implementation_button">ADD IMPLEMENTATION</button>		
+    {% endif %}
     <div class="pane">
         <div class="discdiv"><b>IMPLEMENTATIONS</b> of <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
             <form class="hidden" action="{% url 'add_task_implementation' task.id %}" method="post" id='id-implementationform'>
@@ -190,7 +193,9 @@
 
 <!-- EXTERNAL DATASETS -->
 <div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
+    {% if user.is_authenticated %}
     <button style="float:right;margin-top:10px" id="add_dataset_button">ADD EXTERNAL DATASET</button>
+    {% endif %}
     <div class="pane">
         <div class="discdiv"><b>EXTERNAL DATASETS</b> for <a href="javascript:void(0)" class="task">{{ task.name }}</a><br />
             <form class="hidden" action="{% url 'add_task_dataset' task.id %}" method="post" id='id-datasetform'>
@@ -246,7 +251,9 @@
     <strong>CONTRASTS</strong>
     <div class="conblock2" id="contrasts-block">
         {% if conditions|length > 0 %}
-        <a href="{% url 'add_task_contrast' task.id %}"><button style="position:relative;border-radius:15px;float:right;top:-20px">+</button></a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'add_task_contrast' task.id %}"><button style="position:relative;border-radius:15px;float:right;top:-20px">+</button></a>
+            {% endif %}
         {% else %}
         <p class="subinfo" style="color:#d89013;padding-top:20px">You must specify conditions before you can define contrasts.</p>
         {% endif %}
@@ -298,15 +305,45 @@
     {% empty %}
         <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
     {% endfor %}
-    <button style="margin-top:10px;margin-bottom:10px" id="add_indicator_button">ADD INDICATOR</button>
-    <form class="hidden" action="{% url 'add_task_indicator' task.id %}" method="post" id='id-indicatorform'>
-        {% csrf_token %}
-        {% crispy indicator_form indicator_form.helper %}
-    </form>
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_indicator_button">ADD INDICATOR</button>
+        <form class="hidden" action="{% url 'add_task_indicator' task.id %}" method="post" id='id-indicatorform'>
+            {% csrf_token %}
+            {% crispy indicator_form indicator_form.helper %}
+        </form>
+    {% endif %}
 
     <p class="subinfo">An indicator is a specific quantitative or qualitative variable that is recorded for analysis. These may include behavioral variables (such as response time, accuracy, or other measures of performance) or physiological variables (including genetics, psychophysiology, or brain imaging data).</p>
 </div>
 
+<!-- CITATIONS -->
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div> 
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <form class="hidden" action="{% url 'add_task_citation' task.id %}" method="post" id='id-citationform'>
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+    {% endif %}
 
 
 </div>
@@ -372,7 +409,7 @@ $(document).ready(function() {
         $("#id-datasetform").addClass('hidden');
     })
 
-     // Show input to add indicator
+    // Show input to add indicator
     $("#add_indicator_button").click(function(){
         $("#id-indicatorform").removeClass('hidden');
     })
@@ -380,6 +417,13 @@ $(document).ready(function() {
         $("#id-indicatorform").addClass('hidden');
     })
 
+    // Show input to add citation
+    $("#add_citation_button").click(function(){
+        $("#id-citationform").removeClass('hidden');
+    })
+    $("#reset-id-citation-cancel").click(function(){
+        $("#id-citationform").addClass('hidden');
+    })
  
 
 

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'crispy_forms',
+    'opbeat.contrib.django',
 ]
 #    'allauth',
 #    'allauth.account',
@@ -77,6 +78,7 @@ THIRD_PARTY_APPS = [
 INSTALLED_APPS += THIRD_PARTY_APPS
 
 MIDDLEWARE_CLASSES = [
+    'opbeat.contrib.django.middleware.OpbeatAPMMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -203,3 +205,11 @@ CACHES = {
 AUTH_USER_MODEL = 'users.User'
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')
 DEBUG = os.environ.get('DJANGO_DEBUG', False)
+
+if os.environ.get('OPBEAT_ORGANIZATION_ID', None):
+    OPBEAT = {
+        'ORGANIZATION_ID': os.environ.get('OPBEAT_ORGANIZATION_ID'),
+        'APP_ID': os.environ.get('OPBEAT_APP_ID'),
+        'SECRET_TOKEN': os.environ.get('OPBEAT_SECRET_TOKEN'),
+    }
+

@@ -6,7 +6,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 
 from cognitive.apps.atlas.forms import (CitationForm, ExternalDatasetForm,
-                                       ImplementationForm, IndicatorForm)
+                                        ImplementationForm, IndicatorForm)
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
                                         Battery, Theory, Condition,
                                         Implementation, Indicator,
@@ -95,6 +95,7 @@ def all_disorders(request):
 
 def all_contrasts(request):
     '''all_contrasts returns page with list of all contrasts'''
+    fields = ""
     contrasts = Contrast.all(order_by="name", fields=fields)
     return all_nodes(request, contrasts, "contasts")
 
@@ -141,9 +142,27 @@ def view_concept(request, uid):
             concept["relations"]["MEASUREDBY"][c]["tasks"] = tasks
 
     citations = Concept.get_relation(concept["id"], "HASCITATION")
+    tasks = Concept.get_reverse_relation(concept["id"], "ASSERTS")
+    contrasts = Concept.get_relation(concept["id"], "MEASUREDBY")
+
+    assertions = []
+    for task in tasks:
+        task_contrasts = Task.get_relation(task["id"], "HASCONTRAST")
+        return_contrasts = []
+        for task_contrast in task_contrasts:
+            for contrast in contrasts:
+                if task_contrast["id"] == contrast["id"] :
+                    return_contrasts.append(task_contrast)
+        assertions.append((task, return_contrasts))
+
+    are_kinds_of = Concept.get_reverse_relation(concept["id"], "KINDOF")
+    are_parts_of = Concept.get_reverse_relation(concept["id"], "PARTOF")
 
     context = {
-        "concept":concept,
+        "are_kinds_of": are_kinds_of,
+        "are_parts_of": are_parts_of,
+        "concept": concept,
+        "assertions": assertions,
         "citations": citations,
         "citation_form": CitationForm()
     }
@@ -196,6 +215,7 @@ def view_task(request, uid, return_context=False):
     return render(request, 'atlas/view_task.html', context)
 
 def view_battery(request, uid):
+    context = {}
     return render(request, 'atlas/view_battery.html', context)
 
 def view_theory(request, uid):
@@ -329,7 +349,10 @@ def add_concept_relation(request, uid):
     if request.method == "POST":
         relation_type = request.POST.get('relation_type', '')
         concept_selection = request.POST.get('concept_selection', '')
-        Concept.link(uid, concept_selection, relation_type)
+        if relation_type.startswith("REV"):
+            Concept.link(concept_selection, uid, relation_type[3:])
+        else:
+            Concept.link(uid, concept_selection, relation_type)
     return view_concept(request, uid)
 
 @login_required
@@ -356,6 +379,19 @@ def add_task_concept(request, uid):
         concept_selection = request.POST.get('concept_selection', '')
         Task.link(uid, concept_selection, relation_type, endnode_type="concept")
     return view_task(request, uid)
+
+@login_required
+def add_concept_task(request, concept_id):
+    '''add_concept_task will add a cognitive task to the list on a
+       concept page, making the assertion that the task is associated
+       with the concept.
+    :param concept_id: the unique id of the task, for returning to the task page when finished
+    '''
+    if request.method == "POST":
+        relation_type = "ASSERTS" #task --asserts-> concept
+        task_selection = request.POST.get('task_selection', '')
+        Task.link(task_selection, concept_id, relation_type, endnode_type="concept")
+    return view_concept(request, concept_id)
 
 
 @login_required
@@ -438,7 +474,7 @@ def add_task_implementation(request, task_id):
 
 @login_required
 def add_task_dataset(request, task_id):
-    ''' From the task view we can create a link to dataset that is associated 
+    ''' From the task view we can create a link to dataset that is associated
         with a given task'''
     if request.method == "POST":
         dataset_form = ExternalDatasetForm(request.POST)
@@ -566,13 +602,22 @@ def search_all(request):
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
 
-def search_concept(request):
+def search_by_type(request, node_type):
     ''' Used by ajax in the templates when adding concepts to a task '''
     data = "no results"
     search_text = request.POST.get("relationterm", "")
     results = []
     if search_text != '':
-        results = search(search_text, node_type="concept")
+        results = search(search_text, node_type=node_type)
         data = json.dumps(results)
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
+
+
+def search_concept(request):
+    ''' Used by ajax in the templates when adding concepts to a task '''
+    return search_by_type(request, "concept")
+
+def search_task(request):
+    ''' Used by ajax in the templates when adding concepts to a task '''
+    return search_by_type(request, "task")

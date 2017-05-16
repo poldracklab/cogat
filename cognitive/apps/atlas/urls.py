@@ -74,9 +74,19 @@ urlpatterns = [
         name="add_concept_citation"
     ),
     url(
+        r'^disorder/add/citation/(?P<disorder_id>[\w\+%_& ]+)/$',
+        views.add_disorder_citation,
+        name="add_disorder_citation"
+    ),
+    url(
         r'^concept/add/task/(?P<concept_id>[\w\+%_& ]+)/$',
         views.add_concept_task,
         name="add_concept_task"
+    ),
+    url(
+        r'^disorder/add/task/(?P<disorder_id>[\w\+%_& ]+)/$',
+        views.add_disorder_task,
+        name="add_disorder_task"
     ),
 
 

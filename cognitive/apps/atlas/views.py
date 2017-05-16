@@ -230,7 +230,12 @@ def view_theory(request, uid):
 
 def view_disorder(request, uid):
     disorder = Disorder.get(uid)[0]
-    context = {"disorder":disorder}
+    citations = Disorder.get_relation(disorder["id"], "HASCITATION")
+    context = {
+        "disorder":disorder,
+        "citations": citations,
+        "citation_form": CitationForm(),
+    }
     return render(request, 'atlas/view_disorder.html', context)
 
 
@@ -416,6 +421,21 @@ def add_concept_task(request, concept_id):
         task_selection = request.POST.get('task_selection', '')
         Task.link(task_selection, concept_id, relation_type, endnode_type="concept")
     return view_concept(request, concept_id)
+
+@login_required
+def add_disorder_task(request, disorder_id):
+    '''add_disorder_task will add a cognitive task to the list on a
+       disorder page, making the assertion that the task is associated
+       with the disorder.
+    :param disorder_id: the unique id of the task, for returning to the task page when finished
+    '''
+    ''' In old database this relation was against contrasts
+    if request.method == "POST":
+        relation_type = "ASSERTS" #task --asserts-> disorder
+        task_selection = request.POST.get('task_selection', '')
+        Task.link(task_selection, disorder_id, relation_type, endnode_type="disorder")
+    '''
+    return view_disorder(request, disorder_id)
 
 
 @login_required
@@ -609,6 +629,34 @@ def add_concept_citation(request, concept_id):
             context['citation_form'] = citation_form
             return render(request, 'atlas/view_concept.html', context)
     return view_concept(request, concept_id)
+
+@login_required
+def add_disorder_citation(request, disorder_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    if request.method == "POST":
+        citation_form = CitationForm(request.POST)
+        if citation_form.is_valid():
+            cleaned_data = citation_form.cleaned_data
+            properties = {}
+            properties.update(cleaned_data)
+            cit = Citation.create(cleaned_data['citation_desc'], properties)
+            if cit is None:
+                messages.error(request, "Was unable to create citation")
+                return view_concept(request, disorder_id)
+            link_made = Disorder.link(disorder_id, cit.properties['id'],
+                                     "HASCITATION",
+                                     endnode_type="citation")
+            if link_made is None:
+                graph.delete(cit)
+                messages.error(request, "Was unable to associate concept and citation")
+                return view_concept(request, disorder_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_task(request, disorder_id, return_context=True)
+            context['citation_form'] = citation_form
+            return render(request, 'atlas/view_concept.html', context)
+    return view_concept(request, disorder_id)
 
 
 

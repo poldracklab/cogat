@@ -73,6 +73,7 @@ class Node(object):
                             relation.properties[property_name] = properties[property_name]
                         relation.push()
                     return relation
+        return None
 
     def update(self, uid, updates):
         '''update will update a particular field of a node with a new entry
@@ -354,7 +355,8 @@ class Concept(Node):
         self.relations = {
             "PARTOF": "concepts",
             "KINDOF": "concepts",
-            "MEASUREDBY": "contrasts"
+            "MEASUREDBY": "contrasts",
+            "HASCITATION": "citations"
         }
         self.color = "#3C7263" # sea green
 
@@ -389,7 +391,8 @@ class Task(Node):
             "HASINDICATOR": "indicators",
             "HASEXTERNALDATASET": "external_datasets",
             "HASIMPLEMENTATION": "implementations",
-            "HASCITATION": "citation"
+            "HASCITATION": "citation",
+            "HASCONTRAST": "contrasts"
         }
         self.color = "#63506D" #purple
 
@@ -449,9 +452,7 @@ class Task(Node):
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
-        :param task_id: the task unique id (trm|tsk_*) for the task
-        '''
-
+        :param task_id: the task unique id (trm|tsk_*) for the task'''
 
         fields = ["contrast.id", "contrast.creation_time", "contrast.name",
                   "contrast.last_updated", "ID(contrast)"]
@@ -609,6 +610,36 @@ class Theory(Node):
         self.fields = ["id", "name", "description"]
         self.color = "#BE0000" # dark red
 
+class Implementation(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "implementation"
+        self.fields = ["implementation_uri", "implementation_name", "implementation_description"]
+
+class ExternalDataset(Node):
+    
+    def __init__(self):
+        super().__init__()
+        self.name = "external_dataset"
+        self.fields = ["dataset_name", "dataset_uri"]
+
+class Indicator(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "indicator"
+        self.fields = ["type"]
+
+class Citation(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "citation"
+        self.fields = ["citation_url", "citation_comment", "citation_desc",
+                       "citation_authors", "citation_type", "citation_pubname",
+                       "citation_pubdate", "citation_pmid", "citation_source",
+                       "id", "name"]
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

@@ -11,14 +11,18 @@ def generate_uid(node_type):
     :param node_type: one of concept, battery, condition, etc.
     '''
     nodetypes = {
-        "concept":"trm",
-        "task":"tsk",
-        "theory":"thc",
-        "contrast":"cnt",
-        "battery":"tco",
-        "disorder":"dso",
-        "collection":"tco",
-        "condition":"con"
+        "concept": "trm",
+        "task": "tsk",
+        "theory": "thc",
+        "contrast": "cnt",
+        "battery": "tco",
+        "disorder": "dso",
+        "collection": "tco",
+        "condition": "con",
+        "implementation": "imp",
+        "external_dataset": "dst",
+        "indicator": "ind",
+        "citation": "cit"
     }
 
     # generate new node uid that doesn't exist

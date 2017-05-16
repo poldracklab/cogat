@@ -66,8 +66,8 @@ class SearchAPI(APIView):
         search_classes = [Concept, Contrast, Disorder, Task]
         queries = request.GET.get("q", "")
         results = []
-        for cls in search_classes:
-            result = cls.search_all_fields(queries)
+        for sclass in search_classes:
+            result = sclass.search_all_fields(queries)
             results += result
         if not results:
             raise NotFound('No results found')

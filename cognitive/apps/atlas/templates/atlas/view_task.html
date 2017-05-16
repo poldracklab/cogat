@@ -1,4 +1,5 @@
 {% extends "main/base.html" %}
+{% load crispy_forms_tags %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
@@ -32,14 +33,14 @@
 
         <div class="defn">
             {{ task.definition | safe }}<br><br>
-        {% if request.user.is_authenticated %}
+        {% if user.is_authenticated %}
         <a id="update_definition_button"><button>update definition</button></a>
         {% endif %}
         <a target="_blank" href="http://portal.graphgist.org/graph_gists/by_url?url={{ domain }}{% url 'task_gist' task.id %}"><button>graph</button></a>
         <a target="_blank" href="{% url 'download_task_gist' task.id %}"><button>gist</button></a>
         </div><!-- .defn -->
 
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
     <!-- Update definition -->
     <div id="update_definition" class="hidden">
         <form method="POST" action="{% url 'update_task' task.id %}">
@@ -63,7 +64,7 @@
 <div id="block-measurements" class="block-halfwide block-back">
     <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em> has been asserted to measure the following <strong>CONCEPTS</strong>
   
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
     <button style="float:right;margin-top:10px" id="add_concept_button">ADD CONCEPT</button>		
 
     <!-- add concept box -->
@@ -103,7 +104,7 @@
                                     {% if concept == relation.id %}
                                     {% for assertion in assertions %}
                                     <li class="contrastli">
-                                        <a href="#" class="task">{{ assertion.contrast_name }}</a>
+                                        <a href="#" class="task">{{ assertion.name }}</a>
                                     </li>
                                     {% endfor %}
                                     {% endif %}
@@ -111,7 +112,7 @@
                                 </ul>
 
                                 <!-- Add contrast association -->
-                                {% if request.user.is_authenticated %}
+                                {% if user.is_authenticated %}
                                 <button style="border-radius:15px;float:right" id="add_contrast_button_{{ relation.id }}">+</button>		
                                 <div id="contrast_search_box_{{ relation.id }}" style="padding-left:13px;padding-bottom:20px" class="hidden">
                                     <div>
@@ -119,7 +120,7 @@
                                     <form style="padding-top:20px" method="post" action="{% url 'add_concept_contrast' task.id %}">
                                         <select name="contrast_selection" id="add_contrast_{{ relation.id }}" style="width:220px" size="3" style="padding-left:10px;">
                                         {% for contrast in contrasts %}
-                                        <option value="{{ contrast.contrast_id }}">{{ contrast.contrast_name }}</option>
+                                        <option value="{{ contrast.id }}">{{ contrast.name }}</option>
                                         {% endfor %}
                                         </select>
                                         <input type="hidden" name="concept_id" value="{{ relation.id }}" />
@@ -161,20 +162,58 @@
 
 <!-- IMPLEMENTATIONS -->
 <div id="block-implementors" class="block-halfwide block-back ">
+
+    {% if user.is_authenticated %}
+    <button style="float:right;margin-top:10px" id="add_implementation_button">ADD IMPLEMENTATION</button>		
+    {% endif %}
     <div class="pane">
         <div class="discdiv"><b>IMPLEMENTATIONS</b> of <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
+            <form class="hidden" action="{% url 'add_task_implementation' task.id %}" method="post" id='id-implementationform'>
+                {% csrf_token %}
+                {% crispy implementation_form implementation_form.helper %}
+            </form>
             <div style="margin-top:10px;">
                 <table style="cell-padding:10px;"></table>
-            </div><span class="noassoc">No implementations have been added.</span><br>
+            </div>
+            {% for imp in implementations %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{{ imp.implementation_uri }}">{{ imp.implementation_name }}</a>
+                    </div>
+                    <div class="col-md-6">
+                        {{ imp.implementation_description }}
+                    </div>
+                </div>
+            {% empty %}
+                <span class="noassoc">No implementations have been added.</span><br>
+            {% endfor %}
         </div>
     </div>
 </div>
 
 <!-- EXTERNAL DATASETS -->
 <div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
+    {% if user.is_authenticated %}
+    <button style="float:right;margin-top:10px" id="add_dataset_button">ADD EXTERNAL DATASET</button>
+    {% endif %}
     <div class="pane">
         <div class="discdiv"><b>EXTERNAL DATASETS</b> for <a href="javascript:void(0)" class="task">{{ task.name }}</a><br />
-            <span class="noassoc">No external datasets have been added.</span><br/>
+            <form class="hidden" action="{% url 'add_task_dataset' task.id %}" method="post" id='id-datasetform'>
+                {% csrf_token %}
+                {% crispy dataset_form dataset_form.helper %}
+            </form>
+            {% for ds in datasets %}
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ ds.dataset_name }}</a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ ds.dataset_uri }}">{{ ds.dataset_uri }}</a>
+                    </div>
+                </div>
+            {% empty %}
+                <span class="noassoc">No implementations have been added.</span><br>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -182,7 +221,7 @@
 
 <!-- CONDITIONS -->
 <div style="width: 960px;"><div class="block-thirdwide block-back"><strong> CONDITIONS</strong><br>
-    {% if request.user.is_authenticated %}
+    {% if user.is_authenticated %}
        <button id="add_condition" style="position:relative;border-radius:15px;float:right;top:-20px">+</button>
         <form action="{% url 'add_condition' task.id %}" method="POST">
             {% csrf_token %}
@@ -212,26 +251,28 @@
     <strong>CONTRASTS</strong>
     <div class="conblock2" id="contrasts-block">
         {% if conditions|length > 0 %}
-        <a href="{% url 'add_task_contrast' task.id %}"><button style="position:relative;border-radius:15px;float:right;top:-20px">+</button></a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'add_task_contrast' task.id %}"><button style="position:relative;border-radius:15px;float:right;top:-20px">+</button></a>
+            {% endif %}
         {% else %}
         <p class="subinfo" style="color:#d89013;padding-top:20px">You must specify conditions before you can define contrasts.</p>
         {% endif %}
 
         {% for contrast in contrasts %}
-        <div id="contrast_container_{{ contrast.contrast_id }}">
+        <div id="contrast_container_{{ contrast.id }}">
             <div class="conblock-inner-wide">
-                <a name="{{ contrast.contrast_name }}" class="task" href="http://portal.graphgist.org/graph_gists/by_url?url={{ domain }}{% url 'contrast' contrast.contrast_id %}">{{ contrast.contrast_name }}</a>
+                <a name="{{ contrast.name }}" class="task" href="http://portal.graphgist.org/graph_gists/by_url?url={{ domain }}{% url 'contrast' contrast.id %}">{{ contrast.name }}</a>
             </div>
-            <div id="editcont_{{ contrast.contrast_id }}" style="display:none" class="popstar marbot"><br/>
+            <div id="editcont_{{ contrast.id}}" style="display:none" class="popstar marbot"><br/>
             <form method="post" action="/post/" name="conteditform">
                 <input type="hidden" name="form_type" value="contrast_update" />
                 <input type="hidden" name="return_page" value="task/id" />
                 <input type="hidden" name="id_object" value="{{ task.id }}" />	
-                <input type="hidden" name="id" value="{{ contrast.contrast_id }}" />	
+                <input type="hidden" name="id" value="{{ contrast.id }}" />	
 
                 <table>
                     <tr><td><strong>Edit Contrast:</strong><br/>
-                        <input type="text" name="contrast_text" value="{{ contrast.contrast_name }}" size="28" title="contrast text" aria-label="contrast text">
+                        <input type="text" name="contrast_text" value="{{ contrast.name }}" size="28" title="contrast text" aria-label="contrast text">
                     </td></tr>
                     <tr><td><strong>Contrast URI:</strong><br/>
                         <input type="text" name="contrast_uri" value="" size="28" title="contrast uri" aria-label="contrast uri">
@@ -239,7 +280,7 @@
                     <tr><td style="text-align:right">
                         <input type="button" onclick="javascript:window.location.reload();" value="cancel" title="cancel submission" aria-label="cancel submission"/>
                         <input type="submit" value="update" title="submit form" aria-label="submit form" />
-                        <input type="button" rel="{{ contrast.contrast_id }}" class="contrast-delete" value="delete" title="delete contrast" aria-label="delete contrast" />
+                        <input type="button" rel="{{ contrast.id }}" class="contrast-delete" value="delete" title="delete contrast" aria-label="delete contrast" />
                      </td></tr>
                 </table>
             </form>
@@ -252,7 +293,58 @@
 
 <p class="subinfo">In the Cognitive Atlas, we define a contrast as any function over experimental conditions. The simplest contrast is the indicator value for a specific condition; more complex contrasts include linear or nonlinear functions of the indicator across different experimental conditions.</p>
 
-</div></div>
+</div>
+
+<!-- INDICATORS -->
+<div class="block-thirdwide block-back block-margin">
+    <strong>INDICATORS</strong>
+    {% for indicator in indicators %}
+        <div class="conblock-inner-wide">
+            {{ indicator.type }}
+        </div>
+    {% empty %}
+        <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_indicator_button">ADD INDICATOR</button>
+        <form class="hidden" action="{% url 'add_task_indicator' task.id %}" method="post" id='id-indicatorform'>
+            {% csrf_token %}
+            {% crispy indicator_form indicator_form.helper %}
+        </form>
+    {% endif %}
+
+    <p class="subinfo">An indicator is a specific quantitative or qualitative variable that is recorded for analysis. These may include behavioral variables (such as response time, accuracy, or other measures of performance) or physiological variables (including genetics, psychophysiology, or brain imaging data).</p>
+</div>
+
+<!-- CITATIONS -->
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div>
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <form class="hidden" action="{% url 'add_task_citation' task.id %}" method="post" id='id-citationform'>
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+    {% endif %}
+</div>
 
 <br clear="all"><div class="clear_all"></div>
 
@@ -299,8 +391,41 @@ $(document).ready(function() {
         $("#condition_box").addClass('hidden');
     })
 
+    // Show input to add implementation
+    $("#add_implementation_button").click(function(){
+        $("#id-implementationform").removeClass('hidden');
+    })
+    $("#reset-id-implementation-cancel").click(function(){
+        $("#id-implementationform").addClass('hidden');
+    })
 
-    {% if request.user.is_authenticated %}
+    // Show input to add dataset
+    $("#add_dataset_button").click(function(){
+        $("#id-datasetform").removeClass('hidden');
+    })
+    $("#reset-id-dataset-cancel").click(function(){
+        $("#id-datasetform").addClass('hidden');
+    })
+
+    // Show input to add indicator
+    $("#add_indicator_button").click(function(){
+        $("#id-indicatorform").removeClass('hidden');
+    })
+    $("#reset-id-indicator-cancel").click(function(){
+        $("#id-indicatorform").addClass('hidden');
+    })
+
+    // Show input to add citation
+    $("#add_citation_button").click(function(){
+        $("#id-citationform").removeClass('hidden');
+    })
+    $("#reset-id-citation-cancel").click(function(){
+        $("#id-citationform").addClass('hidden');
+    })
+ 
+
+
+    {% if user.is_authenticated %}
     // Add concept
     $(function() {
 

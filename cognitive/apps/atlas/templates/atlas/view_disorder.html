@@ -6,6 +6,7 @@
 </style>
 {% endblock %}
 {% load staticfiles %}
+{% load crispy_forms_tags %}
 
 {% block branding %}
 {% include 'atlas/branding.html'%}
@@ -36,7 +37,7 @@
             <label for="disorder_definition">Definition</label><br>
             <textarea name="disorder_definition" id="disorder_definition" rows="12" cols="60">{{ disorder.definition }}</textarea>  <br><br>
             <!-- disabling this for now 
-            {% if request.user.is_superuser %}
+            {% if user.is_superuser %}
             <div style="float:right;width:120px;">
                 <button style="background:none; background-color:red !important;color:#fff !important;" id="deleterious" title="delete disorder" aria-label="delete disorder" rel="{{ disorder.id }}">Delete Disorder</button>
             </div>
@@ -48,6 +49,60 @@
     <div class='attribo'>
         <div id="edittargetw" style="display:none; border: 1px solid silver; padding: 20px; width: 350px;">  <i>Select the parent class for this disorder:</i><br><br> 
         </div></div>
+
+<!-- TASKS -->
+<div id="block-holder" class="block-full"><div id="block-measurements" class="block-half">  
+    <h2><strong>Tasks</strong> associated with <em class="dictionary">{{ disorder.name }}</em> and their <strong>contrasts</strong></h2>
+
+    {% if user.is_authenticated %}
+    <button style="float:right;margin-top:10px" id="add_task_button">ADD TASK</button>		
+
+    <!-- add task box -->
+    <form method="POST" action="{% url 'add_disorder_task' disorder.id %}">
+        <div id="task_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
+            <div id="searchformwrap">
+                <div class="ui-widget">
+                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="taskterm" size="20" name="taskterm" aria-label="search for task" title="Search for task" placeholder="search for task" />
+                </div>
+            </div>
+            <div>
+                <select name="task_selection" id="task_search_results" style="width:400px" class="hidden"></select>
+            </div>
+            {% csrf_token %}
+            <button id="task_cancel_button" type="button" class="btn btn-primary">Cancel</button>
+            <input type="submit" value="submit" class="btn btn-primary"></input>    
+        </form>
+    </div>
+    {% endif %}
+
+
+
+    <div class="panes">
+        <div class="pane">
+            <div class="discdiv">
+                <table width='100%'>
+                    <tr>
+                       <td width='50%' valign='top'><b>Task</b></td>
+                       <td width='50%' valign='top'><b>Contrast Measure</b></td>
+                    </tr>
+                </table>
+                {% for assertion in assertions %}
+                <table id="table_{{ assertion.0.id }}" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                        <td colspan="3"><div class="dotholder"><hr class="dotty"></div></td>
+                    </tr>
+                    <tr>
+                       <td width='50%' valign='top'><b><a href="{% url 'task' assertion.0.id %}" class="task">{{ assertion.0.name }}</a></b></td>
+                        {% for contrast in assertion.1 %}
+                       <td width='50%' valign='top'>{{ contrast.name }}</td>
+                        {% empty %}
+                       <td width='50%' valign='top'></td>
+                        {% endfor %}
+                    </tr>
+                </table>
+                {% endfor %}
+
+</div></div></div></div><!-- #block-measurements.block-half -->
 
        <div class="block-right-container clearfix">
            <div id="block-implementors" class="block-back ">
@@ -63,6 +118,37 @@
               </div>
          </div>
       </div>
+<!-- CITATIONS -->
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div>
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <form class="hidden" action="{% url 'add_disorder_citation' disorder.id %}" method="post" id='id-citationform'>
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+    {% endif %}
+</div>
+
+
       <div class="clear_all">
   </div>
 </div><br> 
@@ -82,8 +168,55 @@ $(document).ready(function() {
        $("#closepane").click(function(){
            $("#editpane").addClass("hidden");
        })
- 
+       // Show form to add task 
+       $("#add_task_button").click(function(){
+           $("#task_search_box").removeClass('hidden');
+       })
+       $("#task_cancel_button").click(function(){
+           $("#task_search_box").addClass('hidden');
+       })
+
+
     });
+    {% if user.is_authenticated %}
+    // Add concept
+    $(function() {
+
+    $('#taskterm').click(function() {
+        $("#task_search_results").addClass("hidden")
+        $("#task_search_results").html("")
+        $("#task_search_results").attr("size","0")
+    });
+
+    $('#taskterm').keyup(function() {
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'search_task' %}",
+            data: {
+                'relationterm' : $('#taskterm').val(),
+                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
+            },
+            complete: function (data, error){
+                  $("#task_search_results").html("")
+                  var results = JSON.parse(data.responseText);
+                  $.each(results,function(i,e){
+                      $("#task_search_results").append('<option value="' + e.id +'">'+ e.name +'</option>');
+                  });
+
+                  $("#task_search_results").removeClass("hidden")
+                  $("#task_search_results").attr("size","5")
+
+            },
+            dataType: 'html',
+        });
+
+    });
+    });
+    {% endif %}
+
+
+
 });
 </script>
 {% endblock %}

@@ -99,5 +99,5 @@ def edit_user(request):
 
 def login(request):
      return render_to_response('login.html', {
-         #'plus_id': getattr(settings, 'SOCIAL_AUTH_GOOGLE_PLUS_KEY', None)
+        #'plus_id': getattr(settings, 'SOCIAL_AUTH_GOOGLE_PLUS_KEY', None)
      }, RequestContext(request))

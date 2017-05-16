@@ -54,3 +54,14 @@ class CitationForm(forms.Form):
         self.helper.form_tag = False
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('citation-cancel', 'Cancel'))
+
+class DisorderForm(forms.Form):
+    name = forms.CharField(required=True)
+    definition = forms.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+       super(DisorderForm, self).__init__(*args, **kwargs)
+       self.helper = FormHelper()
+       self.helper.form_tag = False
+       self.helper.add_input(Submit('submit', 'Submit'))
+       self.helper.add_input(Reset('disorder-cancel', 'Cancel'))

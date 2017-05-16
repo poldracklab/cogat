@@ -32,6 +32,7 @@ urlpatterns = [
 
     # Modify terms
     url(r'^terms/new/$', views.contribute_term, name="contribute_term"),
+    url(r'^disorder/new/$', views.contribute_disorder, name="contribute_disorder"),
     url(r'^terms/add/$', views.add_term, name="add_term"),
     url(r'^concept/update/(?P<uid>[\w\+%_& ]+)/$', views.update_concept, name="update_concept"),
     url(r'^task/update/(?P<uid>[\w\+%_& ]+)/$', views.update_task, name="update_task"),

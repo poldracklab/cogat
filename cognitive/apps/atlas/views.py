@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 
-from cognitive.apps.atlas.forms import (CitationForm, ExternalDatasetForm,
+from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
+                                        ExternalDatasetForm,
                                         ImplementationForm, IndicatorForm)
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
                                         Battery, Theory, Condition,
@@ -75,9 +76,9 @@ def all_theories(request):
     theories = Theory.all(order_by="name")
     return all_nodes(request, theories, "theories")
 
-def all_disorders(request):
+def all_disorders(request, return_context=False):
     '''all_disorders returns page with list of all disorders'''
-
+    disorder_form = DisorderForm
     disorders = Disorder.all(order_by="name")
     for d in range(len(disorders)):
         disorder = disorders[d]
@@ -87,10 +88,13 @@ def all_disorders(request):
 
     context = {
         'appname': "The Cognitive Atlas",
-        'active':"disorders",
-        'nodes':disorders
+        'active': "disorders",
+        'nodes': disorders,
+        'disorder_form': disorder_form
     }
 
+    if return_context:
+        return context
     return render(request, "atlas/all_disorders.html", context)
 
 def all_contrasts(request):
@@ -151,7 +155,7 @@ def view_concept(request, uid):
         return_contrasts = []
         for task_contrast in task_contrasts:
             for contrast in contrasts:
-                if task_contrast["id"] == contrast["id"] :
+                if task_contrast["id"] == contrast["id"]:
                     return_contrasts.append(task_contrast)
         assertions.append((task, return_contrasts))
 
@@ -257,6 +261,26 @@ def contribute_term(request):
         context["other_terms"] = results
 
     return render(request, 'atlas/contribute_term.html', context)
+
+@login_required
+def contribute_disorder(request):
+    ''' contribute_disorder will return the detail page for the new disorder '''
+    if request.method == "POST":
+        disorder_form = DisorderForm(request.POST)
+        if disorder_form.is_valid():
+            cleaned_data = disorder_form.cleaned_data
+            properties = {"definition": cleaned_data['definition']}
+            new_dis = Disorder.create(cleaned_data["name"], properties)
+            if new_dis is None:
+                messages.error(request, "Was unable to create disorder")
+                return all_disorders(request)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = all_disorders(request, return_context=True)
+            context['disorder_form'] = disorder_form
+            return render(request, "atlas/all_disorders.html", context)
+    # redirect back to task/id?
+    return view_disorder(request, new_dis.properties["id"])
 
 
 @login_required

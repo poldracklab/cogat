@@ -1,5 +1,6 @@
 {% extends "main/base.html" %}
 {% load staticfiles %}
+{% load crispy_forms_tags %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/img/facebox/loading.gif") right center no-repeat; }
@@ -21,9 +22,20 @@
        nodes = {{ nodes | safe }}
        </script>
 
-        <!-- Contribute New Disorder Form
-        {% include "atlas/_contribute_disorder.html" %}-->
+        <!-- Contribute New Disorder Form -->
+        {% if user.is_authenticated %}
+        <div class="pull-right">
+            <a class="actionator" id="add_disorder_button">+ contribute new disorder</a>
+        </div>
+        <blockquote class="text" id="contribution_block" class="hidden">
+            <span class="sectionmed">Contribute New Disorder</span><br /><br />
+            <form method="post" id="dform" action="{% url 'contribute_disorder'%}">
+                {% csrf_token %}
+                {% crispy disorder_form disorder_form.helper %}
+            </form><br><br><br><br>
+        </blockquote>
         <div class="container" id="pagecontent">
+        {% endif %}
 
         <!-- Only rendered based on highest category -->
         <h1 class="CATitle disorder">Browse <strong class="disorder">Disorders</strong></h1><br>
@@ -56,6 +68,14 @@ $(document).ready(function() {
     });
     $("#disorder_list").select2();
 
+    // Show input to add citation
+    $("#add_disorder_button").click(function(){
+        $("#contribution_block").removeClass('hidden');
+    })
+    $("#reset-id-disorder-cancel").click(function(){
+        $("#contribution_block").addClass('hidden');
+    })
+ 
     // On selection of a node, render in page
     $("#disorder_list").change(function(e) {
         var selection = $("#disorder_list").val()    

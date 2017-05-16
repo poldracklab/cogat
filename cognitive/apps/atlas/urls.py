@@ -68,6 +68,12 @@ urlpatterns = [
         views.add_task_citation,
         name="add_task_citation"
     ),
+    url(
+        r'^concept/add/citation/(?P<concept_id>[\w\+%_& ]+)/$',
+        views.add_concept_citation,
+        name="add_concept_citation"
+    ),
+
 
 
     # Graph views

@@ -355,7 +355,8 @@ class Concept(Node):
         self.relations = {
             "PARTOF": "concepts",
             "KINDOF": "concepts",
-            "MEASUREDBY": "contrasts"
+            "MEASUREDBY": "contrasts",
+            "HASCITATION": "citations"
         }
         self.color = "#3C7263" # sea green
 

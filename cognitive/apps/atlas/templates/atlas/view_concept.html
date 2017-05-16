@@ -1,4 +1,5 @@
 {% extends "main/base.html" %}
+{% load crispy_forms_tags %}
 {% load staticfiles %}
 {% block head %}
 <!--TODO: Add title with term name -->
@@ -192,7 +193,38 @@
                 {% endfor %}
                 {% endif %}
 
-</div></div></div></div><!-- #block-measurements.block-half --><div id="block-appliances" class="block-half" style="">
+</div></div></div></div><!-- #block-measurements.block-half -->
+<div id="block-appliances" class="block-half" style="">
+</div>
+
+<!-- CITATIONS -->
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div>
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <form class="hidden" action="{% url 'add_concept_citation' concept.id %}" method="post" id='id-citationform'>
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+    {% endif %}
 </div>
 
 </div><!-- #block-ephemera.block-full -->
@@ -225,6 +257,14 @@ $(document).ready(function() {
         $("#relation_box").css("background-color","")
     })
 
+    // Show input to add citation
+    $("#add_citation_button").click(function(){
+        $("#id-citationform").removeClass('hidden');
+    })
+    $("#reset-id-citation-cancel").click(function(){
+        $("#id-citationform").addClass('hidden');
+    })
+ 
     // Add relation search
     $(function() {
 

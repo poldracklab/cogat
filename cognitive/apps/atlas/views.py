@@ -140,7 +140,13 @@ def view_concept(request, uid):
             tasks = Contrast.get_tasks(contrast["id"])
             concept["relations"]["MEASUREDBY"][c]["tasks"] = tasks
 
-    context = {"concept":concept}
+    citations = Concept.get_relation(concept["id"], "HASCITATION")
+
+    context = {
+        "concept":concept,
+        "citations": citations,
+        "citation_form": CitationForm()
+    }
 
     return render(request, 'atlas/view_concept.html', context)
 
@@ -498,11 +504,6 @@ def add_task_citation(request, task_id):
             properties = {}
             properties.update(cleaned_data)
             cit = Citation.create(cleaned_data['citation_desc'], properties)
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print(cleaned_data)
-            print(properties)
-            print(cit)
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             if cit is None:
                 messages.error(request, "Was unable to create citation")
                 return view_task(request, task_id)
@@ -510,7 +511,7 @@ def add_task_citation(request, task_id):
                                   "HASCITATION",
                                   endnode_type="citation")
             if link_made is None:
-                #graph.delete(cit)
+                graph.delete(cit)
                 messages.error(request, "Was unable to associate task and citation")
                 return view_task(request, task_id)
         else:
@@ -520,6 +521,34 @@ def add_task_citation(request, task_id):
             return render(request, 'atlas/view_task.html', context)
     # redirect back to task/id?
     return view_task(request, task_id)
+
+@login_required
+def add_concept_citation(request, concept_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    if request.method == "POST":
+        citation_form = CitationForm(request.POST)
+        if citation_form.is_valid():
+            cleaned_data = citation_form.cleaned_data
+            properties = {}
+            properties.update(cleaned_data)
+            cit = Citation.create(cleaned_data['citation_desc'], properties)
+            if cit is None:
+                messages.error(request, "Was unable to create citation")
+                return view_concept(request, concept_id)
+            link_made = Concept.link(concept_id, cit.properties['id'],
+                                     "HASCITATION",
+                                     endnode_type="citation")
+            if link_made is None:
+                graph.delete(cit)
+                messages.error(request, "Was unable to associate concept and citation")
+                return view_concept(request, concept_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_task(request, concept_id, return_context=True)
+            context['citation_form'] = citation_form
+            return render(request, 'atlas/view_concept.html', context)
+    return view_concept(request, concept_id)
 
 
 

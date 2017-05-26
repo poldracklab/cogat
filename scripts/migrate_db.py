@@ -220,7 +220,7 @@ def import_battery():
     sql = ("select id, collection_name, collection_alias, id_user, "
            "event_stamp, collection_description, collection_date_introduced, "
            "collection_publisher, flag_for_curator, website "
-           "from table_task_collections")
+           "from table_task_collection")
     cursor.execute(sql)
     batteries = cursor.fetchall()
     for battery in batteries:
@@ -272,25 +272,24 @@ def import_theory():
         make_node("theory", uid, name, props)
 
 def import_theory_relations():
-    sql = ("select id, id_user, id_assertion, id_collection, event_stamp"
-           "from match_collection_assertions")
+    sql = ("select id_user, id_assertion, id_collection, event_stamp from match_collection_assertions")
     cursor.execute(sql)
     theory_asserts = cursor.fetchall()
 
     for theory_assert in theory_asserts:
         props = {}
-        props["event_stamp"] = theory_assert[4]
-        props["id_user"] = theory_assert[1]
-        theory = find_node("theory", theory_assert[3])
-        assertion = find_node("assertion", theory_assert[2])
+        props["event_stamp"] = theory_assert[3]
+        props["id_user"] = theory_assert[0]
+        theory = find_node("theory", theory_assert[2])
+        assertion = find_node("assertion", theory_assert[1])
 
         if theory and assertion:
             make_relation(assertion, "INTHEORY", theory, props)
 
 def import_collection_relations():
     sql = ("select id, id_user, id_included_collection, id_collection,"
-           "event_stamp from match_collectio_collections")
-    cusrsor.execute(sql)
+           "event_stamp from match_collection_collections")
+    cursor.execute(sql)
     coll_rels = cursor.fetchall()
 
     for coll_rel in coll_rels:

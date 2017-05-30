@@ -5,7 +5,7 @@ mysql_imports ()
 {
     # entrypoint from mysql docker image.
     /entrypoint.sh mysqld &
-    sleep 15
+    sleep 20
     #echo "DROP DATABASE cogat;" | mysql -u root
     echo "CREATE DATABASE cogat;" | mysql -u root
     mysql -u root cogat < $MYSQL_DUMP

@@ -1,4 +1,6 @@
-from py2neo import Path, Node as NeoNode, Relationship
+''' This file contains classes that are used to query and update the neo4j 
+    graph.'''
+from py2neo import Node as Relationship
 import pandas
 
 from cognitive.apps.atlas.utils import (color_by_relation, generate_uid,

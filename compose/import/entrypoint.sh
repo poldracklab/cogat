@@ -5,11 +5,11 @@ mysql_imports ()
 {
     # entrypoint from mysql docker image.
     /entrypoint.sh mysqld &
-    sleep 15
+    sleep 20
     #echo "DROP DATABASE cogat;" | mysql -u root
     echo "CREATE DATABASE cogat;" | mysql -u root
     mysql -u root cogat < $MYSQL_DUMP
-    python3 /code/scripts/migrate_database.py
+    python3 /code/scripts/migrate_db.py
     python3 /code/scripts/mysql2neo.py
     python3 /code/scripts/user_import.py
 }
@@ -27,5 +27,3 @@ if [ ! -z "$MYSQL_DUMP" ]; then
 else
     echo "Variable MYSQL_DUMP unset or null"
 fi
-
-

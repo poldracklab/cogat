@@ -58,7 +58,7 @@ import:
     volumes:
         - .:/code
     links:
+        - postgres
         - nginx
         - uwsgi
         - graphdb
-        - postgres

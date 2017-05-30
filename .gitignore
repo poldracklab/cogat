@@ -79,3 +79,5 @@ target/
 *.sql
 compose/graphdb/data/*
 
+# only allow changes to .env manually
+.env

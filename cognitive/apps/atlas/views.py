@@ -1,3 +1,5 @@
+''' Functional views to create, update, and view the various types of terms
+    and their relationships in cognitive atlas. '''
 import json
 
 from django.contrib import messages
@@ -7,7 +9,8 @@ from django.shortcuts import render
 
 from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ExternalDatasetForm,
-                                        ImplementationForm, IndicatorForm)
+                                        ImplementationForm, IndicatorForm,
+                                        TheoryAssertionForm)
 from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
                                         Battery, Theory, Condition,
                                         Implementation, Indicator,
@@ -39,15 +42,18 @@ counts = {
 
 # VIEWS FOR ALL NODES #############################################################
 
-def all_nodes(request, nodes, node_type):
+def all_nodes(request, nodes, node_type, node_type_plural):
     '''all_nodes returns view with all nodes for node_type'''
 
     appname = "The Cognitive Atlas"
-    context = {'appname': appname,
-               'term_type':node_type[:-1],
-               'nodes':nodes,
-               'filtered_nodes_count':counts[node_type],
-               'counts':counts}
+    context = {
+        'appname': appname,
+        'term_type': node_type,
+        'term_type_plural': node_type_plural,
+        'nodes': nodes,
+        'filtered_nodes_count': counts[node_type_plural],
+        'counts': counts
+    }
 
     return render(request, "atlas/all_terms.html", context)
 
@@ -55,36 +61,36 @@ def all_concepts(request):
     '''all_concepts returns page with list of all concepts'''
 
     concepts = Concept.all(order_by="name")
-    return all_nodes(request, concepts, "concepts")
+    return all_nodes(request, concepts, "concept", "concepts")
 
 def all_tasks(request):
     '''all_tasks returns page with list of all tasks'''
 
     tasks = Task.all(order_by="name")
-    return all_nodes(request, tasks, "tasks")
+    return all_nodes(request, tasks, "task", "tasks")
 
 def all_batteries(request):
     '''all_collections returns page with list of all collections'''
 
     batteries = Battery.all(order_by="name")
-    return all_nodes(request, batteries, "batteries")
+    return all_nodes(request, batteries, "battery", "batteries")
 
 
 def all_theories(request):
     '''all_collections returns page with list of all collections'''
 
     theories = Theory.all(order_by="name")
-    return all_nodes(request, theories, "theories")
+    return all_nodes(request, theories, "theory", "theories")
 
 def all_disorders(request, return_context=False):
     '''all_disorders returns page with list of all disorders'''
     disorder_form = DisorderForm
     disorders = Disorder.all(order_by="name")
-    for d in range(len(disorders)):
-        disorder = disorders[d]
+    for dis_index in range(len(disorders)):
+        disorder = disorders[dis_index]
         if disorder["classification"] is None:
             disorder["classification"] = "None"
-            disorders[d] = disorder
+            disorders[dis_index] = disorder
 
     context = {
         'appname': "The Cognitive Atlas",
@@ -101,7 +107,7 @@ def all_contrasts(request):
     '''all_contrasts returns page with list of all contrasts'''
     fields = ""
     contrasts = Contrast.all(order_by="name", fields=fields)
-    return all_nodes(request, contrasts, "contasts")
+    return all_nodes(request, contrasts, "contast", "contrasts")
 
 
 # VIEWS BY LETTER #############################################################
@@ -219,14 +225,22 @@ def view_task(request, uid, return_context=False):
     return render(request, 'atlas/view_task.html', context)
 
 def view_battery(request, uid):
-    context = {}
+    battery = Battery.get(uid)    
+    context = {"battery": battery}
     return render(request, 'atlas/view_battery.html', context)
 
 def view_theory(request, uid):
     theory = Theory.get(uid)[0]
-    context = {"theory":theory}
+    assertions = Theory.get_reverse_relation(uid, "INTHEORY")
+    # test if logged in, this might be an expensive operation since choices 
+    # field is populated on each instantiation
+    theory_assertions_form = TheoryAssertionForm()
+    context = {
+        "theory": theory,
+        "assertions": assertions,
+        "theory_assertions_form": theory_assertions_form
+    }
     return render(request, 'atlas/view_theory.html', context)
-
 
 def view_disorder(request, uid):
     disorder = Disorder.get(uid)[0]
@@ -310,10 +324,8 @@ def add_term(request):
             node = Task.create(name=term_name, properties=properties)
             return view_task(request, node["id"])
 
-'''
-def contribute_disorder(request):
-    return render(request, 'atlas/contribute_disorder.html', context)
-'''
+#def contribute_disorder(request):
+#    return render(request, 'atlas/contribute_disorder.html', context)
 
 @login_required
 def add_condition(request, task_id):
@@ -645,8 +657,8 @@ def add_disorder_citation(request, disorder_id):
                 messages.error(request, "Was unable to create citation")
                 return view_concept(request, disorder_id)
             link_made = Disorder.link(disorder_id, cit.properties['id'],
-                                     "HASCITATION",
-                                     endnode_type="citation")
+                                      "HASCITATION",
+                                      endnode_type="citation")
             if link_made is None:
                 graph.delete(cit)
                 messages.error(request, "Was unable to associate concept and citation")

@@ -1,12 +1,15 @@
 {% extends "main/base.html" %}
 {% load crispy_forms_tags %}
+{% load staticfiles %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
 .asholder {position:relative;}
+.select2-container { width: 100% !important; }
 </style>
+<link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
+
 {% endblock %}
-{% load staticfiles %}
 
 {% block branding %}
 {% include 'atlas/branding.html'%}
@@ -81,6 +84,7 @@
 
 {% endblock %}
 {% block scripts %}
+<script src="{% static "js/select2.min.js"%}" type="text/javascript"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     $(function() {
@@ -98,6 +102,8 @@ $(document).ready(function() {
     $("#reset-id-theory-assertion-cancel").click(function(){
         $("#slidetarget_constass").addClass('hidden');
     })
+
+    $(".select").select2({width: 'resolve'});
  
 });
 </script>

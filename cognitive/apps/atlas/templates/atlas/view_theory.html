@@ -1,4 +1,5 @@
 {% extends "main/base.html" %}
+{% load crispy_forms_tags %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
@@ -57,8 +58,8 @@
     <div id="block-measurements" class="block-half">
         <h2>Constituent <strong>Assertions</strong></h2><br>
             <ul class="alister">
-            {% for relation in theory.relations.ASSERTS %}
-                <li class="similitude {{relation.id}}">{{ relation.name }}
+            {% for assertion in assertions %}
+                <li class="similitude {{assertion.id}}">{{ assertion.name }}
                 </li>
             {% endfor %}
             </ul><small>REFERENCED TERMS:</small> 
@@ -66,14 +67,11 @@
             <!-- No idea what this is-->
             <a href="#" class="hovermark" rev="{{ relation.id }}">{{ relation.name }}</a>
             {% endfor %}
-                       <a href="javascript:void(0)" id="slide_constass" class="actionator">+ add constituent assertion</a><br>
-            <div id="slidetarget_constass" style="display:none"><br>	
+            <a name="add_theory_assertion_button" id="add_theory_assertion_button" class="actionator">+ add constituent assertion</a><br>
+            <div id="slidetarget_constass" class="hidden"><br>
                 <div class="popstar">
-                    <form method="post" name="constass_form" id="constass_form" action="#">
-                        <input type="hidden" name="id_object" value="{{ theory.id }}"> 
-                        <input type="hidden" name="id_assertion" id="id_assertion" value=""> Select Assertion: 			<input type="text" name="text_description" id="text_description" size="120" value="" title="text description" aria-label="text description" ><br><br>			
-                        <input type="button" value="Cancel" onclick="document.location.reload(true);" title="cancel submission" aria-label="cancel submission" >
-                        <input type="submit" value="Add Constituent Assertion" title="submit form" aria-label="submit form">		
+                    <form method="post" name="theory-assertion-form" id="id-theory-assertion-form" action="#">
+                        {% crispy theory_assertions_form theory_assertions_form.helper %}
                      </form>
                </div>
            </div> 
@@ -93,6 +91,14 @@ $(document).ready(function() {
         $("#edit_theory").removeClass("hidden")
     })
 
+    // Show input to add citation
+    $("#add_theory_assertion_button").click(function(){
+        $("#slidetarget_constass").removeClass('hidden');
+    })
+    $("#reset-id-theory-assertion-cancel").click(function(){
+        $("#slidetarget_constass").addClass('hidden');
+    })
+ 
 });
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
-''' This file contains classes that are used to query and update the neo4j 
+''' This file contains classes that are used to query and update the neo4j
     graph.'''
-from py2neo import Node as Relationship
+from py2neo import Path, Node as NeoNode, Relationship
 import pandas
 
 from cognitive.apps.atlas.utils import (color_by_relation, generate_uid,
@@ -56,7 +56,8 @@ class Node(object):
         :param uid: the unique identifier for the source node
         :param endnode_id: the unique identifier for the end node
         :raram relation_type: the relation type
-        :param endnode_type: the type of the second node. If not specified, assumed to be same as startnode
+        :param endnode_type: the type of the second node. If not specified, assumed to be
+               same as startnode
         :param properties: properties to add to the relation
         '''
         if endnode_type is None:
@@ -189,7 +190,8 @@ class Node(object):
 
     def filter(self, filters, format="dict", fields=None):
         '''filter will filter a node based on some set of filters
-        :param filters: a list of tuples with [(field,filter,value)], eg [("name","starts_with","a")].
+        :param filters: a list of tuples with [(field,filter,value)],
+                        eg [("name","starts_with","a")].
         ::note_
 
              Currently supported filters are "starts_with"
@@ -234,8 +236,9 @@ class Node(object):
         return do_query(query, fields=fields, output_format=format)
 
     def get(self, uid, field="id", get_relations=True, relations=None):
-        '''get returns one or more nodes based on a field of interest. If get_relations is true, will also return
-        the default relations for the node, or those defined in the relations variable
+        ''' get returns one or more nodes based on a field of interest. If
+            get_relations is true, will also return the default relations for
+            the node, or those defined in the relations variable
         :param params: list of parameters to search for, eg [trm_123]
         :param field: field to search (default id)
         :param get_relations: default True, return relationships
@@ -412,9 +415,10 @@ class Task(Node):
     def api_update_concepts(self, concepts, task_id):
         for concept in concepts:
             concept['concept_id'] = concept.pop('id')
-            query = '''MATCH (con:contrast)<-[:HASCONTRAST]-(t:task)-[:ASSERTS]->(c:concept)-[:MEASUREDBY]->(con:contrast)
-                       WHERE c.id = '{}' AND t.id = '{}'
-                       RETURN con'''.format(concept['concept_id'], task_id)
+            query = ("MATCH (con:contrast)<-[:HASCONTRAST]-(t:task)-[:ASSERTS]->"
+                     "(c:concept)-[:MEASUREDBY]->(con:contrast) "
+                     "WHERE c.id = '{}' AND t.id = '{}' "
+                     "RETURN con").format(concept['concept_id'], task_id)
             contrast = do_query(query, "null", "list")
             concept['contrast_id'] = contrast[0].properties.id
         return concepts
@@ -620,7 +624,7 @@ class Implementation(Node):
         self.fields = ["implementation_uri", "implementation_name", "implementation_description"]
 
 class ExternalDataset(Node):
-    
+
     def __init__(self):
         super().__init__()
         self.name = "external_dataset"
@@ -642,6 +646,15 @@ class Citation(Node):
                        "citation_authors", "citation_type", "citation_pubname",
                        "citation_pubdate", "citation_pmid", "citation_source",
                        "id", "name"]
+
+class Assertion(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "assertion"
+        self.fields = ["id", "name", "event_stamp", "truth_value",
+                       "id_subject_def", "user_id", "flag_for_curator",
+                       "confidence_level"]
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

@@ -88,6 +88,11 @@ urlpatterns = [
         views.add_disorder_task,
         name="add_disorder_task"
     ),
+    url(
+        r'^theory/add/assertion/(?P<theory_id>[\w\+%_& ]+)/$',
+        views.add_theory_assertion,
+        name="add_theory_assertion"
+    ),
 
 
     # Graph views

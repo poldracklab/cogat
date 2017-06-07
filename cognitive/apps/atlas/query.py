@@ -655,6 +655,9 @@ class Assertion(Node):
         self.fields = ["id", "name", "event_stamp", "truth_value",
                        "id_subject_def", "user_id", "flag_for_curator",
                        "confidence_level"]
+        self.relations = {
+            "INTHEORY": "theories"
+        }
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

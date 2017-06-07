@@ -4,15 +4,16 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed
 from django.shortcuts import render
 
 from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ExternalDatasetForm,
                                         ImplementationForm, IndicatorForm,
                                         TheoryAssertionForm)
-from cognitive.apps.atlas.query import (Concept, Task, Disorder, Contrast,
-                                        Battery, Theory, Condition,
+
+from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
+                                        Contrast, Battery, Theory, Condition,
                                         Implementation, Indicator,
                                         ExternalDataset, Citation, search)
 from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
@@ -29,6 +30,7 @@ Implementation = Implementation()
 ExternalDataset = ExternalDataset()
 Indicator = Indicator()
 Citation = Citation()
+Assertion = Assertion()
 
 # Needed on all pages
 counts = {
@@ -225,14 +227,14 @@ def view_task(request, uid, return_context=False):
     return render(request, 'atlas/view_task.html', context)
 
 def view_battery(request, uid):
-    battery = Battery.get(uid)    
+    battery = Battery.get(uid)
     context = {"battery": battery}
     return render(request, 'atlas/view_battery.html', context)
 
 def view_theory(request, uid):
     theory = Theory.get(uid)[0]
     assertions = Theory.get_reverse_relation(uid, "INTHEORY")
-    # test if logged in, this might be an expensive operation since choices 
+    # test if logged in, this might be an expensive operation since choices
     # field is populated on each instantiation
     theory_assertions_form = TheoryAssertionForm()
     context = {
@@ -670,6 +672,22 @@ def add_disorder_citation(request, disorder_id):
             return render(request, 'atlas/view_concept.html', context)
     return view_concept(request, disorder_id)
 
+@login_required
+def add_theory_assertion(requset, theory_id):
+    ''' from theory detail view we can add assertions to the theory that we
+        are looking at. '''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    theory_assertion_form = TheoryAssertionForm(request.POST)
+    if theory_assertion_form.is_valid():
+        cleaned_data = theory_assertion_form.cleaned_data
+        assertion_id = cleaned_data['assertions']
+        Assertion.link(assertion_id, theory_id, "INTHEORY", endnode_type="theory")
+        return view_theory(request, theory_id)
+    else:
+        context = view_theory(request, theory_id, return_context=True)
+        context['theory_assertion_form'] = theory_assertion_form
+        return render(request, 'atlas/view_theory.html', context)
 
 
 

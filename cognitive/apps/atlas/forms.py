@@ -4,7 +4,7 @@ from django.urls import reverse
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Reset, Submit
 
-from cognitive.apps.atlas.query import Assertion
+from cognitive.apps.atlas.query import Assertion, Disorder
 
 class ImplementationForm(forms.Form):
     uri = forms.URLField(required=True)
@@ -78,3 +78,15 @@ class TheoryAssertionForm(forms.Form):
         self.helper.form_tag = False
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('theory-assertion-cancel', 'Cancel'))
+
+class TaskDisorderForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(TaskDisorderForm):
+        disorders = Disorder()
+        choices = [(x['id'], x['name']) for x in disorders.all()]
+        self.fields['disorders'] = forms.ChoiceField(choices=choices)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('task-disorder-cancel', 'Cancel'))
+

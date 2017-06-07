@@ -673,7 +673,7 @@ def add_disorder_citation(request, disorder_id):
     return view_concept(request, disorder_id)
 
 @login_required
-def add_theory_assertion(requset, theory_id):
+def add_theory_assertion(request, theory_id):
     ''' from theory detail view we can add assertions to the theory that we
         are looking at. '''
     if request.method != "POST":

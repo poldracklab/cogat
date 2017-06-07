@@ -73,7 +73,7 @@
             <a name="add_theory_assertion_button" id="add_theory_assertion_button" class="actionator">+ add constituent assertion</a><br>
             <div id="slidetarget_constass" class="hidden"><br>
                 <div class="popstar">
-                    <form method="post" name="theory-assertion-form" id="id-theory-assertion-form" action="#">
+                    <form method="post" name="theory-assertion-form" id="id-theory-assertion-form" action="{% url 'add_theory_assertion' theory.id %}">
                         {% crispy theory_assertions_form theory_assertions_form.helper %}
                      </form>
                </div>

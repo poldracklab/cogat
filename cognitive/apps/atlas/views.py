@@ -4,8 +4,10 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed
 from django.shortcuts import render
+
 
 from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ExternalDatasetForm,
@@ -231,17 +233,34 @@ def view_battery(request, uid):
     context = {"battery": battery}
     return render(request, 'atlas/view_battery.html', context)
 
-def view_theory(request, uid):
+def view_theory(request, uid, return_context=False):
     theory = Theory.get(uid)[0]
     assertions = Theory.get_reverse_relation(uid, "INTHEORY")
     # test if logged in, this might be an expensive operation since choices
     # field is populated on each instantiation
     theory_assertions_form = TheoryAssertionForm()
+    referenced_terms = {}
+    for asrt in assertions:
+        pred = Assertion.get_relation(asrt['id'], "PREDICATE")[0]
+        subj = Assertion.get_relation(asrt['id'], "SUBJECT")[0]
+        for term in [pred, subj]:
+            term_node = graph.cypher.execute("match (t) where t.id = '{}' return t".format(term['id'])).one
+            # we only ever create nodes with one label:
+            type = [x for x in term_node.labels][0]
+            url = reverse(type, kwargs={'uid': term['id']})
+            if term['name'] in  referenced_terms:
+                referenced_terms[term['name']][0] += 1
+            else:
+                referenced_terms[term['name']] = [1, url]
+
     context = {
         "theory": theory,
         "assertions": assertions,
-        "theory_assertions_form": theory_assertions_form
+        "theory_assertions_form": theory_assertions_form,
+        "referenced_terms": referenced_terms
     }
+    if return_context is True:
+        return context
     return render(request, 'atlas/view_theory.html', context)
 
 def view_disorder(request, uid):

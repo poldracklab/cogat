@@ -65,11 +65,12 @@
                 <li class="similitude {{assertion.id}}">{{ assertion.name }}
                 </li>
             {% endfor %}
-            </ul><small>REFERENCED TERMS:</small> 
-            {% for relation in theory.relation.REFERENCED %}
-            <!-- No idea what this is-->
-            <a href="#" class="hovermark" rev="{{ relation.id }}">{{ relation.name }}</a>
+            </ul>
+            <small>REFERENCED TERMS:</small> 
+            {% for name, values in referenced_terms.items %}
+                <a href="{{ values.1 }}" class="hovermark">{{ name }}</a>({{ values.0 }})
             {% endfor %}
+            <br>
             <a name="add_theory_assertion_button" id="add_theory_assertion_button" class="actionator">+ add constituent assertion</a><br>
             <div id="slidetarget_constass" class="hidden"><br>
                 <div class="popstar">

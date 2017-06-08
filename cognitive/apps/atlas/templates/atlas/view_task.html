@@ -155,8 +155,17 @@
 <div id="bloastsk-implementors" class="block-halfwide-rfloat block-back block-margin">
     <div class="pane">
         <div class="discdiv"><b>DISORDERS</b> associated with <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
-            <span class="noassoc">No associations have been added.</span><br><br>
+            {% for disorder in disorders %}
+                <a href={% url "disorder" disorder.id %}>{{ disorder.name }}</a><br>
+            {% empty %}
+                <span class="noassoc">No associations have been added.</span><br><br>
+            {% endfor %}
         </div>
+        <button style="float:right;margin-top:10px" id="add_disorder_button">ADD DISORDER</button>		
+        <form class="hidden" action="{% url 'add_task_disorder' task.id %}" method="post" id="id-disorderform">
+            {% csrf_token %}
+            {% crispy task_disorder_form task_disorder_form.helper %}
+        </form>
     </div>
 </div><br clear="all">	
 
@@ -423,7 +432,13 @@ $(document).ready(function() {
         $("#id-citationform").addClass('hidden');
     })
  
-
+    $("#add_disorder_button").click(function(){
+        $("#id-disorderform").removeClass('hidden');
+    })
+    $("#reset-id-task-disorder-cancel").click(function(){
+        $("#id-disorderform").addClass('hidden');
+    })
+ 
 
     {% if user.is_authenticated %}
     // Add concept

@@ -195,7 +195,9 @@ def view_task(request, uid, return_context=False):
     contrasts = Task.api_get_contrasts(task["id"])
 
     concept_lookup = dict()
+    disorders = []
     for contrast in contrasts:
+        disorders.extend(Contrast.get_relation(contrast["id"], "HASDIFFERENCE"))
         contrast_concepts = Contrast.get_concepts(contrast["id"])
         for concept in contrast_concepts:
             concept_lookup = update_lookup(concept_lookup, concept["concept_id"], contrast)
@@ -207,7 +209,6 @@ def view_task(request, uid, return_context=False):
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
     citations = Task.get_relation(task["id"], "HASCITATION")
-    disorders = Task.get_relation(task["id"], "HASDIFFERENCE")
 
     context = {
         "task": task,
@@ -224,7 +225,7 @@ def view_task(request, uid, return_context=False):
         "citations": citations,
         "citation_form": CitationForm(),
         "disorders": disorders,
-        "task_disorder_form": TaskDisorderForm(),
+        "task_disorder_form": TaskDisorderForm(uid),
     }
 
     if return_context is True:
@@ -652,7 +653,8 @@ def add_task_disorder(request, task_id):
     if task_disorder_form.is_valid():
         cleaned_data = task_disorder_form.cleaned_data
         disorder_id = cleaned_data['disorders']
-        Task.link(task_id, disorder_id, "HASDIFFERENCE", endnode_type="disorder")
+        cont_id = cleaned_data['contrasts']
+        Contrast.link(cont_id, disorder_id, "HASDIFFERENCE", endnode_type="disorder")
         return view_task(request, task_id)
     else:
         context = view_task(request, task_id, return_context=True)

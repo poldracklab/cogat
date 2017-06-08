@@ -81,7 +81,7 @@ class TheoryAssertionForm(forms.Form):
 
 class TaskDisorderForm(forms.Form):
     def __init__(self, *args, **kwargs):
-        super(TaskDisorderForm)
+        super(TaskDisorderForm, self).__init__(*args, **kwargs)
         disorders = Disorder()
         choices = [(x['id'], x['name']) for x in disorders.all()]
         self.fields['disorders'] = forms.ChoiceField(choices=choices)

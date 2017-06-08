@@ -12,7 +12,7 @@ from django.shortcuts import render
 from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ExternalDatasetForm,
                                         ImplementationForm, IndicatorForm,
-                                        TheoryAssertionForm)
+                                        TaskDisorderForm, TheoryAssertionForm)
 
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
@@ -207,6 +207,7 @@ def view_task(request, uid, return_context=False):
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
     citations = Task.get_relation(task["id"], "HASCITATION")
+    disorders = Task.get_relation(task["id"], "HASDIFFERENCE")
 
     context = {
         "task": task,
@@ -222,6 +223,8 @@ def view_task(request, uid, return_context=False):
         "indicators": indicators,
         "citations": citations,
         "citation_form": CitationForm(),
+        "disorders": disorders,
+        "task_disorder_form": TaskDisorderForm(),
     }
 
     if return_context is True:
@@ -229,11 +232,13 @@ def view_task(request, uid, return_context=False):
     return render(request, 'atlas/view_task.html', context)
 
 def view_battery(request, uid):
+    ''' detail view for a battery. '''
     battery = Battery.get(uid)
     context = {"battery": battery}
     return render(request, 'atlas/view_battery.html', context)
 
 def view_theory(request, uid, return_context=False):
+    ''' detail view for a given assertion '''
     theory = Theory.get(uid)[0]
     assertions = Theory.get_reverse_relation(uid, "INTHEORY")
     # test if logged in, this might be an expensive operation since choices
@@ -244,7 +249,9 @@ def view_theory(request, uid, return_context=False):
         pred = Assertion.get_relation(asrt['id'], "PREDICATE")[0]
         subj = Assertion.get_relation(asrt['id'], "SUBJECT")[0]
         for term in [pred, subj]:
-            term_node = graph.cypher.execute("match (t) where t.id = '{}' return t".format(term['id'])).one
+            term_node = graph.cypher.execute(
+                "match (t) where t.id = '{}' return t".format(term['id'])
+            ).one
             # we only ever create nodes with one label:
             type = [x for x in term_node.labels][0]
             url = reverse(type, kwargs={'uid': term['id']})
@@ -636,6 +643,23 @@ def add_task_citation(request, task_id):
     return view_task(request, task_id)
 
 @login_required
+def add_task_disorder(request, task_id):
+    ''' From the task we can create a link between the task we are viewing and
+        a disorder.'''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    task_disorder_form = TaskDisorderForm(request.POST)
+    if task_disorder_form.is_valid():
+        cleaned_data = task_disorder_form.cleaned_data
+        disorder_id = cleaned_data['disorders']
+        Task.link(task_id, disorder_id, "HASDIFFERENCE", endnode_type="disorder")
+        return view_task(request, task_id)
+    else:
+        context = view_task(request, task_id, return_context=True)
+        context['task_disorder_form'] = task_disorder_form
+        return render(request, 'atlas/view_task.html', context)
+
+@login_required
 def add_concept_citation(request, concept_id):
     ''' From the task view we can create a link to citation that is associated
         with a given task.'''
@@ -714,6 +738,7 @@ def add_theory_assertion(request, theory_id):
 # SEARCH TERMS ####################################################################
 
 def search_all(request):
+    ''' used by templates via ajax when searching for terms '''
     data = "no results"
     search_text = request.POST.get("searchterm", "")
     results = []

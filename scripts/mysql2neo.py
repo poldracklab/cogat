@@ -197,12 +197,23 @@ for disorder in disorders:
     if not found:
         gret = graph.create(
             Node("disorder", id=disorder[2], id_protocol=disorder[3],
-                 name=disorder[4], definition=disorder[5], is_a=disorder[6],
-                 is_a_protocol=disorder[7], is_a_fulltext=disorder[8],
+                 name=disorder[4], definition=disorder[5],
                  id_user=disorder[9], event_stamp=disorder[10],
                  flag_for_curator=disorder[11])
         )
         #print(str.encode(str(gret), 'utf-8'))
+
+# import is_a relationships 
+for disorder in disorders:
+    start_node = graph.find_one("disorder", property_key="id",
+                                property_value=disorder[2])
+    end_node = graph.find_one("disorder", property_key="id",
+                              property_value=disorder[6])
+    if start_node and end_node:
+        gret = graph.create(
+            Relationship(start_node, "ISA", end_node, protocol=disorder[7],
+                         fulltext=disorder[8])
+        )
 
 sql = "select * from match_disorder_assertions"
 cursor.execute(sql)

@@ -45,6 +45,11 @@
             <option value="{{ disorder.id }}">{{ disorder.name }}</option>
         {% endfor %}
         </select>
+        <br>
+        {% for disorder in disorders %}
+            {{disorder}}<br>
+        {% endfor %}
+    '''
 	<br><br><br><br><br><br>
 	<p><small>Data on Disorders has been provided by the <a href="http://disease-ontology.org/" target="_blank">Disease Ontology (DO) database</a>,
 read more at <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3245088/" target="_blank">NAR</a>, reference: Schriml LM, Arze C, Nadendla S, Chang YW,

@@ -86,6 +86,12 @@ def all_theories(request):
     theories = Theory.all(order_by="name")
     return all_nodes(request, theories, "theory", "theories")
 
+def disorder_populate(disorders):
+    ret = {}
+    for dis in disorders:
+        ret[dis] = disorder_populate([x.start_node for x in dis.match_outgoing()])
+    return ret
+
 def all_disorders(request, return_context=False):
     '''all_disorders returns page with list of all disorders'''
     disorder_form = DisorderForm
@@ -95,12 +101,19 @@ def all_disorders(request, return_context=False):
         if disorder["classification"] is None:
             disorder["classification"] = "None"
             disorders[dis_index] = disorder
+    
+    dis_records = graph.cypher.execute(
+        "match (dis:disorder) where not (dis:disorder)-[:ISA]->() return dis"
+    )
+    top_level_disorders = [x['dis'] for x in dis_records]
+    disorders = disorder_populate(top_level_disorders)
 
     context = {
         'appname': "The Cognitive Atlas",
         'active': "disorders",
         'nodes': disorders,
-        'disorder_form': disorder_form
+        'disorder_form': disorder_form,
+        'disorders': disorders
     }
 
     if return_context:

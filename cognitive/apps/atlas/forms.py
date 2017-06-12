@@ -97,3 +97,24 @@ class TaskDisorderForm(forms.Form):
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('task-disorder-cancel', 'Cancel'))
 
+class TheoryForm(forms.Form):
+    label = "Enter the name of the theory collection you wish to add: "
+    name = forms.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(TheoryForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('theory-cancel', 'Cancel'))
+
+class BatteryForm(forms.Form):
+    label = "Enter the name of the task collection you wish to add: "
+    name = forms.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(BatteryForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('battery-cancel', 'Cancel'))

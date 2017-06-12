@@ -1,0 +1,96 @@
+{% extends "main/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+<link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
+{% block head %}
+<style>
+.ui-autocomplete-loading { background: white url("/img/facebox/loading.gif") right center no-repeat; }
+.asholder {position:relative;}
+</style>
+{% endblock %}
+
+{% block branding %}
+    {% include 'atlas/branding.html'%}
+    {% block navigation %}
+    {% include "atlas/middle_navigation.html" %}
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+<h1 class="CATitle">Browse Collections<strong class="collection"> Theories</strong></h1>
+<div class="stringer">All Theories</div>
+<div class="two-columns">
+    <ul class="colister">
+    {% for node in theories %}
+        <li>
+            <span class="theory">
+                <a href="/theory/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name }}</a>
+            </span>
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% if user.is_authenticated %}
+<form method="POST" action="{% url 'add_theory' %}" class="hidden" id="theory_form">
+    {% crispy theory_form theory_form.helper %}
+    {% csrf_token %}
+    <button id="theory_cancel_button" type="button" class="btn btn-primary">Cancel</button>
+    <input type="submit" value="submit" class="btn btn-primary"></input>    
+</form>
+
+<div class="clear_all"></div>
+
+<h1 class="CATitle">Browse Collections<strong class="collection"> Task Batteries</strong></h1>
+<div class="stringer">All Batteries</div>
+<div class="two-columns">
+    <ul class="colister">
+    {% for node in batteries %}
+        <li>
+            <span class="battery">
+                <a href="/battery/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name }}</a>
+            </span>
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% if user.is_authenticated %}
+<button style="float:right;margin-top:10px" id="add_battery_button">CONTRIBUTE NEW BATTERY COLLECTION</button>		
+<form method="POST" action="{% url 'add_battery' %}" class="hidden" id="theory_form">
+    {% crispy battery_form battery_form.helper %}
+    {% csrf_token %}
+    <button id="battery_cancel_button" type="button" class="btn btn-primary">Cancel</button>
+    <input type="submit" value="submit" class="btn btn-primary"></input>    
+</form>
+{% endif %}
+
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+$(document).ready(function() {
+    $(function() {
+       $(".tooltip").tipsy({fade:false, gravity:"w", html:true});
+       $("#masker").fadeOut("fast");
+       $("#contclicker").click(function(){
+           $("#contribution_block").toggle();
+       });
+    });
+
+    $("#add_theory_button").click(function(){
+        $("#theory_form").removeClass('hidden');
+    })
+    $("#theory_cancel_button").click(function(){
+        $("#theory_form").addClass('hidden');
+    })
+
+    $("#add_battery_button").click(function(){
+        $("#battery_form").removeClass('hidden');
+    })
+    $("#battery_cancel_button").click(function(){
+        $("#battery_form").addClass('hidden');
+    })
+
+});
+</script>
+{% endblock %}

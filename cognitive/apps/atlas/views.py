@@ -12,7 +12,8 @@ from django.shortcuts import render
 from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ExternalDatasetForm,
                                         ImplementationForm, IndicatorForm,
-                                        TaskDisorderForm, TheoryAssertionForm)
+                                        TaskDisorderForm, TheoryAssertionForm,
+                                        TheoryForm, BatteryForm)
 
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
@@ -36,12 +37,13 @@ Assertion = Assertion()
 
 # Needed on all pages
 counts = {
-    "disorders":Disorder.count(),
-    "tasks":Task.count(),
-    "contrasts":Contrast.count(),
-    "concepts":Concept.count(),
-    "batteries":Battery.count(),
-    "theories":Theory.count()
+    "disorders": Disorder.count(),
+    "tasks": Task.count(),
+    "contrasts": Contrast.count(),
+    "concepts": Concept.count(),
+    "theories": Theory.count(),
+    "batteries": Battery.count(),
+    "collections": Battery.count() + Theory.count()
 }
 
 # VIEWS FOR ALL NODES #############################################################
@@ -49,9 +51,7 @@ counts = {
 def all_nodes(request, nodes, node_type, node_type_plural):
     '''all_nodes returns view with all nodes for node_type'''
 
-    appname = "The Cognitive Atlas"
     context = {
-        'appname': appname,
         'term_type': node_type,
         'term_type_plural': node_type_plural,
         'nodes': nodes,
@@ -74,17 +74,35 @@ def all_tasks(request):
     return all_nodes(request, tasks, "task", "tasks")
 
 def all_batteries(request):
-    '''all_collections returns page with list of all collections'''
+    '''all_batteries returns page with list of all batteries'''
 
     batteries = Battery.all(order_by="name")
     return all_nodes(request, batteries, "battery", "batteries")
 
 
 def all_theories(request):
-    '''all_collections returns page with list of all collections'''
+    '''all_theories returns page with list of all theories'''
 
     theories = Theory.all(order_by="name")
     return all_nodes(request, theories, "theory", "theories")
+
+def all_collections(request, return_context=False):
+    '''all_collections returns page with list of all collections'''
+    theories = Theory.all(order_by="name")
+    batteries = Battery.all(order_by="name")
+
+    context = {
+        'theories': theories,
+        'batteries': batteries,
+        'counts': counts,
+        'theory_form': TheoryForm(),
+        'battery_form': BatteryForm()
+    }
+    if return_context:
+        return context
+
+    return render(request, "atlas/all_collections.html", context)
+
 
 def disorder_populate(disorders):
     ret = {}
@@ -742,8 +760,37 @@ def add_theory_assertion(request, theory_id):
         context['theory_assertion_form'] = theory_assertion_form
         return render(request, 'atlas/view_theory.html', context)
 
+@login_required
+def add_theory(request):
+    ''' from all collections we can add new theories, this view handles that ''' 
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    theory_form = TheoryForm(request.POST)
+    if theory_form.is_valid():
+        cleaned_data = theory_form.cleaned_data
+        name = cleaned_data['name']
+        new_theory = Theory.create(name)
+        return view_theory(request, new_theory.properties['id'])
+    else:
+        context = all_collections(request, return_context=True)
+        context['theory_form'] = theory_form
+        return render(request, 'atlas/all_collections.html', context)
 
-
+@login_required
+def add_battery(request):
+    ''' from all collections we can add new theories, this view handles that ''' 
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    battery_form = TheoryForm(request.POST)
+    if battery_form.is_valid():
+        cleaned_data = battery_form.cleaned_data
+        name = cleaned_data['name']
+        new_battery = Battery.create(name)
+        return view_battery(request, new_battery.properties['id'])
+    else:
+        context = all_collections(request, return_context=True)
+        context['battery_form'] = battery_form
+        return render(request, 'atlas/all_collections.html', context)
 
 # SEARCH TERMS ####################################################################
 

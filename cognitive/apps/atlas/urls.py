@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^batteries$', views.all_batteries, name="all_batteries"),
     url(r'^theories$', views.all_theories, name="all_theories"),
     url(r'^tasks$', views.all_tasks, name="all_tasks"),
+    url(r'^collections$', views.all_collections, name="all_collections"),
 
     # Search (json response) views
     url(r'^search$', views.search_all, name="search"),
@@ -33,6 +34,8 @@ urlpatterns = [
     # Modify terms
     url(r'^terms/new/$', views.contribute_term, name="contribute_term"),
     url(r'^disorder/new/$', views.contribute_disorder, name="contribute_disorder"),
+    url(r'^theory/new/$', views.add_theory, name="add_theory"),
+    url(r'^battery/new/$', views.add_battery, name="add_battery"),
     url(r'^terms/add/$', views.add_term, name="add_term"),
     url(r'^concept/update/(?P<uid>[\w\+%_& ]+)/$', views.update_concept, name="update_concept"),
     url(r'^task/update/(?P<uid>[\w\+%_& ]+)/$', views.update_task, name="update_task"),
@@ -98,7 +101,6 @@ urlpatterns = [
         views.add_theory_assertion,
         name="add_theory_assertion"
     ),
-
 
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),

@@ -15,7 +15,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="keywords" content="cognitive atlas, cognitive science, neurobiology, taxonomy, semantic web, collaborative tools, neuroscience" />
     <meta name="description" content="The Cognitive Atlas is a collaborative knowledge building project that aims to develop a knowledge base (or ontology) that characterizes the state of current thought in cognitive science.">
-    <link type="text/css" href="{% static "css/bootstrap-theme.min.css"%}" rel="stylesheet" media="screen">
+    <link type="text/css" href="{# static "css/bootstrap-theme.min.css"#}" rel="stylesheet" media="screen">
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">-->
     <link type="text/css" href="{% static "css/cogat_app.css"%}" rel="stylesheet" media="screen">
     <link type="text/css" href="{% static "css/print.css"%}" rel="stylesheet" media="print">
     <link type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel='stylesheet'>
@@ -97,7 +98,7 @@
                <a href="{% url 'all_disorders' %}" class="btn"><strong>Disorders</strong></a>
            </li>    
            <li class="navlink coll">
-               <a href="{% url 'all_theories' %}" class="btn"><strong>Theories</strong></a>
+               <a href="{% url 'all_collections' %}" class="btn"><strong>Collections</strong></a>
            </li>
            <li class="navlink about">
                <a href="{% url 'about' %}" class="btn quiet"><strong>About</strong></a>

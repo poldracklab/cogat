@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^batteries$', views.all_batteries, name="all_batteries"),
     url(r'^theories$', views.all_theories, name="all_theories"),
     url(r'^tasks$', views.all_tasks, name="all_tasks"),
-    url(r'^collections$', views.all_collections, name="all_collections"),
+    url(r'^collections/$', views.all_collections, name="all_collections"),
 
     # Search (json response) views
     url(r'^search$', views.search_all, name="search"),
@@ -45,8 +45,8 @@ urlpatterns = [
         name="add_concept_relation"),
     url(r'^task/add/concept/(?P<uid>[\w\+%_& ]+)/$', views.add_task_concept,
         name="add_task_concept"),
-    url(r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_contrast,
-        name="add_concept_contrast"),
+    url(r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_contrast_task,
+        name="add_concept_contrast_task"),
     url(r'^task/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_task_contrast,
         name="add_task_contrast"),
     url(r'^contrast/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_contrast, name="add_contrast"),
@@ -111,7 +111,16 @@ urlpatterns = [
         views.add_battery_citation,
         name="add_battery_citation"
     ),
-
+    url(
+        r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/(?P<tid>[\w\+%_& ]+)/$',
+        views.add_concept_contrast,
+        name="add_concept_contrast"
+    ),
+    url(
+        r'^disorder/add/disorder/(?P<disorder_id>[\w\+%_& ]+)/$',
+        views.add_disorder_disorder,
+        name="add_disorder_disorder"
+    ),
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),
     url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)/$', graph.concept_graph, name="concept_graph"),

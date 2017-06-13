@@ -121,6 +121,12 @@ urlpatterns = [
         views.add_disorder_disorder,
         name="add_disorder_disorder"
     ),
+    url(
+        r'^disorder/add/link/(?P<disorder_id>[\w\+%_& ]+)/$',
+        views.add_disorder_external_link,
+        name="add_disorder_external_link"
+    ),
+
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),
     url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)/$', graph.concept_graph, name="concept_graph"),

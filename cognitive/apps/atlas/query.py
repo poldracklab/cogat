@@ -509,6 +509,11 @@ class Disorder(Node):
                        "event_stamp", "id_user", "is_a", "id_protocol",
                        "is_a_fulltext", "is_a_protocol"]
         self.color = "#337AB7" # neurovault blue
+        self.relations = {
+            "ISA": "disorders",
+            "HASCITATION": "citations",
+            "EXTERNALLINK": "external_links"
+        }
 
 class Condition(Node):
 
@@ -525,6 +530,7 @@ class Contrast(Node):
         self.name = "contrast"
         self.fields = ["id", "name", "description"]
         self.color = "#D89013" #gold
+        self.relations = {"HASDIFFERENCE", "disorders"}
 
     def get_conditions(self, contrast_id, fields=None):
         '''get_conditions returns conditions associated with a contrast
@@ -607,6 +613,7 @@ class Battery(Node):
         self.name = "battery"
         self.fields = ["id", "name", "collection"]
         self.color = "#4BBE00" # bright green
+        self.relations = {"HASCITATION": "citations"}
 
 class Theory(Node):
 
@@ -615,6 +622,7 @@ class Theory(Node):
         self.name = "theory"
         self.fields = ["id", "name", "description"]
         self.color = "#BE0000" # dark red
+        self.relations = {"HASCITATION": "citations"}
 
 class Implementation(Node):
 
@@ -656,7 +664,10 @@ class Assertion(Node):
                        "id_subject_def", "user_id", "flag_for_curator",
                        "confidence_level"]
         self.relations = {
-            "INTHEORY": "theories"
+            "PREDICATE": "tasks",
+            "SUBJECT": "concepts",
+            "INTHEORY": "theories",
+            "HASCITATION": "citations"
         }
 
 # General search function across nodes

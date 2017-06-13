@@ -59,7 +59,7 @@ class CitationForm(forms.Form):
 
 class DisorderForm(forms.Form):
     name = forms.CharField(required=True)
-    definition = forms.CharField(required=True)
+    definition = forms.CharField(required=True, widget=forms.Textarea())
 
     def __init__(self, *args, **kwargs):
         super(DisorderForm, self).__init__(*args, **kwargs)
@@ -106,6 +106,7 @@ class TheoryForm(forms.Form):
         self.helper = FormHelper()
         self.helper.attrs = {'id': 'theory-form'}
         self.helper.form_class = "hidden"
+        self.helper.form_action = reverse('add_theory')
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('theory-cancel', 'Cancel'))
 
@@ -118,5 +119,58 @@ class BatteryForm(forms.Form):
         self.helper = FormHelper()
         self.helper.attrs = {'id': 'battery-form'}
         self.helper.form_class = "hidden"
+        self.helper.form_action = reverse('add_battery')
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('battery-cancel', 'Cancel', type="button"))
+
+class ConceptTaskForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(ConceptTaskForm, self).__init__(*args, **kwargs)
+
+        tasks = Task()
+        choices = [(x['id'], x['name']) for x in tasks.all()]
+        self.fields['tasks'] = forms.ChoiceField(choices=choices)
+
+        self.helper = FormHelper()
+        self.helper.form_class = "hidden"
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('battery-cancel', 'Cancel', type="button"))
+
+class ConceptContrastForm(forms.Form):
+    def __init__(self, task_id, concept_id, *args, **kwargs):
+        super(ConceptContrastForm, self).__init__(*args, **kwargs)
+        tasks = Task()
+        contrasts = tasks.get_relation(task_id, "HASCONTRAST")
+        choices = [(x['id'], x['name']) for x in contrasts]
+        self.fields['contrasts'] = forms.ChoiceField(choices=choices)
+
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('battery-cancel', 'Cancel', type="button"))
+        self.helper.form_action = reverse('add_concept_contrast',
+                                          kwargs={'uid': concept_id, 'tid': task_id})
+
+class DisorderDisorderForm(forms.Form):
+    ''' form for relating disorders to themselves '''
+    type = forms.ChoiceField(choices=[('parent', 'Parent'), ('child', 'Child')])
+    def __init__(self, *args, **kwargs):
+        super(DisorderDisorderForm, self).__init__(*args, **kwargs)
+        disorders = Disorder()
+        choices = [(x['id'], x['name']) for x in disorders.all()]
+        self.fields['disorders'] = forms.ChoiceField(choices=choices)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('disorder-disorder-cancel', 'Cancel'))
+
+class ExternalLinkForm(forms.Form):
+    ''' an external link for a node. For disorders this link may describe the
+        disorder in more detail'''
+    url = forms.URLField(required=True, label="Enter the full URL for the link")
+
+    def __init__(self, *args, **kwargs):
+        super(ExternalLinkForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('link-cancel', 'Cancel'))

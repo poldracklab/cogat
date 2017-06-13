@@ -2,18 +2,22 @@
     and their relationships in cognitive atlas. '''
 import json
 
+from py2neo import Graph, Node, Relationship
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 
 from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ExternalDatasetForm,
                                         ImplementationForm, IndicatorForm,
                                         TaskDisorderForm, TheoryAssertionForm,
-                                        TheoryForm, BatteryForm)
+                                        TheoryForm, BatteryForm,
+                                        ConceptTaskForm, ConceptContrastForm,
+                                        DisorderDisorderForm, ExternalLinkForm)
 
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
@@ -41,9 +45,7 @@ counts = {
     "tasks": Task.count(),
     "contrasts": Contrast.count(),
     "concepts": Concept.count(),
-    "theories": Theory.count(),
-    "batteries": Battery.count(),
-    "collections": Battery.count() + Theory.count()
+    "collections": (Battery.count() + Theory.count()),
 }
 
 # VIEWS FOR ALL NODES #############################################################
@@ -108,16 +110,15 @@ def disorder_populate(disorders):
     ret = {}
     for dis in disorders:
         key = (str(dis.properties['id']), str(dis.properties['name']))
-        print(key)
         ret[key] = disorder_populate([x.start_node for x in dis.match_incoming(rel_type="ISA")])
     return ret
 
 def all_disorders(request, return_context=False):
     '''all_disorders returns page with list of all disorders'''
     disorder_form = DisorderForm
-   
+
     dis_records = graph.cypher.execute(
-        "match (dis:disorder) where not (dis:disorder)-[:ISA]->() return dis"
+        "match (dis:disorder) where not (dis:disorder)-[:ISA]->() return dis order by dis.name"
     )
     top_level_disorders = [x['dis'] for x in dis_records]
     disorders = disorder_populate(top_level_disorders)
@@ -186,6 +187,7 @@ def view_concept(request, uid):
     contrasts = Concept.get_relation(concept["id"], "MEASUREDBY")
 
     assertions = []
+    assertions_no_cont = []
     for task in tasks:
         task_contrasts = Task.get_relation(task["id"], "HASCONTRAST")
         return_contrasts = []
@@ -193,7 +195,11 @@ def view_concept(request, uid):
             for contrast in contrasts:
                 if task_contrast["id"] == contrast["id"]:
                     return_contrasts.append(task_contrast)
-        assertions.append((task, return_contrasts))
+        if return_contrasts:
+            assertions.append((task, return_contrasts))
+        else:
+            assertions_no_cont.append((task, ConceptContrastForm(task["id"],
+                                                                 uid)))
 
     are_kinds_of = Concept.get_reverse_relation(concept["id"], "KINDOF")
     are_parts_of = Concept.get_reverse_relation(concept["id"], "PARTOF")
@@ -203,8 +209,10 @@ def view_concept(request, uid):
         "are_parts_of": are_parts_of,
         "concept": concept,
         "assertions": assertions,
+        "assertions_no_cont": assertions_no_cont,
         "citations": citations,
-        "citation_form": CitationForm()
+        "citation_form": CitationForm(),
+        "concept_task_form": ConceptTaskForm()
     }
 
     return render(request, 'atlas/view_concept.html', context)
@@ -221,12 +229,6 @@ def view_task(request, uid, return_context=False):
     contrasts = Task.api_get_contrasts(task["id"])
 
     concept_lookup = dict()
-    disorders = []
-    for contrast in contrasts:
-        disorders.extend(Contrast.get_relation(contrast["id"], "HASDIFFERENCE"))
-        contrast_concepts = Contrast.get_concepts(contrast["id"])
-        for concept in contrast_concepts:
-            concept_lookup = update_lookup(concept_lookup, concept["concept_id"], contrast)
 
     # Retrieve conditions, make associations with contrasts
     conditions = Task.get_conditions(task["id"])
@@ -235,6 +237,7 @@ def view_task(request, uid, return_context=False):
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
     citations = Task.get_relation(task["id"], "HASCITATION")
+    disorders = Task.get_relation(task["id"], "ASSERTS")
 
     context = {
         "task": task,
@@ -264,14 +267,14 @@ def view_battery(request, uid, return_context=False):
     progenitors = Battery.get_relation(uid, "PARTOF")
     descendants = Battery.get_reverse_relation(uid, "PARTOF")
     indicators = Battery.get_relation(uid, "HASINDICATOR")
-    constituent_tasks INBATTERY
+    constituent_tasks = Battery.get_relation(uid, "INBATTERY")
     citations = Battery.get_relation(uid, "HASCITATION")
     context = {
         "battery": battery,
         "citations": citations,
         "citation_form": CitationForm(),
         "indicators": indicators,
-        "indicator_form": indicator_form,
+        "indicator_form": IndicatorForm(),
         "progenitors": progenitors,
         "descendants": descendants
     }
@@ -286,6 +289,7 @@ def view_theory(request, uid, return_context=False):
     # test if logged in, this might be an expensive operation since choices
     # field is populated on each instantiation
     theory_assertions_form = TheoryAssertionForm()
+    citations = Theory.get_relation(uid, "HASCITATION")
     referenced_terms = {}
     for asrt in assertions:
         pred = Assertion.get_relation(asrt['id'], "PREDICATE")[0]
@@ -295,8 +299,8 @@ def view_theory(request, uid, return_context=False):
                 "match (t) where t.id = '{}' return t".format(term['id'])
             ).one
             # we only ever create nodes with one label:
-            type = [x for x in term_node.labels][0]
-            url = reverse(type, kwargs={'uid': term['id']})
+            node_type = [x for x in term_node.labels][0]
+            url = reverse(node_type, kwargs={'uid': term['id']})
             if term['name'] in  referenced_terms:
                 referenced_terms[term['name']][0] += 1
             else:
@@ -306,20 +310,49 @@ def view_theory(request, uid, return_context=False):
         "theory": theory,
         "assertions": assertions,
         "theory_assertions_form": theory_assertions_form,
-        "referenced_terms": referenced_terms
+        "referenced_terms": referenced_terms,
+        "citation_form": CitationForm(),
+        "citations": citations
     }
     if return_context is True:
         return context
     return render(request, 'atlas/view_theory.html', context)
 
-def view_disorder(request, uid):
+def view_disorder(request, uid, return_context=False):
+    ''' detail view for a given disorder '''
     disorder = Disorder.get(uid)[0]
+    assertions = []
+    tasks = Disorder.get_reverse_relation(uid, "ASSERTS")
+    contrasts = Disorder.get_reverse_relation(uid, "HASDIFFERENCE")
+    parent_disorders = Disorder.get_relation(uid, "ISA")
+    child_disorders = Disorder.get_reverse_relation(uid, "ISA")
+    external_links = 1
+
+    assertions = []
+    for task in tasks:
+        task_contrasts = Task.get_relation(task["id"], "HASCONTRAST")
+        return_contrasts = []
+        for task_contrast in task_contrasts:
+            for contrast in contrasts:
+                if task_contrast["id"] == contrast["id"]:
+                    return_contrasts.append(task_contrast)
+        assertions.append((task, return_contrasts))
+
     citations = Disorder.get_relation(disorder["id"], "HASCITATION")
     context = {
         "disorder":disorder,
         "citations": citations,
         "citation_form": CitationForm(),
+        "assertions": assertions,
+        "disorder_form": DisorderDisorderForm(),
+        "parent_disorders": parent_disorders,
+        "child_disorders": child_disorders,
+        "external_links": external_links,
+        "external_link_form": ExternalLinkForm()
     }
+
+    if return_context:
+        return context
     return render(request, 'atlas/view_disorder.html', context)
 
 
@@ -388,11 +421,11 @@ def add_term(request):
 
         if term_type == "concept":
             node = Concept.create(name=term_name, properties=properties)
-            return view_concept(request, node["id"])
+            return redirect('concept', node["id"])
 
         elif term_type == "task":
             node = Task.create(name=term_name, properties=properties)
-            return view_task(request, node["id"])
+            return redirect('task', node["id"])
 
 #def contribute_disorder(request):
 #    return render(request, 'atlas/contribute_disorder.html', context)
@@ -511,18 +544,67 @@ def add_disorder_task(request, disorder_id):
        with the disorder.
     :param disorder_id: the unique id of the task, for returning to the task page when finished
     '''
-    ''' In old database this relation was against contrasts
-    if request.method == "POST":
-        relation_type = "ASSERTS" #task --asserts-> disorder
-        task_selection = request.POST.get('task_selection', '')
-        Task.link(task_selection, disorder_id, relation_type, endnode_type="disorder")
-    '''
-    return view_disorder(request, disorder_id)
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    relation_type = "ASSERTS" #task --asserts-> disorder
+    task_selection = request.POST.get('task_selection', '')
+    Task.link(task_selection, disorder_id, relation_type, endnode_type="disorder")
+    assertion = graph.cypher.execute(
+        (
+            "match (t:task)<-[:PREDICATE]-(a:assertion)-[:SUBJECT]->(d:disorder)"
+            " where d.id = '{}' and t.id = '{}' return a "
+        ).format(disorder_id, task_selection)
+    )
+    print(assertion)
+    if assertion.records == []:
+        asrt = Assertion.create("")
+        print(asrt)
+        Assertion.link(asrt.properties['id'], disorder_id, "SUBJECT", endnode_type='disorder')
+        Assertion.link(asrt.properties['id'], task_selection, "PREDICATE", endnode_type='task')
 
+    return redirect('disorder', disorder_id)
+
+def add_disorder_disorder(request, disorder_id):
+    ''' process form from disorder view that relates disorders to disorders '''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    form = DisorderDisorderForm(request.POST)
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        rel_dis_id = cleaned_data['disorders']
+        rel_type = cleaned_data['type']
+        if rel_type == 'parent':
+            rel = Disorder.link(disorder_id, rel_dis_id, "ISA", "disorder")
+        else:
+            rel = Disorder.link(rel_dis_id, disorder_id, "ISA", "disorder")
+        return view_disorder(request, disorder_id)
+    else:
+        context = view_disorder(request, disorder_id, return_context=True)
+        context['disorder_form'] = form
+        return render(request, 'atlas/view_disorder.html', context)
+
+
+    return redirect('disorder', disorder_id)
 
 @login_required
-def add_concept_contrast(request, uid):
-    '''add_concept_contrast will add a contrast associated with conditions--> task to the task view
+def add_concept_contrast(request, uid, tid):
+    ''' process form from concept view to add contrast that measures concept '''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    form = ConceptContrastForm(tid, uid, request.POST)
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        contrast_id = cleaned_data['contrasts']
+        rel = Concept.link(uid, contrast_id, "MEASUREDBY", "contrast")
+        concept_task_contrast_assertion(uid, tid, contrast_id)
+        return view_concept(request, uid)
+    else:
+        # would have to insert the form into the assertions_no_contrast list.
+        return view_concept(request, uid)
+
+@login_required
+def add_concept_contrast_task(request, uid):
+    '''add_concept_contrast will add a contrast associated with conditions--> task via the task view
     :param uid: the uid of the task, to return to the correct page after creation
     '''
     if request.method == "POST":
@@ -531,8 +613,13 @@ def add_concept_contrast(request, uid):
         concept_id = request.POST.get('concept_id', '')
         Concept.link(concept_id, contrast_selection, relation_type,
                      endnode_type="contrast")
+        concept_task_contrast_assertion(concept_id, uid, contrast_selection)
     return view_task(request, uid)
 
+@login_required
+def concept_task_contrast_assertion(concept_id, task_id, contrast_id):
+    ''' function to generate assertion node along with all three relations assocaited with it'''
+    pass
 
 @login_required
 def add_contrast(request, task_id):
@@ -690,7 +777,7 @@ def add_task_disorder(request, task_id):
         a disorder.'''
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
-    task_disorder_form = TaskDisorderForm(request.POST)
+    task_disorder_form = TaskDisorderForm(task_id, request.POST)
     if task_disorder_form.is_valid():
         cleaned_data = task_disorder_form.cleaned_data
         disorder_id = cleaned_data['disorders']
@@ -749,14 +836,29 @@ def add_disorder_citation(request, disorder_id):
                                       endnode_type="citation")
             if link_made is None:
                 graph.delete(cit)
-                messages.error(request, "Was unable to associate concept and citation")
-                return view_concept(request, disorder_id)
+                messages.error(request, "Was unable to associate disorder and citation")
+                return view_disorder(request, disorder_id)
         else:
             # if form is not valid, regenerate context and use validated form
-            context = view_task(request, disorder_id, return_context=True)
+            context = view_disorder(request, disorder_id, return_context=True)
             context['citation_form'] = citation_form
-            return render(request, 'atlas/view_concept.html', context)
-    return view_concept(request, disorder_id)
+            return render(request, 'atlas/view_disorder.html', context)
+    return view_disorder(request, disorder_id)
+
+def add_disorder_external_link(request, disorder_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    if request.method == "POST":
+        form = ExternalLinkForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            # create link node and associate
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_disorder(request, disorder_id, return_context=True)
+            context['external_link_form'] = form
+            return render(request, 'atlas/view_disorder.html', context)
+    return view_disorder(request, disorder_id)
 
 @login_required
 def add_theory_citation(request, theory_id):
@@ -773,8 +875,8 @@ def add_theory_citation(request, theory_id):
                 messages.error(request, "Was unable to create citation")
                 return view_theory(request, theory_id)
             link_made = Theory.link(theory_id, cit.properties['id'],
-                                  "HASCITATION",
-                                  endnode_type="citation")
+                                    "HASCITATION",
+                                    endnode_type="citation")
             if link_made is None:
                 graph.delete(cit)
                 messages.error(request, "Was unable to associate theory and citation")
@@ -802,8 +904,8 @@ def add_battery_citation(request, battery_id):
                 messages.error(request, "Was unable to create citation")
                 return view_battery(request, battery_id)
             link_made = Battery.link(battery_id, cit.properties['id'],
-                                  "HASCITATION",
-                                  endnode_type="citation")
+                                     "HASCITATION",
+                                     endnode_type="citation")
             if link_made is None:
                 graph.delete(cit)
                 messages.error(request, "Was unable to associate battery and citation")
@@ -836,7 +938,7 @@ def add_theory_assertion(request, theory_id):
 
 @login_required
 def add_theory(request):
-    ''' from all collections we can add new theories, this view handles that ''' 
+    ''' from all collections we can add new theories, this view handles that '''
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
     theory_form = TheoryForm(request.POST)
@@ -852,7 +954,7 @@ def add_theory(request):
 
 @login_required
 def add_battery(request):
-    ''' from all collections we can add new theories, this view handles that ''' 
+    ''' from all collections we can add new theories, this view handles that '''
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
     battery_form = TheoryForm(request.POST)

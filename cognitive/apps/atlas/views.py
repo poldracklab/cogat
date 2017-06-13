@@ -258,10 +258,25 @@ def view_task(request, uid, return_context=False):
         return context
     return render(request, 'atlas/view_task.html', context)
 
-def view_battery(request, uid):
+def view_battery(request, uid, return_context=False):
     ''' detail view for a battery. '''
-    battery = Battery.get(uid)
-    context = {"battery": battery}
+    battery = Battery.get(uid)[0]
+    progenitors = Battery.get_relation(uid, "PARTOF")
+    descendants = Battery.get_reverse_relation(uid, "PARTOF")
+    indicators = Battery.get_relation(uid, "HASINDICATOR")
+    constituent_tasks INBATTERY
+    citations = Battery.get_relation(uid, "HASCITATION")
+    context = {
+        "battery": battery,
+        "citations": citations,
+        "citation_form": CitationForm(),
+        "indicators": indicators,
+        "indicator_form": indicator_form,
+        "progenitors": progenitors,
+        "descendants": descendants
+    }
+    if return_context:
+        return context
     return render(request, 'atlas/view_battery.html', context)
 
 def view_theory(request, uid, return_context=False):
@@ -742,6 +757,65 @@ def add_disorder_citation(request, disorder_id):
             context['citation_form'] = citation_form
             return render(request, 'atlas/view_concept.html', context)
     return view_concept(request, disorder_id)
+
+@login_required
+def add_theory_citation(request, theory_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    if request.method == "POST":
+        citation_form = CitationForm(request.POST)
+        if citation_form.is_valid():
+            cleaned_data = citation_form.cleaned_data
+            properties = {}
+            properties.update(cleaned_data)
+            cit = Citation.create(cleaned_data['citation_desc'], properties)
+            if cit is None:
+                messages.error(request, "Was unable to create citation")
+                return view_theory(request, theory_id)
+            link_made = Theory.link(theory_id, cit.properties['id'],
+                                  "HASCITATION",
+                                  endnode_type="citation")
+            if link_made is None:
+                graph.delete(cit)
+                messages.error(request, "Was unable to associate theory and citation")
+                return view_theory(request, theory_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_theory(request, theory_id, return_context=True)
+            context['citation_form'] = citation_form
+            return render(request, 'atlas/view_theory.html', context)
+    # redirect back to theory/id?
+    return view_theory(request, theory_id)
+
+@login_required
+def add_battery_citation(request, battery_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    if request.method == "POST":
+        citation_form = CitationForm(request.POST)
+        if citation_form.is_valid():
+            cleaned_data = citation_form.cleaned_data
+            properties = {}
+            properties.update(cleaned_data)
+            cit = Citation.create(cleaned_data['citation_desc'], properties)
+            if cit is None:
+                messages.error(request, "Was unable to create citation")
+                return view_battery(request, battery_id)
+            link_made = Battery.link(battery_id, cit.properties['id'],
+                                  "HASCITATION",
+                                  endnode_type="citation")
+            if link_made is None:
+                graph.delete(cit)
+                messages.error(request, "Was unable to associate battery and citation")
+                return view_battery(request, battery_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_battery(request, battery_id, return_context=True)
+            context['citation_form'] = citation_form
+            return render(request, 'atlas/view_battery.html', context)
+    # redirect back to battery/id?
+    return view_battery(request, battery_id)
+
 
 @login_required
 def add_theory_assertion(request, theory_id):

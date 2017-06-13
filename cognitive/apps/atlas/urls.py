@@ -101,6 +101,16 @@ urlpatterns = [
         views.add_theory_assertion,
         name="add_theory_assertion"
     ),
+    url(
+        r'^theory/add/citation/(?P<theory_id>[\w\+%_& ]+)/$',
+        views.add_theory_citation,
+        name="add_theory_citation"
+    ),
+    url(
+        r'^battery/add/citation/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_citation,
+        name="add_battery_citation"
+    ),
 
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),

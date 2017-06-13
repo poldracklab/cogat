@@ -31,12 +31,9 @@
     </ul>
 </div>
 {% if user.is_authenticated %}
-<form method="POST" action="{% url 'add_theory' %}" class="hidden" id="theory_form">
-    {% crispy theory_form theory_form.helper %}
-    {% csrf_token %}
-    <button id="theory_cancel_button" type="button" class="btn btn-primary">Cancel</button>
-    <input type="submit" value="submit" class="btn btn-primary"></input>    
-</form>
+<button style="float:right;margin-top:10px" id="add_theory_button">CONTRIBUTE NEW THEORY COLLECTION</button>		
+{% crispy theory_form theory_form.helper %}
+{% endif %}
 
 <div class="clear_all"></div>
 
@@ -55,12 +52,7 @@
 </div>
 {% if user.is_authenticated %}
 <button style="float:right;margin-top:10px" id="add_battery_button">CONTRIBUTE NEW BATTERY COLLECTION</button>		
-<form method="POST" action="{% url 'add_battery' %}" class="hidden" id="theory_form">
-    {% crispy battery_form battery_form.helper %}
-    {% csrf_token %}
-    <button id="battery_cancel_button" type="button" class="btn btn-primary">Cancel</button>
-    <input type="submit" value="submit" class="btn btn-primary"></input>    
-</form>
+{% crispy battery_form battery_form.helper %}
 {% endif %}
 
 
@@ -78,17 +70,17 @@ $(document).ready(function() {
     });
 
     $("#add_theory_button").click(function(){
-        $("#theory_form").removeClass('hidden');
+        $("#theory-form").removeClass('hidden');
     })
-    $("#theory_cancel_button").click(function(){
-        $("#theory_form").addClass('hidden');
+    $("#reset-id-theory-cancel").click(function(){
+        $("#theory-form").addClass('hidden');
     })
 
     $("#add_battery_button").click(function(){
-        $("#battery_form").removeClass('hidden');
+        $("#battery-form").removeClass('hidden');
     })
-    $("#battery_cancel_button").click(function(){
-        $("#battery_form").addClass('hidden');
+    $("#reset-id-battery-cancel").click(function(){
+        $("#battery-form").addClass('hidden');
     })
 
 });

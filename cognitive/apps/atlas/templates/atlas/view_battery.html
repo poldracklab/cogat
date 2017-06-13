@@ -1,4 +1,6 @@
 {% extends "main/base.html" %}
+{% load crispy_forms_tags %}
+{% load staticfiles %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
@@ -17,7 +19,34 @@
 
 {% block content %}
 
-
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div>
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <form class="hidden" action="{% url 'add_battery_citation' battery.id %}" method="post" id='id-citationform'>
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+    {% endif %}
+</div>
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript">
@@ -26,6 +55,12 @@ $(document).ready(function() {
        $(".tooltip").tipsy({fade:false, gravity:"w", html:true});
        $("#masker").fadeOut("fast");
     });
+    $("#add_citation_button").click(function(){
+        $("#id-citationform").removeClass('hidden');
+    })
+    $("#reset-id-citation-cancel").click(function(){
+        $("#id-citationform").addClass('hidden');
+    })
 });
 </script>
 {% endblock %}

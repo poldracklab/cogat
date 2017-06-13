@@ -5,21 +5,22 @@
 <style>
 .ui-autocomplete-loading { background: white url("/img/facebox/loading.gif") right center no-repeat; }
 .asholder {position:relative;}
+.dis-elem {padding-left: 20px;}
 </style>
 <link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
 {% endblock %}
 
 {% block branding %}
-{% include 'atlas/branding.html'%}
-{% block navigation %}
-{% include "atlas/middle_navigation.html" %}
-{% endblock %}
+    {% include 'atlas/branding.html'%}
+    {% block navigation %}
+        {% include "atlas/middle_navigation.html" %}
+    {% endblock %}
 {% endblock %}
 
 {% block content %}
 
        <script>
-       nodes = {{ nodes | safe }}
+       //nodes = {{ nodes | safe }}
        </script>
 
         <!-- Contribute New Disorder Form -->
@@ -27,16 +28,15 @@
         <div class="pull-right">
             <a class="actionator" id="add_disorder_button">+ contribute new disorder</a>
         </div>
-        <blockquote class="text" id="contribution_block" class="hidden">
+        <div id="contribution_block" class="container hidden">
             <span class="sectionmed">Contribute New Disorder</span><br /><br />
             <form method="post" id="dform" action="{% url 'contribute_disorder'%}">
                 {% csrf_token %}
                 {% crispy disorder_form disorder_form.helper %}
             </form><br><br><br><br>
-        </blockquote>
-        <div class="container" id="pagecontent">
+        </div>
         {% endif %}
-
+        <div class="container" id="pagecontent">
         <!-- Only rendered based on highest category -->
         <h1 class="CATitle disorder">Browse <strong class="disorder">Disorders</strong></h1><br>
         <br>
@@ -74,13 +74,21 @@ $(document).ready(function() {
     $("#reset-id-disorder-cancel").click(function(){
         $("#contribution_block").addClass('hidden');
     })
- 
+
+    $(".dis-list-toggle").click(function(){
+        if ($(this).parent().children("ul").hasClass("hidden")) {
+            $(this).parent().children("ul").removeClass("hidden");    
+            $(this).text('-');
+        } else {
+            $(this).parent().children("ul").addClass("hidden");    
+            $(this).text('+');
+        }
+    });
+    
     // On selection of a node, render in page
     $("#disorder_list").change(function(e) {
         var selection = $("#disorder_list").val()    
         var text = $("#disorder_list option:selected").text()    
-        console.log(selection);
-        console.log(text);
         document.location = "disorder/id/" + selection
     });
 });

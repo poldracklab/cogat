@@ -19,6 +19,46 @@
 
 {% block content %}
 
+<!-- Constituents -->
+<div style="width: 960px;"><div class="block-thirdwide block-back"><strong> CONDITIONS</strong><br>
+    {% if user.is_authenticated %}
+       <button id="add_constituent" style="position:relative;border-radius:15px;float:right;top:-20px">+</button>
+       <form action="" method="POST">
+       </form>
+    {% endif %}
+</div>
+
+<!-- Phylogeny -->
+<div class="block-thirdwide block-back block-margin">
+    Task Battery <strong>PHYLOGENY</strong>
+    <div>
+    </div>
+</div>  
+<a name="contrasts"></a><br/>
+
+<!-- INDICATORS -->
+<div class="block-thirdwide block-back block-margin">
+    <strong>INDICATORS</strong>
+    {% for indicator in indicators %}
+        <div class="conblock-inner-wide">
+            {{ indicator.type }}
+        </div>
+    {% empty %}
+        <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_indicator_button">ADD INDICATOR</button>
+        <form class="hidden" action="{# url 'add_battery_indicator' task.id #}" method="post" id='id-indicatorform'>
+            {% csrf_token %}
+            {% crispy indicator_form indicator_form.helper %}
+        </form>
+    {% endif %}
+
+    <p class="subinfo">An indicator is a specific quantitative or qualitative variable that is recorded for analysis. These may include behavioral variables (such as response time, accuracy, or other measures of performance) or physiological variables (including genetics, psychophysiology, or brain imaging data).</p>
+</div>
+
+
+
 <div id="block-biblio" class="block-bits block-back container">
     <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
     {% for citation in citations %}

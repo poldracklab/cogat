@@ -104,20 +104,64 @@
 
 </div></div></div></div><!-- #block-measurements.block-half -->
 
-       <div class="block-right-container clearfix">
-           <div id="block-implementors" class="block-back ">
-               <div class="pane">
-                  <div class="discdiv"><b>RELATIONSHIPS</b> to other disorders<br>
-                  {% for relation in disorder.relations %}
-                  <div class="relation-border pre-top-margin">
+<div class="block-right-container clearfix">
+    <div id="block-implementors" class="block-back ">
+        <div class="pane">
+            <div class="discdiv"><b>RELATIONSHIPS</b> to other disorders<br>
+                <div>{{ disorder.name }} is derived from the following disorders:<br>
+                {% for relation in parent_disorders %}
+                    <div class="relation-border pre-top-margin">
                       <a href="{% url 'disorder' relation.id %}" rel="{{ relation.id }}" class="classic">{{ relation.name }}</a>
-                  </div>
-                  <div class="diso-relation-buffer"></div>
-                  {% endfor %}
-                  </div>  
-              </div>
-         </div>
-      </div>
+                    </div>
+                <div class="diso-relation-buffer"></div>
+                {% empty %}
+                    None<br>
+                    <div class="diso-relation-buffer"></div>
+                {% endfor %}
+                </div>
+                <div>The following diorders are derived from {{ disorder.name }}:<br>
+                {% for relation in child_disorders %}
+                    <div class="relation-border pre-top-margin">
+                      <a href="{% url 'disorder' relation.id %}" rel="{{ relation.id }}" class="classic">{{ relation.name }}</a>
+                    </div>
+                <div class="diso-relation-buffer"></div>
+                {% empty %}
+                    None<br>
+                    <div class="diso-relation-buffer"></div>
+                {% endfor %}
+                <button style="float:right;margin-top:10px" id="add-disorder-button">ADD DISORDER RELATIONSHIP</button>		
+                <form method="post" action="{% url 'add_disorder_disorder' disorder.id %}" class='hidden' id='disorder-form'>
+                    {% crispy disorder_form disorder_form.helper %}
+                </form>
+                </div>
+            </div>  
+        </div>
+    </div>
+</div>
+
+<div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
+    {% if user.is_authenticated %}
+    <button style="float:right;margin-top:10px" id="add-link-button">ADD EXTERNAL LINK</button>
+    {% endif %}
+    <div class="pane">
+        <div class="discdiv"><b>EXTERNAL LINKS</b> for <a href="javascript:void(0)" class="task">{{ task.name }}</a><br />
+            <form class="hidden" action="{% url 'add_disorder_external_link' disorder.id %}" method="post" id='link-form'>
+                {% csrf_token %}
+                {% crispy external_link_form external_link_form.helper %}
+            </form>
+            {% for link in external_links %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{{ link.url }}">{{ link.url }}</a>
+                    </div>
+                </div>
+            {% empty %}
+                <span class="noassoc">No implementations have been added.</span><br>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
 <!-- CITATIONS -->
 <div id="block-biblio" class="block-bits block-back container">
     <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
@@ -140,11 +184,13 @@
     {% empty %}
     {% endfor %}
     {% if user.is_authenticated %}
-        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
-        <form class="hidden" action="{% url 'add_disorder_citation' disorder.id %}" method="post" id='id-citationform'>
+        <button style="margin-top:10px;margin-bottom:10px" id="add-citation-button">ADD CITATION</button>
+        <div class="hidden" id='citation-form'>
+        <form action="{% url 'add_disorder_citation' disorder.id %}" method="post">
             {% csrf_token %}
             {% crispy citation_form citation_form.helper %}
         </form>
+        </div>
     {% endif %}
 </div>
 
@@ -174,6 +220,27 @@ $(document).ready(function() {
        })
        $("#task_cancel_button").click(function(){
            $("#task_search_box").addClass('hidden');
+       })
+
+       $("#add-disorder-button").click(function(){
+           $("#disorder-form").removeClass('hidden');
+       })
+       $("#reset-id-disorder-disorder-cancel").click(function(){
+           $("#disorder-form").addClass('hidden');
+       })
+
+       $("#add-citation-button").click(function(){
+           $("#citation-form").removeClass('hidden');
+       })
+       $("#reset-id-citation-cancel").click(function(){
+           $("#citation-form").addClass('hidden');
+       })
+
+       $("#add-link-button").click(function(){
+           $("#link-form").removeClass('hidden');
+       })
+       $("#reset-id-link-cancel").click(function(){
+           $("#link-form").addClass('hidden');
        })
 
 

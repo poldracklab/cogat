@@ -474,6 +474,15 @@ def update_theory(request, uid):
     return view_theory(request, uid)
 
 @login_required
+def update_battery(request, uid):
+    if request.method == "POST":
+        description = request.POST.get('description', '')
+        updates = add_update("description", description)
+        Battery.update(uid, updates=updates)
+    return view_battery(request, uid)
+
+
+@login_required
 def update_disorder(request, uid):
     if request.method == "POST":
         definition = request.POST.get('disorder_definition', '')

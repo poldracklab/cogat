@@ -255,6 +255,12 @@
                     </tr>
                 </table>
                 {% endfor %}
+                {% for assertion in assertions_no_cont %}
+                    <div class="row">
+                       <div class=".col-md-6"><a href="{% url 'task' assertion.0.id %}" class="task">{{ assertion.0.name }}</a></b></div>
+                       <div class=".col-md-6">{% crispy assertion.1 assertion.1.helper %}</div>
+                    </div>
+                {% endfor %}
 
 </div></div></div></div><!-- #block-measurements.block-half -->
 <div id="block-appliances" class="block-half" style="">

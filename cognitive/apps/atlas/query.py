@@ -613,7 +613,10 @@ class Battery(Node):
         self.name = "battery"
         self.fields = ["id", "name", "collection"]
         self.color = "#4BBE00" # bright green
-        self.relations = {"HASCITATION": "citations"}
+        self.relations = {
+            "HASCITATION": "citations",
+            "HASINDICATOR": "indicators"
+        }
 
 class Theory(Node):
 

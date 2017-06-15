@@ -84,7 +84,7 @@
         <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
     {% endfor %}
     {% if user.is_authenticated %}
-        <button style="margin-top:10px;margin-bottom:10px" id="add_indicator_button">ADD INDICATOR</button>
+        <button style="margin-top:10px;margin-bottom:10px" id="add-indicator-button">ADD INDICATOR</button>
         <form class="hidden" action="{# url 'add_battery_indicator' battery.id #}" method="post" id='id-indicatorform'>
             {% csrf_token %}
             {% crispy indicator_form indicator_form.helper %}
@@ -144,6 +144,13 @@ $(document).ready(function() {
     $("#reset-id-update-cancel").click(function(){
         $("#id-updateform").addClass('hidden');
     })
+    $("#add-indicator-button").click(function(){
+        $("#id-indicatorform").removeClass('hidden');
+    })
+    $("#reset-id-indicator-cancel").click(function(){
+        $("#id-indicatorform").addClass('hidden');
+    })
+
 
 });
 </script>

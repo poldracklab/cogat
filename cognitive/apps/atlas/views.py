@@ -927,6 +927,35 @@ def add_battery_citation(request, battery_id):
     # redirect back to battery/id?
     return view_battery(request, battery_id)
 
+@login_required
+def add_battery_indicator(request, battery_id):
+    ''' From the battery view we can create a link to indicator that is associated
+        with a given battery.'''
+    if request.method == "POST":
+        indicator_form = IndicatorForm(request.POST)
+        if indicator_form.is_valid():
+            clean_data = indicator_form.cleaned_data
+            properties = {'type': clean_data['type']}
+            ind = Indicator.create(clean_data['type'], properties)
+            print(ind)
+            if ind is None:
+                messages.error(request, "Was unable to create indicator")
+                return view_battery(request, battery_id)
+            link_made = Battery.link(battery_id, ind.properties['id'],
+                                  "HASINDICATOR",
+                                  endnode_type="indicator")
+            if link_made is None:
+                graph.delete(ind)
+                messages.error(request, "Was unable to associate battery and indicator")
+                return view_battery(request, battery_id)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = view_battery(request, battery_id, return_context=True)
+            context['indicator_form'] = indicator_form
+            return render(request, 'atlas/view_battery.html', context)
+    return view_battery(request, battery_id)
+
+
 
 @login_required
 def add_theory_assertion(request, theory_id):

@@ -127,6 +127,11 @@ urlpatterns = [
         views.add_disorder_external_link,
         name="add_disorder_external_link"
     ),
+    url(
+        r'^battery/add/indicator/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_indicator,
+        name="add_battery_indicator"
+    ),
 
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),

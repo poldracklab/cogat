@@ -937,13 +937,12 @@ def add_battery_indicator(request, battery_id):
             clean_data = indicator_form.cleaned_data
             properties = {'type': clean_data['type']}
             ind = Indicator.create(clean_data['type'], properties)
-            print(ind)
             if ind is None:
                 messages.error(request, "Was unable to create indicator")
                 return view_battery(request, battery_id)
             link_made = Battery.link(battery_id, ind.properties['id'],
-                                  "HASINDICATOR",
-                                  endnode_type="indicator")
+                                    "HASINDICATOR",
+                                    endnode_type="indicator")
             if link_made is None:
                 graph.delete(ind)
                 messages.error(request, "Was unable to associate battery and indicator")

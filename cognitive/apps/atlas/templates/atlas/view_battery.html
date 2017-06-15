@@ -85,7 +85,7 @@
     {% endfor %}
     {% if user.is_authenticated %}
         <button style="margin-top:10px;margin-bottom:10px" id="add-indicator-button">ADD INDICATOR</button>
-        <form class="hidden" action="{# url 'add_battery_indicator' battery.id #}" method="post" id='id-indicatorform'>
+        <form class="hidden" action="{% url 'add_battery_indicator' battery.id %}" method="post" id='id-indicatorform'>
             {% csrf_token %}
             {% crispy indicator_form indicator_form.helper %}
         </form>

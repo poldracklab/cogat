@@ -954,6 +954,40 @@ def add_battery_indicator(request, battery_id):
             return render(request, 'atlas/view_battery.html', context)
     return view_battery(request, battery_id)
 
+'''
+@login_required
+def add_battery_indicator(request, battery_id):
+    link = NodeLink(Battery, Indicator, IndicatorForm, 'type')
+    return link.make_link(request, battery_id)
+
+class NodeLink(object):
+
+    def __init__(self, src_label, dest_label, form_class, name_field):
+        self.src_label = src_label
+        self.dest_label = dest_label
+        self.form_class = form_class
+        self.name_field = name_field
+    
+    def make_link(self, request, src_id):
+        if request.method != "POST":
+            return HttpResponseNotAllowed(['POST'])
+        form = self.form_class(request.POST)
+        if not form.is_valid():
+            # ....
+        clean_data = form.cleaned_data()
+        dest_node = self.dest_label.create(clean_data[self.name_field])
+        if dest_node is None:
+            messages.error(request, "Was unable to create {}".format(self.dest_label.name))
+            # ....
+        link_made = self.src_label.link(src_id, dest_node.properties['id'],
+                                        "GENERIC", endnode_type=self.dest_label.name)
+        if link_made is None:
+            graph.delete(dest_node)
+            error_msg = "Was unable to associate {} and {}".format(
+                    self.src_label.name, self.dest_label.name)
+            messages.error(request, error_msg)
+        return success_url...
+'''
 
 
 @login_required

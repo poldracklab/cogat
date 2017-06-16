@@ -30,6 +30,7 @@ COPY ./compose/graphdb/neo4j/conf /var/lib/neo4j/conf
 RUN apt-get clean && \
     sed -i "s|data/graph.db|/opt/data/graph.db|g" /var/lib/neo4j/conf/neo4j-server.properties && \
     sed -i "s|dbms.security.auth_enabled=true|dbms.security.auth_enabled=false|g" /var/lib/neo4j/conf/neo4j-server.properties && \
+    sed -i "s|rrdb.location=data/rrd|rrdb.location=/rrd/rrd|g" /var/lib/neo4j/conf/neo4j-server.properties && \
     sed -i "s|#org.neo4j.server.webserver.address|org.neo4j.server.webserver.address|g" /var/lib/neo4j/conf/neo4j-server.properties && \
     sed -i "s|#org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.examples.server.unmanaged=/examples/unmanaged|org.neo4j.server.thirdparty_jaxrs_classes=extension=/service|g" /var/lib/neo4j/conf/neo4j-server.properties
 
@@ -54,8 +55,12 @@ ADD . /code
 WORKDIR /code
 #RUN bash scripts/docker_import.sh
 
+# make invalid rrd so neo attempts to replace it instead of defaulting to datadir
+RUN mkdir /rrd/
+RUN touch /rrd/rrd
 # Mount a volume for persistent data
 VOLUME /opt/data
+VOLUME /rrd/
 
 # Set the bootstrap script on container run
 CMD ["/var/lib/neo4j/bin/neo4j", "console", "-d"]

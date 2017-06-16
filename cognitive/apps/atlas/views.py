@@ -709,7 +709,8 @@ def add_task_implementation(request, task_id):
     ''' From the task view we can create an implementation that is associated
         with a given task'''
     return make_link(request, task_id, Task, Implementation,
-                     ImplementationForm, 'name', view_task, "HASIMPLEMENTATION)
+                     ImplementationForm, 'implementation_name', view_task,
+                     "HASIMPLEMENTATION)
 
 @login_required
 def add_task_dataset(request, task_id):

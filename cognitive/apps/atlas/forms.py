@@ -7,9 +7,9 @@ from crispy_forms.layout import Reset, Submit
 from cognitive.apps.atlas.query import Assertion, Disorder, Task
 
 class ImplementationForm(forms.Form):
-    uri = forms.URLField(required=True)
-    name = forms.CharField(required=True)
-    description = forms.CharField(required=True)
+    implementation_uri = forms.URLField(required=True)
+    implementation_name = forms.CharField(required=True)
+    implementation_description = forms.CharField(required=True)
 
     def __init__(self, *args, **kwargs):
         super(ImplementationForm, self).__init__(*args, **kwargs)

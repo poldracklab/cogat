@@ -900,94 +900,35 @@ def add_theory_citation(request, theory_id):
 
 @login_required
 def add_battery_citation(request, battery_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    if request.method == "POST":
-        citation_form = CitationForm(request.POST)
-        if citation_form.is_valid():
-            cleaned_data = citation_form.cleaned_data
-            properties = {}
-            properties.update(cleaned_data)
-            cit = Citation.create(cleaned_data['citation_desc'], properties)
-            if cit is None:
-                messages.error(request, "Was unable to create citation")
-                return view_battery(request, battery_id)
-            link_made = Battery.link(battery_id, cit.properties['id'],
-                                     "HASCITATION",
-                                     endnode_type="citation")
-            if link_made is None:
-                graph.delete(cit)
-                messages.error(request, "Was unable to associate battery and citation")
-                return view_battery(request, battery_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_battery(request, battery_id, return_context=True)
-            context['citation_form'] = citation_form
-            return render(request, 'atlas/view_battery.html', context)
-    # redirect back to battery/id?
-    return view_battery(request, battery_id)
+    return make_link(request, battery_id, Battery, Citation, CitationForm,
+                     'citation_desc', view_battery, "HASCITATION")
 
 @login_required
 def add_battery_indicator(request, battery_id):
-    ''' From the battery view we can create a link to indicator that is associated
-        with a given battery.'''
-    if request.method == "POST":
-        indicator_form = IndicatorForm(request.POST)
-        if indicator_form.is_valid():
-            clean_data = indicator_form.cleaned_data
-            properties = {'type': clean_data['type']}
-            ind = Indicator.create(clean_data['type'], properties)
-            if ind is None:
-                messages.error(request, "Was unable to create indicator")
-                return view_battery(request, battery_id)
-            link_made = Battery.link(battery_id, ind.properties['id'],
-                                    "HASINDICATOR",
-                                    endnode_type="indicator")
-            if link_made is None:
-                graph.delete(ind)
-                messages.error(request, "Was unable to associate battery and indicator")
-                return view_battery(request, battery_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_battery(request, battery_id, return_context=True)
-            context['indicator_form'] = indicator_form
-            return render(request, 'atlas/view_battery.html', context)
-    return view_battery(request, battery_id)
+    return make_link(request, battery_id, Battery, Indicator, IndicatorForm,
+                     'type', view_battery, "HASINDICATOR")
 
-'''
 @login_required
-def add_battery_indicator(request, battery_id):
-    link = NodeLink(Battery, Indicator, IndicatorForm, 'type')
-    return link.make_link(request, battery_id)
-
-class NodeLink(object):
-
-    def __init__(self, src_label, dest_label, form_class, name_field):
-        self.src_label = src_label
-        self.dest_label = dest_label
-        self.form_class = form_class
-        self.name_field = name_field
-    
-    def make_link(self, request, src_id):
-        if request.method != "POST":
-            return HttpResponseNotAllowed(['POST'])
-        form = self.form_class(request.POST)
-        if not form.is_valid():
-            # ....
-        clean_data = form.cleaned_data()
-        dest_node = self.dest_label.create(clean_data[self.name_field])
-        if dest_node is None:
-            messages.error(request, "Was unable to create {}".format(self.dest_label.name))
-            # ....
-        link_made = self.src_label.link(src_id, dest_node.properties['id'],
-                                        "GENERIC", endnode_type=self.dest_label.name)
-        if link_made is None:
-            graph.delete(dest_node)
-            error_msg = "Was unable to associate {} and {}".format(
-                    self.src_label.name, self.dest_label.name)
-            messages.error(request, error_msg)
-        return success_url...
-'''
+def make_link(request, src_id, src_label, dest_label, form_class, name_field,
+              view, rel):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    form = form_class(request.POST)
+    if not form.is_valid():
+        return view(request, src_id)
+    clean_data = form.cleaned_data
+    dest_node = dest_label.create(clean_data[name_field], properties=clean_data)
+    if dest_node is None:
+        messages.error(request, "Was unable to create {}".format(dest_label.name))
+        return view(request, src_id)
+    link_made = src_label.link(src_id, dest_node.properties['id'],
+                               rel, endnode_type=dest_label.name)
+    if link_made is None:
+        graph.delete(dest_node)
+        error_msg = "Was unable to associate {} and {}".format(
+                src_label.name, dest_label.name)
+        messages.error(request, error_msg)
+    return view(request, src_id)
 
 
 @login_required

@@ -19,8 +19,8 @@ class ImplementationForm(forms.Form):
         self.helper.add_input(Reset('implementation-cancel', 'Cancel'))
 
 class ExternalDatasetForm(forms.Form):
-    name = forms.CharField(required=True)
-    uri = forms.URLField(required=True)
+    dataset_name = forms.CharField(required=True)
+    dataset_uri = forms.URLField(required=True)
 
     def __init__(self, *args, **kwargs):
         super(ExternalDatasetForm, self).__init__(*args, **kwargs)

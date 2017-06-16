@@ -326,7 +326,7 @@ def view_disorder(request, uid, return_context=False):
     contrasts = Disorder.get_reverse_relation(uid, "HASDIFFERENCE")
     parent_disorders = Disorder.get_relation(uid, "ISA")
     child_disorders = Disorder.get_reverse_relation(uid, "ISA")
-    external_links = 1
+    external_links = []
 
     assertions = []
     for task in tasks:
@@ -567,7 +567,6 @@ def add_disorder_task(request, disorder_id):
     print(assertion)
     if assertion.records == []:
         asrt = Assertion.create("")
-        print(asrt)
         Assertion.link(asrt.properties['id'], disorder_id, "SUBJECT", endnode_type='disorder')
         Assertion.link(asrt.properties['id'], task_selection, "PREDICATE", endnode_type='task')
 
@@ -665,122 +664,6 @@ def add_contrast(request, task_id):
     return view_task(request, task_id)
 
 @login_required
-def add_task_implementation(request, task_id):
-    ''' From the task view we can create an implementation that is associated
-        with a given task'''
-    if request.method == "POST":
-        implementation_form = ImplementationForm(request.POST)
-        if implementation_form.is_valid():
-            clean_data = implementation_form.cleaned_data
-            properties = {'implementation_description': clean_data['description'],
-                          'implementation_uri': clean_data['uri'],
-                          'implementation_name': clean_data['name']}
-            imp = Implementation.create(clean_data['name'], properties)
-            if imp is None:
-                messages.error(request, "Was unable to create implementation")
-                return view_task(request, task_id)
-            link_made = Task.link(task_id, imp.properties['id'],
-                                  "HASIMPLEMENTATION",
-                                  endnode_type="implementation")
-            if link_made is None:
-                graph.delete(imp)
-                messages.error(request, "Was unable to associate task and implementation")
-                return view_task(request, task_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_task(request, task_id, return_context=True)
-            context['implementation_form'] = implementation_form
-            return render(request, 'atlas/view_task.html', context)
-    # redirect back to task/id?
-    return view_task(request, task_id)
-
-@login_required
-def add_task_dataset(request, task_id):
-    ''' From the task view we can create a link to dataset that is associated
-        with a given task'''
-    if request.method == "POST":
-        dataset_form = ExternalDatasetForm(request.POST)
-        if dataset_form.is_valid():
-            clean_data = dataset_form.cleaned_data
-            properties = {'dataset_uri': clean_data['uri'],
-                          'dataset_name': clean_data['name']}
-            ext_d = ExternalDataset.create(clean_data['name'], properties)
-            if ext_d is None:
-                messages.error(request, "Was unable to create external dataset")
-                return view_task(request, task_id)
-            link_made = Task.link(task_id, ext_d.properties['id'],
-                                  "HASEXTERNALDATASET",
-                                  endnode_type="external_dataset")
-            if link_made is None:
-                graph.delete(ext_d)
-                messages.error(request, "Was unable to associate task and external dataset")
-                return view_task(request, task_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_task(request, task_id, return_context=True)
-            context['dataset_form'] = dataset_form
-            return render(request, 'atlas/view_task.html', context)
-    # redirect back to task/id?
-    return view_task(request, task_id)
-
-@login_required
-def add_task_indicator(request, task_id):
-    ''' From the task view we can create a link to indicator that is associated
-        with a given task.'''
-    if request.method == "POST":
-        indicator_form = IndicatorForm(request.POST)
-        if indicator_form.is_valid():
-            clean_data = indicator_form.cleaned_data
-            properties = {'type': clean_data['type']}
-            ind = Indicator.create(clean_data['type'], properties)
-            if ind is None:
-                messages.error(request, "Was unable to create indicator")
-                return view_task(request, task_id)
-            link_made = Task.link(task_id, ind.properties['id'],
-                                  "HASINDICATOR",
-                                  endnode_type="indicator")
-            if link_made is None:
-                graph.delete(ind)
-                messages.error(request, "Was unable to associate task and indicator")
-                return view_task(request, task_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_task(request, task_id, return_context=True)
-            context['indicator_form'] = indicator_form
-            return render(request, 'atlas/view_task.html', context)
-    # redirect back to task/id?
-    return view_task(request, task_id)
-
-@login_required
-def add_task_citation(request, task_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    if request.method == "POST":
-        citation_form = CitationForm(request.POST)
-        if citation_form.is_valid():
-            cleaned_data = citation_form.cleaned_data
-            properties = {}
-            properties.update(cleaned_data)
-            cit = Citation.create(cleaned_data['citation_desc'], properties)
-            if cit is None:
-                messages.error(request, "Was unable to create citation")
-                return view_task(request, task_id)
-            link_made = Task.link(task_id, cit.properties['id'],
-                                  "HASCITATION",
-                                  endnode_type="citation")
-            if link_made is None:
-                graph.delete(cit)
-                messages.error(request, "Was unable to associate task and citation")
-                return view_task(request, task_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_task(request, task_id, return_context=True)
-            context['citation_form'] = citation_form
-            return render(request, 'atlas/view_task.html', context)
-    # redirect back to task/id?
-    return view_task(request, task_id)
-
-@login_required
 def add_task_disorder(request, task_id):
     ''' From the task we can create a link between the task we are viewing and
         a disorder.'''
@@ -798,115 +681,6 @@ def add_task_disorder(request, task_id):
         context['task_disorder_form'] = task_disorder_form
         return render(request, 'atlas/view_task.html', context)
 
-@login_required
-def add_concept_citation(request, concept_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    if request.method == "POST":
-        citation_form = CitationForm(request.POST)
-        if citation_form.is_valid():
-            cleaned_data = citation_form.cleaned_data
-            properties = {}
-            properties.update(cleaned_data)
-            cit = Citation.create(cleaned_data['citation_desc'], properties)
-            if cit is None:
-                messages.error(request, "Was unable to create citation")
-                return view_concept(request, concept_id)
-            link_made = Concept.link(concept_id, cit.properties['id'],
-                                     "HASCITATION",
-                                     endnode_type="citation")
-            if link_made is None:
-                graph.delete(cit)
-                messages.error(request, "Was unable to associate concept and citation")
-                return view_concept(request, concept_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_task(request, concept_id, return_context=True)
-            context['citation_form'] = citation_form
-            return render(request, 'atlas/view_concept.html', context)
-    return view_concept(request, concept_id)
-
-@login_required
-def add_disorder_citation(request, disorder_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    if request.method == "POST":
-        citation_form = CitationForm(request.POST)
-        if citation_form.is_valid():
-            cleaned_data = citation_form.cleaned_data
-            properties = {}
-            properties.update(cleaned_data)
-            cit = Citation.create(cleaned_data['citation_desc'], properties)
-            if cit is None:
-                messages.error(request, "Was unable to create citation")
-                return view_concept(request, disorder_id)
-            link_made = Disorder.link(disorder_id, cit.properties['id'],
-                                      "HASCITATION",
-                                      endnode_type="citation")
-            if link_made is None:
-                graph.delete(cit)
-                messages.error(request, "Was unable to associate disorder and citation")
-                return view_disorder(request, disorder_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_disorder(request, disorder_id, return_context=True)
-            context['citation_form'] = citation_form
-            return render(request, 'atlas/view_disorder.html', context)
-    return view_disorder(request, disorder_id)
-
-def add_disorder_external_link(request, disorder_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    if request.method == "POST":
-        form = ExternalLinkForm(request.POST)
-        if form.is_valid():
-            cleaned_data = form.cleaned_data
-            # create link node and associate
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_disorder(request, disorder_id, return_context=True)
-            context['external_link_form'] = form
-            return render(request, 'atlas/view_disorder.html', context)
-    return view_disorder(request, disorder_id)
-
-@login_required
-def add_theory_citation(request, theory_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    if request.method == "POST":
-        citation_form = CitationForm(request.POST)
-        if citation_form.is_valid():
-            cleaned_data = citation_form.cleaned_data
-            properties = {}
-            properties.update(cleaned_data)
-            cit = Citation.create(cleaned_data['citation_desc'], properties)
-            if cit is None:
-                messages.error(request, "Was unable to create citation")
-                return view_theory(request, theory_id)
-            link_made = Theory.link(theory_id, cit.properties['id'],
-                                    "HASCITATION",
-                                    endnode_type="citation")
-            if link_made is None:
-                graph.delete(cit)
-                messages.error(request, "Was unable to associate theory and citation")
-                return view_theory(request, theory_id)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = view_theory(request, theory_id, return_context=True)
-            context['citation_form'] = citation_form
-            return render(request, 'atlas/view_theory.html', context)
-    # redirect back to theory/id?
-    return view_theory(request, theory_id)
-
-@login_required
-def add_battery_citation(request, battery_id):
-    return make_link(request, battery_id, Battery, Citation, CitationForm,
-                     'citation_desc', view_battery, "HASCITATION")
-
-@login_required
-def add_battery_indicator(request, battery_id):
-    return make_link(request, battery_id, Battery, Indicator, IndicatorForm,
-                     'type', view_battery, "HASINDICATOR")
 
 @login_required
 def make_link(request, src_id, src_label, dest_label, form_class, name_field,
@@ -929,6 +703,72 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
                 src_label.name, dest_label.name)
         messages.error(request, error_msg)
     return view(request, src_id)
+
+@login_required
+def add_task_implementation(request, task_id):
+    ''' From the task view we can create an implementation that is associated
+        with a given task'''
+    return make_link(request, task_id, Task, Implementation,
+                     ImplementationForm, 'name', view_task, "HASIMPLEMENTATION)
+
+@login_required
+def add_task_dataset(request, task_id):
+    ''' From the task view we can create a link to dataset that is associated
+        with a given task'''
+    return make_link(request, task_id, Task, ExternalDataset,
+                     ExternalDatasetForm, 'dataset_name', view_task,
+                     "HASEXTERNALDATASET")
+
+@login_required
+def add_task_indicator(request, task_id):
+    ''' From the task view we can create a link to indicator that is associated
+        with a given task.'''
+    return make_link(request, task_id, Task, Indicator, IndicatorForm, 
+                     'type', view_task, "HASINDICATOR")
+
+@login_required
+def add_task_citation(request, task_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    return make_link(request, task_id, Task, Citation, CitationForm,
+                     'citation_desc', view_task, "HASCITATION")
+
+@login_required
+def add_concept_citation(request, concept_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    return make_link(request, concept_id, Concept, Citation, CitationForm,
+                     'citation_desc', view_concept, "HASCITATION")
+
+@login_required
+def add_disorder_citation(request, disorder_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    return make_link(request, disorder_id, Disorder, Citation, CitationForm,
+                     'citation_desc', view_disorder, "HASCITATION")
+
+# need to add ExternalLink to query and make form
+@login_required
+def add_disorder_external_link(request, disorder_id):
+    ''' From the task view we can create a link to citation that is associated
+        with a given task.'''
+    #return make_link(request, disorder_id, Disorder, ExternalLink,
+    #                 ExternalLinkForm, 'name', view_disorder, "HASLINK")
+
+@login_required
+def add_theory_citation(request, theory_id):
+    return make_link(request, theory_id, Theory, Citation, CitationForm,
+                     'citation_desc', view_theory, "HASCITATION")
+
+@login_required
+def add_battery_citation(request, battery_id):
+    return make_link(request, battery_id, Battery, Citation, CitationForm,
+                     'citation_desc', view_battery, "HASCITATION")
+
+@login_required
+def add_battery_indicator(request, battery_id):
+    return make_link(request, battery_id, Battery, Indicator, IndicatorForm,
+                     'type', view_battery, "HASINDICATOR")
 
 
 @login_required

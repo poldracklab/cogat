@@ -22,22 +22,24 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
                                         Implementation, Indicator,
-                                        ExternalDataset, Citation, search)
+                                        ExternalDataset, Citation, ExternalLink,
+                                        search)
 from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
 from cognitive.settings import DOMAIN, graph
 
-Concept = Concept()
-Task = Task()
-Disorder = Disorder()
-Contrast = Contrast()
-Battery = Battery()
-Theory = Theory()
-Condition = Condition()
-Implementation = Implementation()
-ExternalDataset = ExternalDataset()
-Indicator = Indicator()
-Citation = Citation()
 Assertion = Assertion()
+Battery = Battery()
+Citation = Citation()
+Concept = Concept()
+Condition = Condition()
+Contrast = Contrast()
+Disorder = Disorder()
+ExternalDataset = ExternalDataset()
+ExternalLink = ExternalLink()
+Implementation = Implementation()
+Indicator = Indicator()
+Task = Task()
+Theory = Theory()
 
 # Needed on all pages
 counts = {
@@ -326,7 +328,7 @@ def view_disorder(request, uid, return_context=False):
     contrasts = Disorder.get_reverse_relation(uid, "HASDIFFERENCE")
     parent_disorders = Disorder.get_relation(uid, "ISA")
     child_disorders = Disorder.get_reverse_relation(uid, "ISA")
-    external_links = []
+    external_links = Disorder.get_relation(uid, "HASLINK")
 
     assertions = []
     for task in tasks:
@@ -710,7 +712,7 @@ def add_task_implementation(request, task_id):
         with a given task'''
     return make_link(request, task_id, Task, Implementation,
                      ImplementationForm, 'implementation_name', view_task,
-                     "HASIMPLEMENTATION)
+                     "HASIMPLEMENTATION")
 
 @login_required
 def add_task_dataset(request, task_id):
@@ -753,8 +755,8 @@ def add_disorder_citation(request, disorder_id):
 def add_disorder_external_link(request, disorder_id):
     ''' From the task view we can create a link to citation that is associated
         with a given task.'''
-    #return make_link(request, disorder_id, Disorder, ExternalLink,
-    #                 ExternalLinkForm, 'name', view_disorder, "HASLINK")
+    return make_link(request, disorder_id, Disorder, ExternalLink,
+                     ExternalLinkForm, 'uri', view_disorder, "HASLINK")
 
 @login_required
 def add_theory_citation(request, theory_id):

@@ -166,7 +166,7 @@ class DisorderDisorderForm(forms.Form):
 class ExternalLinkForm(forms.Form):
     ''' an external link for a node. For disorders this link may describe the
         disorder in more detail'''
-    url = forms.URLField(required=True, label="Enter the full URL for the link")
+    uri = forms.URLField(required=True, label="Enter the full URL for the link")
 
     def __init__(self, *args, **kwargs):
         super(ExternalLinkForm, self).__init__(*args, **kwargs)

@@ -512,7 +512,7 @@ class Disorder(Node):
         self.relations = {
             "ISA": "disorders",
             "HASCITATION": "citations",
-            "EXTERNALLINK": "external_links"
+            "HASLINK": "external_links"
         }
 
 class Condition(Node):
@@ -672,6 +672,13 @@ class Assertion(Node):
             "INTHEORY": "theories",
             "HASCITATION": "citations"
         }
+
+class ExternalLink(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "external_link"
+        self.fields = ["uri"]
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

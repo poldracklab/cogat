@@ -242,7 +242,7 @@ class Node(object):
         :param params: list of parameters to search for, eg [trm_123]
         :param field: field to search (default id)
         :param get_relations: default True, return relationships
-        :param relations: list of relations to include. If not defined, will return all
+        :paiam relations: list of relations to include. If not defined, will return all
         '''
         parents = self.graph.find(self.name, field, uid)
         nodes = []
@@ -305,29 +305,37 @@ class Node(object):
                 i += 1
         return df.to_dict(orient="records")
 
-    def get_relation(self, id, relation):
+    def get_relation(self, id, relation, label=None):
         ''' get nodes that are related to a given task
             :param task_id: id of node to look for relations from
             :relation: neo style relationship label ex. "ASSERTS"
             :fields: fields to retrieve from nodes related to task_id'''
-        query = '''MATCH (p:{})-[:{}]->(r)
+        if label:
+            label_substr = ':{}'.format(label)
+        else:
+            label_substr = ''
+        query = '''MATCH (p:{})-[:{}]->(r{})
                    WHERE p.id = '{}'
-                   RETURN r'''.format(self.name, relation, id)
+                   RETURN r'''.format(self.name, relation, label_substr, id)
         relations = do_query(query, "null", "list")
         relations = [x[0].properties for x in relations]
         for rel in relations:
             rel['relationship'] = relation
         return relations
 
-    def get_reverse_relation(self, id, relation):
+    def get_reverse_relation(self, id, relation, label=None):
         '''As opposed to get_relation this gets relations where the
            given id is the subject in the relationship, not the predicate.
            :param task_id: id of node to look for relations from
            :relation: neo style relationship label ex. "ASSERTS"
            :fields: fields to retrieve from nodes related to task_id'''
-        query = '''MATCH (p)-[:{}]->(s:{})
+        if label:
+            label_substr = ':{}'.format(label)
+        else:
+            label_substr = ''
+        query = '''MATCH (p{})-[:{}]->(s:{})
                    WHERE s.id = '{}'
-                   RETURN p'''.format(relation, self.name, id)
+                   RETURN p'''.format(label_substr, relation, self.name, id)
         relations = do_query(query, "null", "list")
         relations = [x[0].properties for x in relations]
         for rel in relations:
@@ -397,7 +405,8 @@ class Task(Node):
             "HASEXTERNALDATASET": "external_datasets",
             "HASIMPLEMENTATION": "implementations",
             "HASCITATION": "citation",
-            "HASCONTRAST": "contrasts"
+            "HASCONTRAST": "contrasts",
+            "INBATTERY": "batteries"
         }
         self.color = "#63506D" #purple
 
@@ -615,7 +624,8 @@ class Battery(Node):
         self.color = "#4BBE00" # bright green
         self.relations = {
             "HASCITATION": "citations",
-            "HASINDICATOR": "indicators"
+            "HASINDICATOR": "indicators",
+            "INBATTERY": "constituents"
         }
 
 class Theory(Node):

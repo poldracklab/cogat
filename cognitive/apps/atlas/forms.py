@@ -4,7 +4,7 @@ from django.urls import reverse
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Reset, Submit
 
-from cognitive.apps.atlas.query import Assertion, Disorder, Task
+from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery
 
 class ImplementationForm(forms.Form):
     implementation_uri = forms.URLField(required=True)
@@ -135,6 +135,34 @@ class ConceptTaskForm(forms.Form):
         self.helper.form_class = "hidden"
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('battery-cancel', 'Cancel', type="button"))
+
+class BatteryBatteryForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(BatteryBatteryForm, self).__init__(*args, **kwargs)
+
+        batteries = Battery()
+        choices = [(x['id'], x['name']) for x in batteries.all()]
+        self.fields['batteries'] = forms.ChoiceField(choices=choices)
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('battery-cancel', 'Cancel', type="button"))
+
+class BatteryTaskForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(BatteryTaskForm, self).__init__(*args, **kwargs)
+
+        tasks = Task()
+        choices = [(x['id'], x['name']) for x in tasks.all()]
+        self.fields['tasks'] = forms.ChoiceField(choices=choices)
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('battery-task-cancel', 'Cancel',
+                                    type="button"))
+
 
 class ConceptContrastForm(forms.Form):
     def __init__(self, task_id, concept_id, *args, **kwargs):

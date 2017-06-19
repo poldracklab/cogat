@@ -132,6 +132,16 @@ urlpatterns = [
         views.add_battery_indicator,
         name="add_battery_indicator"
     ),
+    url(
+        r'^battery/add/battery/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_battery,
+        name="add_battery_battery"
+    ),
+    url(
+        r'^battery/add/task/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_task,
+        name="add_battery_task"
+    ),
 
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),

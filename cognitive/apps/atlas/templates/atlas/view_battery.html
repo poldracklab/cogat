@@ -57,11 +57,29 @@
 </div>
 
 <!-- Constituents -->
-<div style="width: 960px;"><div class="block-thirdwide block-back"><strong> CONDITIONS</strong><br>
+<div style="width: 960px;"><div class="block-thirdwide block-back">
+    <strong>Constituent Tasks</strong><br>
+    {% for task in constituent_tasks %}
+        <a href="{% url 'task' task.id %}">{{ task.name }}</a><br>
+    {% empty %}
+        No tasks have been added.<br>
+    {% endfor %}
+    <strong>Constituent Battery</strong><br>
+    {% for battery in constituent_batteries %}
+        <a href="{% url 'battery' battery.id %}">{{ battery.name }}</a><br>
+    {% empty %}
+        No batteries have been added.<br>
+    {% endfor %}
     {% if user.is_authenticated %}
-       <button id="add_constituent" style="position:relative;border-radius:15px;float:right;top:-20px">+</button>
-       <form action="" method="POST">
-       </form>
+        <button id="add-constituent" style="position:relative;border-radius:15px;float:right;top:-20px">+</button>
+        <div id="constituent-forms" class="hidden">
+            <form method="POST" action="{% url 'add_battery_battery' battery.id %}">
+            {% crispy battery_form battery_form.helper %}
+            </form>
+            <form method="POST" action="{% url 'add_battery_task' battery.id %}">
+            {% crispy task_form task_form.helper %}
+            </form>
+        </div>
     {% endif %}
 </div>
 
@@ -149,6 +167,16 @@ $(document).ready(function() {
     })
     $("#reset-id-indicator-cancel").click(function(){
         $("#id-indicatorform").addClass('hidden');
+    })
+
+    $("#add-constituent").click(function(){
+        $("#constituent-forms").removeClass('hidden');
+    })
+    $("#reset-id-battery-cancel").click(function(){
+        $("#constituent-forms").addClass('hidden');
+    })
+    $("#reset-id-battery-task-cancel").click(function(){
+        $("#constituent-forms").addClass('hidden');
     })
 
 

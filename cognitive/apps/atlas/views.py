@@ -17,7 +17,8 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         TaskDisorderForm, TheoryAssertionForm,
                                         TheoryForm, BatteryForm,
                                         ConceptTaskForm, ConceptContrastForm,
-                                        DisorderDisorderForm, ExternalLinkForm)
+                                        DisorderDisorderForm, ExternalLinkForm,
+                                        BatteryBatteryForm, BatteryTaskForm)
 
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
@@ -269,8 +270,17 @@ def view_battery(request, uid, return_context=False):
     progenitors = Battery.get_relation(uid, "PARTOF")
     descendants = Battery.get_reverse_relation(uid, "PARTOF")
     indicators = Battery.get_relation(uid, "HASINDICATOR")
-    constituent_tasks = Battery.get_relation(uid, "INBATTERY")
+    constituent_tasks = Battery.get_reverse_relation(uid, "INBATTERY",
+                                                     label='task')
+    constituent_batteries = Battery.get_reverse_relation(uid, "INBATTERY",
+                                                         label='battery')
     citations = Battery.get_relation(uid, "HASCITATION")
+
+    print("!!!!!!!!!!!!!!!")
+    print(constituent_tasks)
+    print(constituent_batteries)
+    print("!!!!!!!!!!!!!!!")
+
     context = {
         "battery": battery,
         "citations": citations,
@@ -278,7 +288,12 @@ def view_battery(request, uid, return_context=False):
         "indicators": indicators,
         "indicator_form": IndicatorForm(),
         "progenitors": progenitors,
-        "descendants": descendants
+        "descendants": descendants,
+        "constituent_tasks": constituent_tasks,
+        "constituent_batteries": constituent_batteries,
+        "task_form": BatteryTaskForm(),
+        "battery_form": BatteryBatteryForm()
+
     }
     if return_context:
         return context
@@ -686,19 +701,34 @@ def add_task_disorder(request, task_id):
 
 @login_required
 def make_link(request, src_id, src_label, dest_label, form_class, name_field,
-              view, rel):
+              view, rel, reverse=False, create=True):
+    ''' make link processes forms in a request and attempts to create links
+        between nodes. If create is True, make link will crate a node based on
+        the form. If create is false it will attempt to find an existing node
+        using 'name_field' in the form as the id to lookup the node by.'''
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
     form = form_class(request.POST)
     if not form.is_valid():
         return view(request, src_id)
     clean_data = form.cleaned_data
-    dest_node = dest_label.create(clean_data[name_field], properties=clean_data)
+
+    if create is True:
+        dest_node = dest_label.create(clean_data[name_field], properties=clean_data)
+    else:
+        dest_node = graph.find_one(dest_label.name, "id", clean_data[name_field])
+
     if dest_node is None:
         messages.error(request, "Was unable to create {}".format(dest_label.name))
         return view(request, src_id)
-    link_made = src_label.link(src_id, dest_node.properties['id'],
-                               rel, endnode_type=dest_label.name)
+
+    if reverse is False:
+        link_made = src_label.link(src_id, dest_node.properties['id'],
+                                   rel, endnode_type=dest_label.name)
+    elif reverse is True:
+        link_made = dest_label.link(dest_node.properties['id'], src_id, 
+                                   rel, endnode_type=src_label.name)
+
     if link_made is None:
         graph.delete(dest_node)
         error_msg = "Was unable to associate {} and {}".format(
@@ -773,6 +803,17 @@ def add_battery_indicator(request, battery_id):
     return make_link(request, battery_id, Battery, Indicator, IndicatorForm,
                      'type', view_battery, "HASINDICATOR")
 
+@login_required
+def add_battery_battery(request, battery_id):
+    return make_link(request, battery_id, Battery, Battery, BatteryBatteryForm,
+                     'batteries', view_battery, "INBATTERY", reverse=True,
+                     create=False)
+
+@login_required
+def add_battery_task(request, battery_id):
+    return make_link(request, battery_id, Battery, Task, BatteryTaskForm,
+                     'tasks', view_battery, "INBATTERY", reverse=True,
+                     create=False)
 
 @login_required
 def add_theory_assertion(request, theory_id):

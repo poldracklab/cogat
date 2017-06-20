@@ -6,6 +6,7 @@ import pandas
 from cognitive.apps.atlas.utils import (color_by_relation, generate_uid,
                                         do_query, get_relation_nodetype)
 import cognitive.settings as settings
+from cognitive.settings import graph
 
 
 class Node(object):
@@ -209,6 +210,11 @@ class Node(object):
         fields = fields + ["_id"]
         return do_query(query, output_format=format, fields=fields)
 
+    def api_all(self):
+        query = "match (n:{}) return n".format(self.name)
+        nodes = graph.cypher.execute(query)
+        results = [x['n'].properties for x in nodes]
+        return results
 
     def all(self, fields=None, limit=None, format="dict", order_by=None, desc=False):
         '''all returns all concepts, or up to a limit

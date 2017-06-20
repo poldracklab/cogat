@@ -56,6 +56,7 @@ counts = {
 def all_nodes(request, nodes, node_type, node_type_plural):
     '''all_nodes returns view with all nodes for node_type'''
 
+
     context = {
         'term_type': node_type,
         'term_type_plural': node_type_plural,
@@ -130,7 +131,8 @@ def all_disorders(request, return_context=False):
         'appname': "The Cognitive Atlas",
         'active': "disorders",
         'disorder_form': disorder_form,
-        'disorders': disorders
+        'disorders': disorders,
+        'counts': counts
     }
 
     if return_context:
@@ -155,7 +157,8 @@ def nodes_by_letter(request, letter, nodes, nodes_count, node_type):
         'nodes': nodes,
         'letter': letter,
         'term_type': node_type[:-1],
-        'filtered_nodes_count': nodes_count
+        'filtered_nodes_count': nodes_count,
+        'counts': counts
     }
 
     return render(request, "atlas/terms_by_letter.html", context)
@@ -208,6 +211,7 @@ def view_concept(request, uid):
     are_parts_of = Concept.get_reverse_relation(concept["id"], "PARTOF")
 
     context = {
+        "counts": counts,
         "are_kinds_of": are_kinds_of,
         "are_parts_of": are_parts_of,
         "concept": concept,
@@ -243,6 +247,7 @@ def view_task(request, uid, return_context=False):
     disorders = Task.get_relation(task["id"], "ASSERTS")
 
     context = {
+        "counts": counts,
         "task": task,
         "concepts": concept_lookup,
         "contrasts": contrasts,
@@ -276,12 +281,8 @@ def view_battery(request, uid, return_context=False):
                                                          label='battery')
     citations = Battery.get_relation(uid, "HASCITATION")
 
-    print("!!!!!!!!!!!!!!!")
-    print(constituent_tasks)
-    print(constituent_batteries)
-    print("!!!!!!!!!!!!!!!")
-
     context = {
+        "counts": counts,
         "battery": battery,
         "citations": citations,
         "citation_form": CitationForm(),
@@ -329,7 +330,8 @@ def view_theory(request, uid, return_context=False):
         "theory_assertions_form": theory_assertions_form,
         "referenced_terms": referenced_terms,
         "citation_form": CitationForm(),
-        "citations": citations
+        "citations": citations,
+        "counts": counts
     }
     if return_context is True:
         return context
@@ -365,7 +367,8 @@ def view_disorder(request, uid, return_context=False):
         "parent_disorders": parent_disorders,
         "child_disorders": child_disorders,
         "external_links": external_links,
-        "external_link_form": ExternalLinkForm()
+        "external_link_form": ExternalLinkForm(),
+        "counts": counts
     }
 
     if return_context:

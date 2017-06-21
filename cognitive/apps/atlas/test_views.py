@@ -61,13 +61,6 @@ class AtlasViewTestCase(TestCase):
         self.assertEqual(len(response.context['nodes']), count)
         self.assertEqual(response.status_code, 200)
 
-    def test_all_theories(self):
-        theory = Theory()
-        count = theory.count()
-        response = self.client.get(reverse('all_theories'))
-        self.assertEqual(response.context['term_type'], 'theory')
-        self.assertEqual(len(response.context['nodes']), count)
-
     def test_concepts_by_letter(self):
         for letter in string.ascii_lowercase:
             response = self.client.get(reverse('concepts_by_letter',
@@ -141,7 +134,7 @@ class AtlasViewTestCase(TestCase):
             {'term_type': 'concept', 'term_name': concept_name,
              'definition_text': definition}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         uid = response.context['concept']['id']
         con = concept.get(uid)
         self.assertEqual(len(con), 1)
@@ -159,7 +152,7 @@ class AtlasViewTestCase(TestCase):
             {'term_type': 'task', 'term_name': task_name,
              'definition_text': definition}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         uid = response.context['task']['id']
         tsk = task.get(uid)
         self.assertEqual(len(tsk), 1)

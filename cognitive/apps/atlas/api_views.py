@@ -22,7 +22,7 @@ class ConceptAPI(APIView):
         elif contrast_id:
             concept = Contrast.api_get_concepts(contrast_id)
         else:
-            concept = Concept.all()
+            concept = Concept.api_all()
         
         if concept is None:
             raise NotFound('Concept not found')
@@ -38,7 +38,7 @@ class TaskAPI(APIView):
         elif name:
             task = Task.get_full(name, 'name')
         else:
-            task = Task.all()
+            task = Task.api_all()
 
         if task is None:
             raise NotFound('Task not found')
@@ -54,7 +54,7 @@ class DisorderAPI(APIView):
         elif name:
             disorder = Disorder.get_full(name, 'name')
         else:
-            disorder = Disorder.all()
+            disorder = Disorder.api_all()
         
         if disorder is None:
             raise NotFound('Disorder not found')

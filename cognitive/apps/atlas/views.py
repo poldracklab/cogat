@@ -48,6 +48,8 @@ counts = {
     "tasks": Task.count(),
     "contrasts": Contrast.count(),
     "concepts": Concept.count(),
+    "theories": Theory.count(),
+    "batteries": Battery.count(),
     "collections": (Battery.count() + Theory.count()),
 }
 

@@ -123,10 +123,11 @@ def color_by_relation(relation_name):
         return colors[relation_name]
     return "#FFFFFF"
 
-# Query helper functions #########################################################################
+# Query helper functions ######################################################
 
 def do_query(query, fields, output_format="dict", drop_duplicates=True):
-    '''do_query will return the result of a cypher query in the format specified (default is dict)
+    ''' do_query will return the result of a cypher query in the format
+        specified (default is dict)
     :param query: string of cypher query
     :param output_format: desired output format. Default is "dict"
     '''
@@ -145,10 +146,18 @@ def do_query(query, fields, output_format="dict", drop_duplicates=True):
         return df.to_dict(orient="records")
 
 def do_transaction(tx=None, query=None, params=None):
-    '''do_transaction will return the result of a cypher transaction in the format specified (default is dict). If a transaction object is not supplied, query must be defined, and the function will call get_transactions first. If tx is defined and query is also defined, the query will be added to the transaction before running it.
-    :param tx: string of cypher query (optional) if provided, will first call get_transactions to
-    :param query: string of cypher query (optional) if provided, will first call get_transactions to
-    :param params: a list of dictionaries, each dictionary with keys as values to sub in the query, and values as the thing to substitute. Eg: [{"A":name,"B":classification}]
+    ''' do_transaction will return the result of a cypher transaction in the
+        format specified (default is dict). If a transaction object is not
+        supplied, query must be defined, and the function will call
+        get_transactions first. If tx is defined and query is also defined,
+        the query will be added to the transaction before running it.
+    :param tx: string of cypher query (optional) if provided, will first call
+        get_transactions to
+    :param query: string of cypher query (optional) if provided, will first
+        call get_transactions to
+    :param params: a list of dictionaries, each dictionary with keys as values
+        to sub in the query, and values as the thing to substitute.
+        Eg: [{"A":name,"B":classification}]
     '''
     if tx is None and query is None:
         print("Please define either transaction or query.")

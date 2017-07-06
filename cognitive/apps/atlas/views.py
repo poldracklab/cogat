@@ -405,7 +405,7 @@ def contribute_disorder(request):
         if disorder_form.is_valid():
             cleaned_data = disorder_form.cleaned_data
             properties = {"definition": cleaned_data['definition']}
-            new_dis = Disorder.create(cleaned_data["name"], properties)
+            new_dis = Disorder.create(cleaned_data["name"], properties, request=request)
             if new_dis is None:
                 messages.error(request, "Was unable to create disorder")
                 return all_disorders(request)
@@ -433,15 +433,12 @@ def add_term(request):
             properties = {"definition":definition_text}
 
         if term_type == "concept":
-            node = Concept.create(name=term_name, properties=properties)
+            node = Concept.create(name=term_name, properties=properties, request=request)
             return redirect('concept', node["id"])
 
         elif term_type == "task":
-            node = Task.create(name=term_name, properties=properties)
+            node = Task.create(name=term_name, properties=properties, request=request)
             return redirect('task', node["id"])
-
-#def contribute_disorder(request):
-#    return render(request, 'atlas/contribute_disorder.html', context)
 
 @login_required
 def add_condition(request, task_id):
@@ -453,7 +450,7 @@ def add_condition(request, task_id):
         condition_name = request.POST.get('condition_name', '')
 
         if condition_name != "":
-            condition = Condition.create(name=condition_name)
+            condition = Condition.create(name=condition_name, request=request)
             Task.link(task_id, condition["id"], relation_type, endnode_type="condition")
     return view_task(request, task_id)
 
@@ -579,7 +576,7 @@ def add_disorder_task(request, disorder_id):
     )
     print(assertion)
     if assertion.records == []:
-        asrt = Assertion.create("")
+        asrt = Assertion.create("", request=request)
         Assertion.link(asrt.properties['id'], disorder_id, "SUBJECT", endnode_type='disorder')
         Assertion.link(asrt.properties['id'], task_selection, "PREDICATE", endnode_type='task')
 
@@ -664,7 +661,7 @@ def add_contrast(request, task_id):
                 conditions[condition_id] = weight
 
         if contrast_name != "" and len(conditions) > 0:
-            node = Contrast.create(name=contrast_name)
+            node = Contrast.create(name=contrast_name, request=request)
             # Associate task and contrast so we can look it up for task view
             Task.link(task_id, node.properties["id"], relation_type, endnode_type="contrast")
 
@@ -710,7 +707,7 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
     clean_data = form.cleaned_data
 
     if create is True:
-        dest_node = dest_label.create(clean_data[name_field], properties=clean_data)
+        dest_node = dest_label.create(clean_data[name_field], properties=clean_data, request=request)
     else:
         dest_node = graph.find_one(dest_label.name, "id", clean_data[name_field])
 
@@ -837,7 +834,7 @@ def add_theory(request):
     if theory_form.is_valid():
         cleaned_data = theory_form.cleaned_data
         name = cleaned_data['name']
-        new_theory = Theory.create(name)
+        new_theory = Theory.create(name, request=request)
         return view_theory(request, new_theory.properties['id'])
     else:
         context = all_collections(request, return_context=True)
@@ -853,7 +850,7 @@ def add_battery(request):
     if battery_form.is_valid():
         cleaned_data = battery_form.cleaned_data
         name = cleaned_data['name']
-        new_battery = Battery.create(name)
+        new_battery = Battery.create(name, request=request)
         return view_battery(request, new_battery.properties['id'])
     else:
         context = all_collections(request, return_context=True)

@@ -6,8 +6,6 @@ import pandas
 from cognitive.apps.atlas.utils import (color_by_relation, generate_uid,
                                         do_query, get_relation_nodetype)
 import cognitive.settings as settings
-from cognitive.settings import graph
-
 
 class Node(object):
 
@@ -30,7 +28,7 @@ class Node(object):
         return self.graph.cypher.execute(query).one
 
 
-    def create(self, name, properties=None, property_key="id"):
+    def create(self, name, properties=None, property_key="id", request=None):
         '''create will create a new node of nodetype with unique id uid, and properties
         :param uid: the unique identifier
         :param name: the name of the node
@@ -43,13 +41,24 @@ class Node(object):
             timestamp = self.graph.cypher.execute("RETURN timestamp()").one
             node = NeoNode(self.name, name=name, id=uid, creation_time=timestamp,
                            last_updated=timestamp)
-            self.graph.create(node)
+            create_ret = self.graph.create(node)
             if properties != None:
                 for property_name in properties.keys():
                     node.properties[property_name] = properties[property_name]
                 node.push()
+            if request and (len(create_ret) > 0):
+                self.create_log(request, uid)
         return node
 
+    def create_log(self, request, node_id):
+        user_id = request.user.id
+        neo_user = self.graph.find_one("user", property_key="id",
+                                       property_value=user_id)
+        user = User()
+        if not neo_user:
+            user.create(user_id, properties={'username': request.user.username,
+                                             'id': user_id})
+        user.link(user_id, node_id, "CREATED", endnode_type=self.name)
 
     def link(self, uid, endnode_id, relation_type, endnode_type=None, properties=None):
         '''link will create a new link (relation) from a uid to a relation, first confirming
@@ -69,7 +78,8 @@ class Node(object):
         if startnode != None and endnode != None:
             # If the relation_type is allowed for the node type
             if relation_type in self.relations:
-                if self.graph.match_one(start_node=startnode, rel_type=relation_type, end_node=endnode) is None:
+                if self.graph.match_one(start_node=startnode,
+                                        rel_type=relation_type, end_node=endnode) is None:
                     relation = Relationship(startnode, relation_type, endnode)
                     self.graph.create(relation)
                     if properties != None:
@@ -92,7 +102,8 @@ class Node(object):
 
 
     def cypher(self, uid, lookup=None, return_lookup=False):
-        '''cypher returns a data structure with nodes and relations for an object to generate a gist with cypher
+        ''' cypher returns a data structure with nodes and relations for an
+            object to generate a gist with cypher
         :param uid: the node unique id to look up
         :param lookup: an optional lookup dictionary to append to
         :param return_lookup: if true, returns a lookup with nodes and relations that are added to the graph
@@ -212,7 +223,7 @@ class Node(object):
 
     def api_all(self):
         query = "match (n:{}) return n".format(self.name)
-        nodes = graph.cypher.execute(query)
+        nodes = self.graph.cypher.execute(query)
         results = [x['n'].properties for x in nodes]
         return results
 
@@ -273,7 +284,7 @@ class Node(object):
 
                 # Does the user want a filtered set?
                 if relations != None:
-                    relation_nodes = {k:v for k, v in relation_nodes.iteritems() if k in relations}
+                    relation_nodes = {k:v for k, v in relation_nodes.items() if k in relations}
                 new_node["relations"] = relation_nodes
 
             nodes.append(new_node)
@@ -687,6 +698,16 @@ class Assertion(Node):
             "SUBJECT": "concepts",
             "INTHEORY": "theories",
             "HASCITATION": "citations"
+        }
+
+class User(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "user"
+        self.fields = ["id", "username"]
+        self.relations = {
+            "CREATED": "nodes"
         }
 
 class ExternalLink(Node):

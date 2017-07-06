@@ -370,7 +370,7 @@ class Concept(Node):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = "concept"
-        self.fields = ["id", "name", "definition", "alias"]
+        self.fields = ["id", "name", "definition_text", "alias"]
         self.relations = {
             "PARTOF": "concepts",
             "KINDOF": "concepts",
@@ -403,7 +403,7 @@ class Task(Node):
     def __init__(self):
         super().__init__()
         self.name = "task"
-        self.fields = ["id", "name", "definition"]
+        self.fields = ["id", "name", "definition_text"]
         self.relations = {
             "HASCONDITION": "conditions",
             "ASSERTS": "concepts",

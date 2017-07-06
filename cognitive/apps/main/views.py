@@ -1,9 +1,8 @@
-from cognitive.apps.atlas.query import Concept, Task, Disorder, Theory, Battery
 from django.shortcuts import render, render_to_response
-from django.template import RequestContext
+from django.template import loader, RequestContext
+
+from cognitive.apps.atlas.query import Concept, Task, Disorder, Theory, Battery
 from cognitive.settings import DOMAIN
-from django.shortcuts import render
-from django.template import loader
 
 Concept = Concept()
 Task = Task()
@@ -27,14 +26,14 @@ def base(request):
                'concepts':concepts,
                'tasks':tasks,
                'theories':theories,
-               'disorders':disorders}
+               'disorders':disorders,}
+
 
     return context
 
 def index(request):
     context = base(request)
     return render(request,'main/index.html',context)
-
 
 def about(request):
     context = base(request)

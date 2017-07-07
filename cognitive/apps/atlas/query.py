@@ -67,21 +67,21 @@ class Node(object):
         ''' associate user node who created a given node to the newly created
             node
         '''
-        neo_user_lookup(request)
+        self.neo_user_lookup(request)
         user = User()
-        user.link(user_id, node_id, "CREATED", endnode_type=self.name)
+        user.link(request.user.id, node_id, "CREATED", endnode_type=self.name)
 
     def log_update(self, request, node_id):
         ''' assocaite user who most recently updated a node. If another user
             has this relation set, remove it.
         '''
-        neo_user_lookup(request)
+        self.neo_user_lookup(request)
         user = User()
         query = "MATCH ()-[rel:UPDATED]->(dest) WHERE dest.id = '{}' RETURN rel"
         res = self.graph.cypher.execute(query)
         if res[0]:
             res[0]['rel'].delete()
-        user.link(user_id, node_id, "UPDATED", endnode_type=self.name)
+        user.link(request.user.id, node_id, "UPDATED", endnode_type=self.name)
 
     def link(self, uid, endnode_id, relation_type, endnode_type=None, properties=None):
         '''link will create a new link (relation) from a uid to a relation, first confirming

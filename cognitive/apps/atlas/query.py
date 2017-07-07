@@ -47,10 +47,14 @@ class Node(object):
                     node.properties[property_name] = properties[property_name]
                 node.push()
             if request and (len(create_ret) > 0):
-                self.create_log(request, uid)
+                self.log_create(request, uid)
         return node
 
-    def create_log(self, request, node_id):
+    def neo_user_lookup(self, request):
+        ''' see if user from current request exists as a node in the neo
+            database. If not make a node for them. These nodes used for basic
+            audit of changes made to other nodes.
+        '''
         user_id = request.user.id
         neo_user = self.graph.find_one("user", property_key="id",
                                        property_value=user_id)
@@ -58,7 +62,26 @@ class Node(object):
         if not neo_user:
             user.create(user_id, properties={'username': request.user.username,
                                              'id': user_id})
+
+    def log_create(self, request, node_id):
+        ''' associate user node who created a given node to the newly created
+            node
+        '''
+        neo_user_lookup(request)
+        user = User()
         user.link(user_id, node_id, "CREATED", endnode_type=self.name)
+
+    def log_update(self, request, node_id):
+        ''' assocaite user who most recently updated a node. If another user
+            has this relation set, remove it.
+        '''
+        neo_user_lookup(request)
+        user = User()
+        query = "MATCH ()-[rel:UPDATED]->(dest) WHERE dest.id = '{}' RETURN rel"
+        res = self.graph.cypher.execute(query)
+        if res[0]:
+            res[0]['rel'].delete()
+        user.link(user_id, node_id, "UPDATED", endnode_type=self.name)
 
     def link(self, uid, endnode_id, relation_type, endnode_type=None, properties=None):
         '''link will create a new link (relation) from a uid to a relation, first confirming

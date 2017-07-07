@@ -1,5 +1,6 @@
 ''' Functional views to create, update, and view the various types of terms
     and their relationships in cognitive atlas. '''
+from collections import OrderedDict
 import json
 
 from py2neo import Graph, Node, Relationship
@@ -111,10 +112,13 @@ def all_collections(request, return_context=False):
 
 
 def disorder_populate(disorders):
-    ret = {}
+    ret = OrderedDict()
     for dis in disorders:
         key = (str(dis.properties['id']), str(dis.properties['name']))
-        ret[key] = disorder_populate([x.start_node for x in dis.match_incoming(rel_type="ISA")])
+        children = [x.start_node for x in dis.match_incoming(rel_type="ISA")]
+        if children: 
+            children.sort(key=lambda x: str.lower(x.properties['name']))
+        ret[key] = disorder_populate(children)
     return ret
 
 def all_disorders(request, return_context=False):
@@ -125,6 +129,7 @@ def all_disorders(request, return_context=False):
         "match (dis:disorder) where not (dis:disorder)-[:ISA]->() return dis order by dis.name"
     )
     top_level_disorders = [x['dis'] for x in dis_records]
+    top_level_disorders.sort(key=lambda x: str.lower(x.properties['name']))
     disorders = disorder_populate(top_level_disorders)
 
     context = {

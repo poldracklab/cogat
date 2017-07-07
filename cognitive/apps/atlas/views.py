@@ -112,6 +112,8 @@ def all_collections(request, return_context=False):
 
 
 def disorder_populate(disorders):
+    if bool(disorders) is False:
+        return None
     ret = OrderedDict()
     for dis in disorders:
         key = (str(dis.properties['id']), str(dis.properties['name']))

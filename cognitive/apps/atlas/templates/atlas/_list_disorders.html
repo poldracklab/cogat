@@ -1,6 +1,8 @@
 {% for key, values in disorders.items  %}
-    {% if values is empty%}
-        <li><a href="{% url 'disorder' key.0 %}"> {{ key.1 }}</a>
+    {% if values is empty %}
+        <li class="dis-elem">
+        <span class="dis-list-toggle">-</span>
+        <a href="{% url 'disorder' key.0 %}"> {{ key.1 }}</a>
     {% else %}
         <li class="dis-elem">
         <span class="dis-list-toggle">+</span>

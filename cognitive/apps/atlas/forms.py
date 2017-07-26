@@ -6,6 +6,20 @@ from crispy_forms.layout import Reset, Submit
 
 from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery
 
+class TaskForm(forms.Form):
+    term_name = forms.CharField(required=True)
+    definition_text = forms.CharField(required=True)
+
+class ConceptForm(TaskForm):
+    pass
+
+class ContrastForm(forms.Form):
+    name = forms.CharField(required=True)
+
+class ConditionForm(forms.Form):
+    condition_text = forms.CharField(required=True)
+    condition_description = forms.CharField(required=True)
+
 class ImplementationForm(forms.Form):
     implementation_uri = forms.URLField(required=True)
     implementation_name = forms.CharField(required=True)

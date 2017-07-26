@@ -437,7 +437,7 @@ def add_term(request):
 
         properties = None
         if definition_text != '':
-            properties = {"definition":definition_text}
+            properties = {"definition": definition_text}
 
         if term_type == "concept":
             node = Concept.create(name=term_name, properties=properties, request=request)

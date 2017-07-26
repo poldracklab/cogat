@@ -163,6 +163,24 @@ api_urls = [
     url(r'^api/v-alpha/disorder', api_views.DisorderAPI.as_view(), name='disorder_api_list'),
     url(r'^task/json/(?P<uid>[\w\+%_& ]+)/$', graph.task_json, name="task_json"),
     url(r'^concept/json/(?P<uid>[\w\+%_& ]+)/$', graph.concept_json, name="concept_json"),
+    url(
+        r'^api/task/(?P<uid>[\w\+%_& ]+)/contrast$',
+        api_views.ContrastAPI.as_view(),
+        name='contrast_api'
+    ),
+    url(
+        r'^api/task/(?P<uid>[\w\+%_& ]+)/condition$',
+        api_views.ConditionAPI.as_view(),
+        name='contrast_api'
+    ),
+    url(r'^api/concept/relate/$', api_views.ConceptRelAPI.as_view(),
+        name="add_concept_relation_api"),
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/concept/$', api_views.TaskConceptAPI.as_view(),
+        name="add_task_concept_api"),
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/disorder/$', api_views.TaskDisorderAPI.as_view(),
+        name="add_task_disorder_api"),
+    url(r'^api/disorder/(?P<uid>[\w\+%_& ]+)/disorder/$', api_views.DisorderDisorderAPI.as_view(),
+        name="add_Disorder_disorder_api"),
 ]
 
 urlpatterns += api_urls

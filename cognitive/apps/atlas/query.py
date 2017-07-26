@@ -579,7 +579,7 @@ class Contrast(Node):
         self.name = "contrast"
         self.fields = ["id", "name", "description"]
         self.color = "#D89013" #gold
-        self.relations = {"HASDIFFERENCE", "disorders"}
+        self.relations = {"HASDIFFERENCE": "disorders"}
 
     def get_conditions(self, contrast_id, fields=None):
         '''get_conditions returns conditions associated with a contrast

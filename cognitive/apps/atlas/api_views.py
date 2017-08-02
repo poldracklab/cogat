@@ -44,7 +44,11 @@ class NodeAPI(APIView):
                             status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def get(self, request, format=None):
-        return Response(self.node_class.get_full(request.GET['id'], 'id'))
+        id = request.GET.get('id', None)
+        if id:
+            return Response(self.node_class.get_full(request.GET['id'], 'id'))
+        else:
+            return Response(self.node_class.api_all())
 
     def make_link(self, request, src_id, src_label, dest_id, dest_label, rel,
                   reverse=False):
@@ -66,6 +70,7 @@ class NodeAPI(APIView):
             request.GET['id'] = dest_id
 
         return self.get(request)
+
 
        
 class ContrastAPI(NodeAPI):
@@ -361,6 +366,13 @@ class BatteryTaskAPI(NodeAPI):
                               Task, 'INBATTERY')
  
 # def add_theory_assertion(request, theory_id):
+class TheoryAssertion(NodeAPI):
+    node_class = Assertion
+
+    def post(self, request, uid):
+        theory_id = request.POST.get('theory_id', '')
+        return self.make_link(request, uid, self.node_class, theory_id,
+                              Theory, 'INTHEORY')
 # def add_theory(request):
 class TheoryAPI(NodeAPI):
     node_class = Theory

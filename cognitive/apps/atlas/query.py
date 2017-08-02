@@ -100,16 +100,18 @@ class Node(object):
 
         if startnode != None and endnode != None:
             # If the relation_type is allowed for the node type
-            if relation_type in self.relations:
-                if self.graph.match_one(start_node=startnode,
-                                        rel_type=relation_type, end_node=endnode) is None:
-                    relation = Relationship(startnode, relation_type, endnode)
-                    self.graph.create(relation)
-                    if properties != None:
-                        for property_name in properties.keys():
-                            relation.properties[property_name] = properties[property_name]
-                        relation.push()
-                    return relation
+            if relation_type not in self.relations:
+                # throw something
+                return None
+            if self.graph.match_one(start_node=startnode,
+                                    rel_type=relation_type, end_node=endnode) is None:
+                relation = Relationship(startnode, relation_type, endnode)
+                self.graph.create(relation)
+                if properties != None:
+                    for property_name in properties.keys():
+                        relation.properties[property_name] = properties[property_name]
+                    relation.push()
+                return relation
         return None
 
     def update(self, uid, updates):
@@ -469,7 +471,8 @@ class Task(Node):
                      "WHERE c.id = '{}' AND t.id = '{}' "
                      "RETURN con").format(concept['concept_id'], task_id)
             contrast = do_query(query, "null", "list")
-            concept['contrast_id'] = contrast[0].properties.id
+            if contrast:
+                concept['contrast_id'] = contrast[0].properties.id
         return concepts
 
     def api_get_contrasts(self, task_id):

@@ -663,7 +663,7 @@ class Battery(Node):
     def __init__(self):
         super().__init__()
         self.name = "battery"
-        self.fields = ["id", "name", "collection"]
+        self.fields = ["id", "name", "collection", "collection_description"]
         self.color = "#4BBE00" # bright green
         self.relations = {
             "HASCITATION": "citations",
@@ -676,7 +676,7 @@ class Theory(Node):
     def __init__(self):
         super().__init__()
         self.name = "theory"
-        self.fields = ["id", "name", "description"]
+        self.fields = ["id", "name", "collection_description"]
         self.color = "#BE0000" # dark red
         self.relations = {"HASCITATION": "citations"}
 

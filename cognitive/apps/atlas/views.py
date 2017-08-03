@@ -581,7 +581,6 @@ def add_disorder_task(request, disorder_id):
             " where d.id = '{}' and t.id = '{}' return a "
         ).format(disorder_id, task_selection)
     )
-    print(assertion)
     if assertion.records == []:
         asrt = Assertion.create("", request=request)
         Assertion.link(asrt.properties['id'], disorder_id, "SUBJECT", endnode_type='disorder')
@@ -638,11 +637,11 @@ def add_concept_contrast_task(request, uid):
         concept_id = request.POST.get('concept_id', '')
         Concept.link(concept_id, contrast_selection, relation_type,
                      endnode_type="contrast")
-        concept_task_contrast_assertion(concept_id, uid, contrast_selection)
+        concept_task_contrast_assertion(request, concept_id, uid, contrast_selection)
     return view_task(request, uid)
 
 @login_required
-def concept_task_contrast_assertion(concept_id, task_id, contrast_id):
+def concept_task_contrast_assertion(request, concept_id, task_id, contrast_id):
     ''' function to generate assertion node along with all three relations assocaited with it'''
     pass
 
@@ -663,7 +662,7 @@ def add_contrast(request, task_id):
         conditions = dict()
         condition_ids = [x for x in request.POST.keys() if x not in skip]
         for condition_id in condition_ids:
-            weight = int(request.POST.get(condition_id, 0)[0])
+            weight = float(request.POST.get(condition_id, 0))
             if weight != 0:
                 conditions[condition_id] = weight
 

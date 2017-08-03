@@ -117,7 +117,7 @@
                                 <div id="contrast_search_box_{{ relation.id }}" style="padding-left:13px;padding-bottom:20px" class="hidden">
                                     <div>
                                     {% if contrasts|length > 0 %}
-                                    <form style="padding-top:20px" method="post" action="{% url 'add_concept_contrast' task.id %}">
+                                    <form style="padding-top:20px" method="post" action="{% url 'add_concept_contrast_task' task.id %}">
                                         <select name="contrast_selection" id="add_contrast_{{ relation.id }}" style="width:220px" size="3" style="padding-left:10px;">
                                         {% for contrast in contrasts %}
                                         <option value="{{ contrast.id }}">{{ contrast.name }}</option>
@@ -155,8 +155,17 @@
 <div id="bloastsk-implementors" class="block-halfwide-rfloat block-back block-margin">
     <div class="pane">
         <div class="discdiv"><b>DISORDERS</b> associated with <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
-            <span class="noassoc">No associations have been added.</span><br><br>
+            {% for disorder in disorders %}
+                <a href={% url "disorder" disorder.id %}>{{ disorder.name }}</a><br>
+            {% empty %}
+                <span class="noassoc">No associations have been added.</span><br><br>
+            {% endfor %}
         </div>
+        <button style="float:right;margin-top:10px" id="add_disorder_button">ADD DISORDER</button>		
+        <form class="hidden" action="{% url 'add_task_disorder' task.id %}" method="post" id="id-disorderform">
+            {% csrf_token %}
+            {% crispy task_disorder_form task_disorder_form.helper %}
+        </form>
     </div>
 </div><br clear="all">	
 
@@ -423,7 +432,13 @@ $(document).ready(function() {
         $("#id-citationform").addClass('hidden');
     })
  
-
+    $("#add_disorder_button").click(function(){
+        $("#id-disorderform").removeClass('hidden');
+    })
+    $("#reset-id-task-disorder-cancel").click(function(){
+        $("#id-disorderform").addClass('hidden');
+    })
+ 
 
     {% if user.is_authenticated %}
     // Add concept

@@ -7,11 +7,12 @@ Theory = Theory()
 Battery = Battery()
 
 # Needed on all pages
-counts = {"disorders":Disorder.count(),
-          "tasks":Task.count(),
-          "concepts":Concept.count(),
-          "theories":Theory.count(),
-          "batteries":Battery.count()}
+counts = {
+    "disorders": Disorder.count(),
+    "tasks": Task.count(),
+    "concepts": Concept.count(),
+    "collections": Battery.count() + Theory.count()
+}
 
 def counts_processor(request):
     return {'counts': counts}

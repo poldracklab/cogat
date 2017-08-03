@@ -1,11 +1,15 @@
 {% extends "main/base.html" %}
+{% load crispy_forms_tags %}
+{% load staticfiles %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
 .asholder {position:relative;}
+.select2-container { width: 100% !important; }
 </style>
+<link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
+
 {% endblock %}
-{% load staticfiles %}
 
 {% block branding %}
 {% include 'atlas/branding.html'%}
@@ -57,23 +61,21 @@
     <div id="block-measurements" class="block-half">
         <h2>Constituent <strong>Assertions</strong></h2><br>
             <ul class="alister">
-            {% for relation in theory.relations.ASSERTS %}
-                <li class="similitude {{relation.id}}">{{ relation.name }}
+            {% for assertion in assertions %}
+                <li class="similitude {{assertion.id}}">{{ assertion.name }}
                 </li>
             {% endfor %}
-            </ul><small>REFERENCED TERMS:</small> 
-            {% for relation in theory.relation.REFERENCED %}
-            <!-- No idea what this is-->
-            <a href="#" class="hovermark" rev="{{ relation.id }}">{{ relation.name }}</a>
+            </ul>
+            <small>REFERENCED TERMS:</small> 
+            {% for name, values in referenced_terms.items %}
+                <a href="{{ values.1 }}" class="hovermark">{{ name }}</a>({{ values.0 }})
             {% endfor %}
-                       <a href="javascript:void(0)" id="slide_constass" class="actionator">+ add constituent assertion</a><br>
-            <div id="slidetarget_constass" style="display:none"><br>	
+            <br>
+            <a name="add_theory_assertion_button" id="add_theory_assertion_button" class="actionator">+ add constituent assertion</a><br>
+            <div id="slidetarget_constass" class="hidden"><br>
                 <div class="popstar">
-                    <form method="post" name="constass_form" id="constass_form" action="#">
-                        <input type="hidden" name="id_object" value="{{ theory.id }}"> 
-                        <input type="hidden" name="id_assertion" id="id_assertion" value=""> Select Assertion: 			<input type="text" name="text_description" id="text_description" size="120" value="" title="text description" aria-label="text description" ><br><br>			
-                        <input type="button" value="Cancel" onclick="document.location.reload(true);" title="cancel submission" aria-label="cancel submission" >
-                        <input type="submit" value="Add Constituent Assertion" title="submit form" aria-label="submit form">		
+                    <form method="post" name="theory-assertion-form" id="id-theory-assertion-form" action="{% url 'add_theory_assertion' theory.id %}">
+                        {% crispy theory_assertions_form theory_assertions_form.helper %}
                      </form>
                </div>
            </div> 
@@ -81,8 +83,38 @@
  </div> 
 </div>
 
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div>
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <form class="hidden" action="{% url 'add_theory_citation' theory.id %}" method="post" id='id-citationform'>
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+    {% endif %}
+</div>
+
 {% endblock %}
 {% block scripts %}
+<script src="{% static "js/select2.min.js"%}" type="text/javascript"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     $(function() {
@@ -93,6 +125,22 @@ $(document).ready(function() {
         $("#edit_theory").removeClass("hidden")
     })
 
+    // Show input to add citation
+    $("#add_theory_assertion_button").click(function(){
+        $("#slidetarget_constass").removeClass('hidden');
+    })
+    $("#reset-id-theory-assertion-cancel").click(function(){
+        $("#slidetarget_constass").addClass('hidden');
+    })
+
+    $("#add_citation_button").click(function(){
+        $("#id-citationform").removeClass('hidden');
+    })
+    $("#reset-id-citation-cancel").click(function(){
+        $("#id-citationform").addClass('hidden');
+    })
+    $(".select").select2({width: 'resolve'});
+ 
 });
 </script>
 {% endblock %}

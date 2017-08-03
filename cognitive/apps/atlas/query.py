@@ -1,12 +1,11 @@
-''' This file contains classes that are used to query and update the neo4j 
+''' This file contains classes that are used to query and update the neo4j
     graph.'''
-from py2neo import Node as Relationship
+from py2neo import Path, Node as NeoNode, Relationship
 import pandas
 
 from cognitive.apps.atlas.utils import (color_by_relation, generate_uid,
                                         do_query, get_relation_nodetype)
 import cognitive.settings as settings
-
 
 class Node(object):
 
@@ -29,7 +28,7 @@ class Node(object):
         return self.graph.cypher.execute(query).one
 
 
-    def create(self, name, properties=None, property_key="id"):
+    def create(self, name, properties=None, property_key="id", request=None):
         '''create will create a new node of nodetype with unique id uid, and properties
         :param uid: the unique identifier
         :param name: the name of the node
@@ -42,13 +41,47 @@ class Node(object):
             timestamp = self.graph.cypher.execute("RETURN timestamp()").one
             node = NeoNode(self.name, name=name, id=uid, creation_time=timestamp,
                            last_updated=timestamp)
-            self.graph.create(node)
+            create_ret = self.graph.create(node)
             if properties != None:
                 for property_name in properties.keys():
                     node.properties[property_name] = properties[property_name]
                 node.push()
+            if request and (len(create_ret) > 0):
+                self.log_create(request, uid)
         return node
 
+    def neo_user_lookup(self, request):
+        ''' see if user from current request exists as a node in the neo
+            database. If not make a node for them. These nodes used for basic
+            audit of changes made to other nodes.
+        '''
+        user_id = request.user.id
+        neo_user = self.graph.find_one("user", property_key="id",
+                                       property_value=user_id)
+        user = User()
+        if not neo_user:
+            user.create(user_id, properties={'username': request.user.username,
+                                             'id': user_id})
+
+    def log_create(self, request, node_id):
+        ''' associate user node who created a given node to the newly created
+            node
+        '''
+        self.neo_user_lookup(request)
+        user = User()
+        user.link(request.user.id, node_id, "CREATED", endnode_type=self.name)
+
+    def log_update(self, request, node_id):
+        ''' assocaite user who most recently updated a node. If another user
+            has this relation set, remove it.
+        '''
+        self.neo_user_lookup(request)
+        user = User()
+        query = "MATCH ()-[rel:UPDATED]->(dest) WHERE dest.id = '{}' RETURN rel"
+        res = self.graph.cypher.execute(query)
+        if res[0]:
+            res[0]['rel'].delete()
+        user.link(request.user.id, node_id, "UPDATED", endnode_type=self.name)
 
     def link(self, uid, endnode_id, relation_type, endnode_type=None, properties=None):
         '''link will create a new link (relation) from a uid to a relation, first confirming
@@ -56,7 +89,8 @@ class Node(object):
         :param uid: the unique identifier for the source node
         :param endnode_id: the unique identifier for the end node
         :raram relation_type: the relation type
-        :param endnode_type: the type of the second node. If not specified, assumed to be same as startnode
+        :param endnode_type: the type of the second node. If not specified, assumed to be
+               same as startnode
         :param properties: properties to add to the relation
         '''
         if endnode_type is None:
@@ -66,15 +100,18 @@ class Node(object):
 
         if startnode != None and endnode != None:
             # If the relation_type is allowed for the node type
-            if relation_type in self.relations:
-                if self.graph.match_one(start_node=startnode, rel_type=relation_type, end_node=endnode) is None:
-                    relation = Relationship(startnode, relation_type, endnode)
-                    self.graph.create(relation)
-                    if properties != None:
-                        for property_name in properties.keys():
-                            relation.properties[property_name] = properties[property_name]
-                        relation.push()
-                    return relation
+            if relation_type not in self.relations:
+                # throw something
+                return None
+            if self.graph.match_one(start_node=startnode,
+                                    rel_type=relation_type, end_node=endnode) is None:
+                relation = Relationship(startnode, relation_type, endnode)
+                self.graph.create(relation)
+                if properties != None:
+                    for property_name in properties.keys():
+                        relation.properties[property_name] = properties[property_name]
+                    relation.push()
+                return relation
         return None
 
     def update(self, uid, updates):
@@ -90,7 +127,8 @@ class Node(object):
 
 
     def cypher(self, uid, lookup=None, return_lookup=False):
-        '''cypher returns a data structure with nodes and relations for an object to generate a gist with cypher
+        ''' cypher returns a data structure with nodes and relations for an
+            object to generate a gist with cypher
         :param uid: the node unique id to look up
         :param lookup: an optional lookup dictionary to append to
         :param return_lookup: if true, returns a lookup with nodes and relations that are added to the graph
@@ -189,7 +227,8 @@ class Node(object):
 
     def filter(self, filters, format="dict", fields=None):
         '''filter will filter a node based on some set of filters
-        :param filters: a list of tuples with [(field,filter,value)], eg [("name","starts_with","a")].
+        :param filters: a list of tuples with [(field,filter,value)],
+                        eg [("name","starts_with","a")].
         ::note_
 
              Currently supported filters are "starts_with"
@@ -207,6 +246,11 @@ class Node(object):
         fields = fields + ["_id"]
         return do_query(query, output_format=format, fields=fields)
 
+    def api_all(self):
+        query = "match (n:{}) return n".format(self.name)
+        nodes = self.graph.cypher.execute(query)
+        results = [x['n'].properties for x in nodes]
+        return results
 
     def all(self, fields=None, limit=None, format="dict", order_by=None, desc=False):
         '''all returns all concepts, or up to a limit
@@ -234,12 +278,13 @@ class Node(object):
         return do_query(query, fields=fields, output_format=format)
 
     def get(self, uid, field="id", get_relations=True, relations=None):
-        '''get returns one or more nodes based on a field of interest. If get_relations is true, will also return
-        the default relations for the node, or those defined in the relations variable
+        ''' get returns one or more nodes based on a field of interest. If
+            get_relations is true, will also return the default relations for
+            the node, or those defined in the relations variable
         :param params: list of parameters to search for, eg [trm_123]
         :param field: field to search (default id)
         :param get_relations: default True, return relationships
-        :param relations: list of relations to include. If not defined, will return all
+        :paiam relations: list of relations to include. If not defined, will return all
         '''
         parents = self.graph.find(self.name, field, uid)
         nodes = []
@@ -264,7 +309,7 @@ class Node(object):
 
                 # Does the user want a filtered set?
                 if relations != None:
-                    relation_nodes = {k:v for k, v in relation_nodes.iteritems() if k in relations}
+                    relation_nodes = {k:v for k, v in relation_nodes.items() if k in relations}
                 new_node["relations"] = relation_nodes
 
             nodes.append(new_node)
@@ -302,29 +347,37 @@ class Node(object):
                 i += 1
         return df.to_dict(orient="records")
 
-    def get_relation(self, id, relation):
+    def get_relation(self, id, relation, label=None):
         ''' get nodes that are related to a given task
             :param task_id: id of node to look for relations from
             :relation: neo style relationship label ex. "ASSERTS"
             :fields: fields to retrieve from nodes related to task_id'''
-        query = '''MATCH (p:{})-[:{}]->(r)
+        if label:
+            label_substr = ':{}'.format(label)
+        else:
+            label_substr = ''
+        query = '''MATCH (p:{})-[:{}]->(r{})
                    WHERE p.id = '{}'
-                   RETURN r'''.format(self.name, relation, id)
+                   RETURN r'''.format(self.name, relation, label_substr, id)
         relations = do_query(query, "null", "list")
         relations = [x[0].properties for x in relations]
         for rel in relations:
             rel['relationship'] = relation
         return relations
 
-    def get_reverse_relation(self, id, relation):
+    def get_reverse_relation(self, id, relation, label=None):
         '''As opposed to get_relation this gets relations where the
            given id is the subject in the relationship, not the predicate.
            :param task_id: id of node to look for relations from
            :relation: neo style relationship label ex. "ASSERTS"
            :fields: fields to retrieve from nodes related to task_id'''
-        query = '''MATCH (p)-[:{}]->(s:{})
+        if label:
+            label_substr = ':{}'.format(label)
+        else:
+            label_substr = ''
+        query = '''MATCH (p{})-[:{}]->(s:{})
                    WHERE s.id = '{}'
-                   RETURN p'''.format(relation, self.name, id)
+                   RETURN p'''.format(label_substr, relation, self.name, id)
         relations = do_query(query, "null", "list")
         relations = [x[0].properties for x in relations]
         for rel in relations:
@@ -353,7 +406,7 @@ class Concept(Node):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = "concept"
-        self.fields = ["id", "name", "definition", "alias"]
+        self.fields = ["id", "name", "definition_text", "alias"]
         self.relations = {
             "PARTOF": "concepts",
             "KINDOF": "concepts",
@@ -386,7 +439,7 @@ class Task(Node):
     def __init__(self):
         super().__init__()
         self.name = "task"
-        self.fields = ["id", "name", "definition"]
+        self.fields = ["id", "name", "definition_text"]
         self.relations = {
             "HASCONDITION": "conditions",
             "ASSERTS": "concepts",
@@ -394,7 +447,8 @@ class Task(Node):
             "HASEXTERNALDATASET": "external_datasets",
             "HASIMPLEMENTATION": "implementations",
             "HASCITATION": "citation",
-            "HASCONTRAST": "contrasts"
+            "HASCONTRAST": "contrasts",
+            "INBATTERY": "batteries"
         }
         self.color = "#63506D" #purple
 
@@ -412,11 +466,13 @@ class Task(Node):
     def api_update_concepts(self, concepts, task_id):
         for concept in concepts:
             concept['concept_id'] = concept.pop('id')
-            query = '''MATCH (con:contrast)<-[:HASCONTRAST]-(t:task)-[:ASSERTS]->(c:concept)-[:MEASUREDBY]->(con:contrast)
-                       WHERE c.id = '{}' AND t.id = '{}'
-                       RETURN con'''.format(concept['concept_id'], task_id)
+            query = ("MATCH (con:contrast)<-[:HASCONTRAST]-(t:task)-[:ASSERTS]->"
+                     "(c:concept)-[:MEASUREDBY]->(con:contrast) "
+                     "WHERE c.id = '{}' AND t.id = '{}' "
+                     "RETURN con").format(concept['concept_id'], task_id)
             contrast = do_query(query, "null", "list")
-            concept['contrast_id'] = contrast[0].properties.id
+            if contrast:
+                concept['contrast_id'] = contrast[0].properties.id
         return concepts
 
     def api_get_contrasts(self, task_id):
@@ -505,6 +561,11 @@ class Disorder(Node):
                        "event_stamp", "id_user", "is_a", "id_protocol",
                        "is_a_fulltext", "is_a_protocol"]
         self.color = "#337AB7" # neurovault blue
+        self.relations = {
+            "ISA": "disorders",
+            "HASCITATION": "citations",
+            "HASLINK": "external_links"
+        }
 
 class Condition(Node):
 
@@ -521,6 +582,7 @@ class Contrast(Node):
         self.name = "contrast"
         self.fields = ["id", "name", "description"]
         self.color = "#D89013" #gold
+        self.relations = {"HASDIFFERENCE": "disorders"}
 
     def get_conditions(self, contrast_id, fields=None):
         '''get_conditions returns conditions associated with a contrast
@@ -603,6 +665,11 @@ class Battery(Node):
         self.name = "battery"
         self.fields = ["id", "name", "collection"]
         self.color = "#4BBE00" # bright green
+        self.relations = {
+            "HASCITATION": "citations",
+            "HASINDICATOR": "indicators",
+            "INBATTERY": "constituents"
+        }
 
 class Theory(Node):
 
@@ -611,6 +678,7 @@ class Theory(Node):
         self.name = "theory"
         self.fields = ["id", "name", "description"]
         self.color = "#BE0000" # dark red
+        self.relations = {"HASCITATION": "citations"}
 
 class Implementation(Node):
 
@@ -620,7 +688,7 @@ class Implementation(Node):
         self.fields = ["implementation_uri", "implementation_name", "implementation_description"]
 
 class ExternalDataset(Node):
-    
+
     def __init__(self):
         super().__init__()
         self.name = "external_dataset"
@@ -642,6 +710,38 @@ class Citation(Node):
                        "citation_authors", "citation_type", "citation_pubname",
                        "citation_pubdate", "citation_pmid", "citation_source",
                        "id", "name"]
+
+class Assertion(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "assertion"
+        self.fields = ["id", "name", "event_stamp", "truth_value",
+                       "id_subject_def", "user_id", "flag_for_curator",
+                       "confidence_level"]
+        self.relations = {
+            "PREDICATE": "tasks",
+            "SUBJECT": "concepts",
+            "INTHEORY": "theories",
+            "HASCITATION": "citations"
+        }
+
+class User(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "user"
+        self.fields = ["id", "username"]
+        self.relations = {
+            "CREATED": "nodes"
+        }
+
+class ExternalLink(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "external_link"
+        self.fields = ["uri"]
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

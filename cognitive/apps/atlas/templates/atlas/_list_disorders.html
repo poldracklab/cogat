@@ -1,0 +1,15 @@
+{% for key, values in disorders.items  %}
+    {% if values is empty %}
+        <li class="dis-elem">
+        <span class="dis-list-toggle">-</span>
+        <a href="{% url 'disorder' key.0 %}"> {{ key.1 }}</a>
+    {% else %}
+        <li class="dis-elem">
+        <span class="dis-list-toggle">+</span>
+        <a href="{% url 'disorder' key.0 %}">{{ key.1 }}</a>
+        <ul class="dis-list hidden">
+        {% include "atlas/_list_disorders.html" with disorders=values %}
+        </ul>
+    {% endif %}
+    </li>
+{% endfor %}

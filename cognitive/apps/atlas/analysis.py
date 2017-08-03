@@ -86,7 +86,7 @@ def strongly_connected_components(relation="MEASUREDBY"):
     result = run_analysis(url)
 
 
-def run_analysis(url)
+def run_analysis(url):
     '''run_analysis will submit a GET request to run a graph analysis with Mazerunner (under development)
     :param url: the url of the request for GET.
     '''

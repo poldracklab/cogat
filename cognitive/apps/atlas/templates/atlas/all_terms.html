@@ -23,25 +23,31 @@
        <!-- Contribute New Term Form -->
        {% include "atlas/_contribute_term.html" %}
 
-       <h1 class="CATitle">Browse <strong class="{{ term_type }}">{{ term_type|capfirst }}s</strong></h1>
+       <h1 class="CATitle">Browse <strong class="{{ term_type_plural }}">{{ term_type_plural|capfirst }}s</strong></h1>
 
-       {% if term_type != "theorie" %}
-       <div class='inset padtop charstring'><a href='/{{ term_type }}s' class=' selected-letter '>ALL</a>
-       {% for let in "abcdefghijklmnopqrstuvwxyz"|make_list %}
-            <span class='finb'>&nbsp;</span>
-             <a href='/{{ term_type }}s/{{ let }}' class=' non-selected-letter '>{{ let|capfirst }}</a>
-       {% endfor %}
-       </div><br>
+       {% if term_type != "theory" %}
+           <div class='inset padtop charstring'><a href='/{{ term_type_plural }}' class=' selected-letter '>ALL</a>
+           {% for let in "abcdefghijklmnopqrstuvwxyz"|make_list %}
+                <span class='finb'>&nbsp;</span>
+                 <a href='/{{ term_type_plural }}s/{{ let }}' class=' non-selected-letter '>{{ let|capfirst }}</a>
+           {% endfor %}
+           </div><br>
        {% endif %}
  
-       <div class="stringer">All {{ term_type|capfirst }}s {{ filtered_nodes_count }}</div>
-       <div style='float:left;width:300px;'>
-           <ul class="columns" id="triple">
-               {% for node in nodes %}<li><span class="{{ term_type }}"><a href="/{{ term_type }}/id/{{ node.id }}" class="{{ term_type }} tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.definition }}<br/><br/>">{{ node.name }}</a></span></li>{% endfor %}
-           </ul>
-       </div>
-       <div class="clear_all"></div>
-      
+    <div class="stringer">All {{ term_type_plural|capfirst }} {{ filtered_nodes_count }}</div>
+    <div style='float:left;width:300px;'>
+        <ul class="columns" id="triple">
+        {% for node in nodes %}
+            <li>
+                <span class="{{ term_type }}">
+                    <a href="/{{ term_type }}/id/{{ node.id }}" class="{{ term_type }} tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.definition }}<br/><br/>">{{ node.name }}</a>
+                </span>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+    <div class="clear_all"></div>
+
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript">

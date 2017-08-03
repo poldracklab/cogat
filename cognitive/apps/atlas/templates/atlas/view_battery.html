@@ -1,4 +1,6 @@
 {% extends "main/base.html" %}
+{% load crispy_forms_tags %}
+{% load staticfiles %}
 {% block head %}
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
@@ -16,8 +18,130 @@
 {% endblock %}
 
 {% block content %}
+<div id="block-definition" class="block-full">	
+<div class="assertion">
+    <div class="CATerm task">
+        <h1 class="termtext">
+            <a class="color-task" href="">
+            <em>{{ battery.name }}</em>
+            </a>
+            <span class="typebutton task_type"><a href="{% url 'all_collections' %}">BATTERY</a></span>
+        </h1>
+    </div><!-- .CATerm.task -->
+
+    <div class="defn">
+        {{ battery.description | safe }}<br><br>
+    {% if user.is_authenticated %}
+    <a id="update-button"><button>update description</button></a>
+    {% endif %}
+    </div><!-- .defn -->
+
+{% if user.is_authenticated %}
+<!-- Update description -->
+<div id="id-updateform" class="hidden">
+    <form method="POST" action="{% url 'update_battery' battery.id %}">
+        <div class="modal-body">
+            <textarea name="description" rows="4" cols="50">{{ battery.description }}</textarea>
+        </div>
+        {% csrf_token %}
+        <button id="id-reset-update-button" type="button" class="btn btn-primary">Cancel</button>
+        <input type="submit" value="submit" class="btn btn-primary"></input>
+    </form>
+</div>
+{% endif %}
 
 
+    <div id="unterbutton_slide_def" class="defn"></div><!-- #unterbutton_slide_def.defn -->
+
+    <div class="clear_all"></div>
+</div>
+
+<!-- Constituents -->
+<div style="width: 960px;"><div class="block-thirdwide block-back">
+    <strong>Constituent Tasks</strong><br>
+    {% for task in constituent_tasks %}
+        <a href="{% url 'task' task.id %}">{{ task.name }}</a><br>
+    {% empty %}
+        No tasks have been added.<br>
+    {% endfor %}
+    <strong>Constituent Battery</strong><br>
+    {% for battery in constituent_batteries %}
+        <a href="{% url 'battery' battery.id %}">{{ battery.name }}</a><br>
+    {% empty %}
+        No batteries have been added.<br>
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button id="add-constituent" style="position:relative;border-radius:15px;float:right;top:-20px">+</button>
+        <div id="constituent-forms" class="hidden">
+            <form method="POST" action="{% url 'add_battery_battery' battery.id %}">
+            {% crispy battery_form battery_form.helper %}
+            </form>
+            <form method="POST" action="{% url 'add_battery_task' battery.id %}">
+            {% crispy task_form task_form.helper %}
+            </form>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Phylogeny -->
+<div class="block-thirdwide block-back block-margin">
+    Task Battery <strong>PHYLOGENY</strong>
+    <div>
+    </div>
+</div>  
+<a name="contrasts"></a><br/>
+
+<!-- INDICATORS -->
+<div class="block-thirdwide block-back block-margin">
+    <strong>INDICATORS</strong>
+    {% for indicator in indicators %}
+        <div class="conblock-inner-wide">
+            {{ indicator.type }}
+        </div>
+    {% empty %}
+        <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add-indicator-button">ADD INDICATOR</button>
+        <form class="hidden" action="{% url 'add_battery_indicator' battery.id %}" method="post" id='id-indicatorform'>
+            {% csrf_token %}
+            {% crispy indicator_form indicator_form.helper %}
+        </form>
+    {% endif %}
+
+    <p class="subinfo">An indicator is a specific quantitative or qualitative variable that is recorded for analysis. These may include behavioral variables (such as response time, accuracy, or other measures of performance) or physiological variables (including genetics, psychophysiology, or brain imaging data).</p>
+</div>
+
+
+
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div>
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <form class="hidden" action="{% url 'add_battery_citation' battery.id %}" method="post" id='id-citationform'>
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+    {% endif %}
+</div>
 {% endblock %}
 {% block scripts %}
 <script type="text/javascript">
@@ -26,6 +150,36 @@ $(document).ready(function() {
        $(".tooltip").tipsy({fade:false, gravity:"w", html:true});
        $("#masker").fadeOut("fast");
     });
+    $("#add_citation_button").click(function(){
+        $("#id-citationform").removeClass('hidden');
+    })
+    $("#reset-id-citation-cancel").click(function(){
+        $("#id-citationform").addClass('hidden');
+    })
+    $("#update-definition-button").click(function(){
+        $("#id-updateform").removeClass('hidden');
+    })
+    $("#reset-id-update-cancel").click(function(){
+        $("#id-updateform").addClass('hidden');
+    })
+    $("#add-indicator-button").click(function(){
+        $("#id-indicatorform").removeClass('hidden');
+    })
+    $("#reset-id-indicator-cancel").click(function(){
+        $("#id-indicatorform").addClass('hidden');
+    })
+
+    $("#add-constituent").click(function(){
+        $("#constituent-forms").removeClass('hidden');
+    })
+    $("#reset-id-battery-cancel").click(function(){
+        $("#constituent-forms").addClass('hidden');
+    })
+    $("#reset-id-battery-task-cancel").click(function(){
+        $("#constituent-forms").addClass('hidden');
+    })
+
+
 });
 </script>
 {% endblock %}

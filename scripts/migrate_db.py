@@ -161,6 +161,9 @@ def import_assertions():
         rel_type = assertion[5]
         id_predicate_def = assertion[10]
 
+        assert_node = make_node("assertion", props.pop('id'),
+                                props.pop('text_description'), props)
+
         if rel_type == "concept-task":
             tasknode = find_node("task", property_value=predicate)
             conceptnode = find_node("concept", property_value=subject)
@@ -169,14 +172,12 @@ def import_assertions():
             # Contrast is measured by contrast
             if contrastnode is not None and conceptnode is not None:
                 relation = make_relation(
-                    conceptnode, "MEASUREDBY", contrastnode, props)
+                    conceptnode, "MEASUREDBY", contrastnode)
 
             if tasknode and conceptnode:
-                make_relation(tasknode, "ASSERTS", conceptnode, props)
+                make_relation(tasknode, "ASSERTS", conceptnode)
 
             if tasknode and conceptnode and contrastnode:
-                assert_node = make_node("assertion", props.pop('id'),
-                                        props.pop('text_description'), props)
                 make_relation(assert_node, "PREDICATE", tasknode)
                 make_relation(assert_node, "SUBJECT", conceptnode)
                 make_relation(assert_node, "PREDICATE_DEF", contrastnode)
@@ -201,7 +202,9 @@ def import_assertions():
             # Contrast is measured by contrast
             if conceptnode1 and conceptnode2:
                 relation = make_relation(
-                    conceptnode1, relationship_type, conceptnode2, props)
+                    conceptnode1, relationship_type, conceptnode2)
+                make_relation(assert_node, "PREDICATE", conceptnode2)
+                make_relation(assert_node, "SUBJECT", conceptnode1)
 
         elif rel_type == "task-task":
             tasknode1 = find_node("task", property_value=subject)
@@ -214,7 +217,9 @@ def import_assertions():
 
             # Task is descended from task
             if tasknode1 and tasknode2:
-                relation = make_relation(tasknode1, relationship_type, tasknode2, props)
+                relation = make_relation(tasknode1, relationship_type, tasknode2)
+                make_relation(assert_node, "PREDICATE", tasknode2)
+                make_relation(assert_node, "SUBJECT", tasknode1)
 
 def import_battery():
     sql = ("select id, collection_name, collection_alias, id_user, "

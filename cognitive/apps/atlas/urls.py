@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^batteries$', views.all_batteries, name="all_batteries"),
     url(r'^theories$', views.all_theories, name="all_theories"),
     url(r'^tasks$', views.all_tasks, name="all_tasks"),
+    url(r'^collections/$', views.all_collections, name="all_collections"),
 
     # Search (json response) views
     url(r'^search$', views.search_all, name="search"),
@@ -33,17 +34,20 @@ urlpatterns = [
     # Modify terms
     url(r'^terms/new/$', views.contribute_term, name="contribute_term"),
     url(r'^disorder/new/$', views.contribute_disorder, name="contribute_disorder"),
+    url(r'^theory/new/$', views.add_theory, name="add_theory"),
+    url(r'^battery/new/$', views.add_battery, name="add_battery"),
     url(r'^terms/add/$', views.add_term, name="add_term"),
     url(r'^concept/update/(?P<uid>[\w\+%_& ]+)/$', views.update_concept, name="update_concept"),
     url(r'^task/update/(?P<uid>[\w\+%_& ]+)/$', views.update_task, name="update_task"),
     url(r'^disorder/update/(?P<uid>[\w\+%_& ]+)/$', views.update_disorder, name="update_disorder"),
     url(r'^theory/update/(?P<uid>[\w\+%_& ]+)/$', views.update_theory, name="update_theory"),
+    url(r'^battery/update/(?P<uid>[\w\+%_& ]+)/$', views.update_battery, name="update_battery"),
     url(r'^concept/assert/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_relation,
         name="add_concept_relation"),
     url(r'^task/add/concept/(?P<uid>[\w\+%_& ]+)/$', views.add_task_concept,
         name="add_task_concept"),
-    url(r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_contrast,
-        name="add_concept_contrast"),
+    url(r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_contrast_task,
+        name="add_concept_contrast_task"),
     url(r'^task/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_task_contrast,
         name="add_task_contrast"),
     url(r'^contrast/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_contrast, name="add_contrast"),
@@ -69,6 +73,11 @@ urlpatterns = [
         name="add_task_citation"
     ),
     url(
+        r'^task/add/disorder/(?P<task_id>[\w\+%_& ]+)/$',
+        views.add_task_disorder,
+        name="add_task_disorder"
+    ),
+    url(
         r'^concept/add/citation/(?P<concept_id>[\w\+%_& ]+)/$',
         views.add_concept_citation,
         name="add_concept_citation"
@@ -88,7 +97,51 @@ urlpatterns = [
         views.add_disorder_task,
         name="add_disorder_task"
     ),
-
+    url(
+        r'^theory/add/assertion/(?P<theory_id>[\w\+%_& ]+)/$',
+        views.add_theory_assertion,
+        name="add_theory_assertion"
+    ),
+    url(
+        r'^theory/add/citation/(?P<theory_id>[\w\+%_& ]+)/$',
+        views.add_theory_citation,
+        name="add_theory_citation"
+    ),
+    url(
+        r'^battery/add/citation/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_citation,
+        name="add_battery_citation"
+    ),
+    url(
+        r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/(?P<tid>[\w\+%_& ]+)/$',
+        views.add_concept_contrast,
+        name="add_concept_contrast"
+    ),
+    url(
+        r'^disorder/add/disorder/(?P<disorder_id>[\w\+%_& ]+)/$',
+        views.add_disorder_disorder,
+        name="add_disorder_disorder"
+    ),
+    url(
+        r'^disorder/add/link/(?P<disorder_id>[\w\+%_& ]+)/$',
+        views.add_disorder_external_link,
+        name="add_disorder_external_link"
+    ),
+    url(
+        r'^battery/add/indicator/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_indicator,
+        name="add_battery_indicator"
+    ),
+    url(
+        r'^battery/add/battery/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_battery,
+        name="add_battery_battery"
+    ),
+    url(
+        r'^battery/add/task/(?P<battery_id>[\w\+%_& ]+)/$',
+        views.add_battery_task,
+        name="add_battery_task"
+    ),
 
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),
@@ -103,13 +156,71 @@ api_urls = [
     url(r'^api/search$', api_views.SearchAPI.as_view(), name='search_api_list'),
     url(r'^api/concept$', api_views.ConceptAPI.as_view(), name='concept_api_list'),
     url(r'^api/task$', api_views.TaskAPI.as_view(), name='task_api_list'),
-    url(r'^api/disorder', api_views.DisorderAPI.as_view(), name='disorder_api_list'),
+    url(r'^api/disorder$', api_views.DisorderAPI.as_view(), name='disorder_api_list'),
     url(r'^api/v-alpha/search$', api_views.SearchAPI.as_view(), name='search_api_list'),
     url(r'^api/v-alpha/concept$', api_views.ConceptAPI.as_view(), name='concept_api_list'),
     url(r'^api/v-alpha/task$', api_views.TaskAPI.as_view(), name='task_api_list'),
     url(r'^api/v-alpha/disorder', api_views.DisorderAPI.as_view(), name='disorder_api_list'),
     url(r'^task/json/(?P<uid>[\w\+%_& ]+)/$', graph.task_json, name="task_json"),
     url(r'^concept/json/(?P<uid>[\w\+%_& ]+)/$', graph.concept_json, name="concept_json"),
+    url(
+        r'^api/task/(?P<uid>[\w\+%_& ]+)/contrast$',
+        api_views.ContrastAPI.as_view(),
+        name='contrast_api'
+    ),
+    url(
+        r'^api/task/(?P<uid>[\w\+%_& ]+)/condition$',
+        api_views.ConditionAPI.as_view(),
+        name='contrast_api'
+    ),
+    url(r'^api/concept/relate/$', api_views.ConceptRelAPI.as_view(),
+        name="add_concept_relation_api"),
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/concept/$', api_views.TaskConceptAPI.as_view(),
+        name="add_task_concept_api"),
+
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/disorder/$', api_views.TaskDisorderAPI.as_view(),
+        name="add_task_disorder_api"),
+    url(r'^api/disorder/(?P<uid>[\w\+%_& ]+)/disorder/$', api_views.DisorderDisorderAPI.as_view(),
+        name="add_disorder_disorder_api"),
+    url(r'^api/disorder/(?P<uid>[\w\+%_& ]+)/citation/$',
+        api_views.DisorderCitationAPI.as_view(), name="add_disorder_citation_api"),
+    url(r'^api/disorder/(?P<uid>[\w\+%_& ]+)/ExternalLink/$',
+        api_views.DisorderExternalLinkAPI.as_view(), name="add_disorder_external_link_api"),
+    url(r'^api/disorder/(?P<uid>[\w\+%_& ]+)/task/$',
+        api_views.DisorderTask.as_view(), name="add_disorder_task_api"),
+
+    url(r'^api/concept/(?P<uid>[\w\+%_& ]+)_/contrast$',
+        api_views.ConceptContrastAPI.as_view(), name="add_concept_contrast_api"),
+    url(r'^api/concept/(?P<uid>[\w\+%_& ]+)/contrast/task$',
+        api_views.ConceptContrastTaskAPI.as_view(), name="add_concept_contrast_task_api"),
+    url(r'^api/concept/(?P<uid>[\w\+%_& ]+)/citation/$',
+        api_views.ConceptCitationAPI.as_view(), name="add_concept_citation_api"),
+
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/implementation/$',
+        api_views.TaskImplementationAPI.as_view(), name="add_task_implementation_api"),
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/dataset/$',
+        api_views.TaskDatasetAPI.as_view(), name="add_task_dataset_api"),
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/indicator/$',
+        api_views.TaskIndicatorAPI.as_view(), name="add_task_indicator_api"),
+    url(r'^api/task/(?P<uid>[\w\+%_& ]+)/citation/$',
+        api_views.TaskCitationAPI.as_view(), name="add_task_citation_api"),
+
+    url(r'^api/battery/(?P<uid>[\w\+%_& ]+)/citation/$',
+        api_views.BatteryCitationAPI.as_view(), name="add_battery_citation_api"),
+    url(r'^api/battery/(?P<uid>[\w\+%_& ]+)/indicator/$',
+        api_views.BatteryIndicatorAPI.as_view(), name="add_battery_indicator_api"),
+    url(r'^api/battery/(?P<uid>[\w\+%_& ]+)/battery/$',
+        api_views.BatteryBatteryAPI.as_view(), name="add_battery_battery_api"),
+    url(r'^api/battery/(?P<uid>[\w\+%_& ]+)/task/$',
+        api_views.BatteryTaskAPI.as_view(), name="add_battery_task_api"),
+    url(r'^api/battery$',
+        api_views.BatteryAPI.as_view(), name="battery_list_api"),
+
+    url(r'^api/theory$', api_views.TheoryAPI.as_view(), name="theory_list_api"),
+    url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/assertion/$',
+        api_views.TheoryAssertion.as_view(), name="add_theory_assertion"),
+    url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/citation/$',
+        api_views.TheoryCitationAPI.as_view(), name="add_theory_citation"),
 ]
 
 urlpatterns += api_urls

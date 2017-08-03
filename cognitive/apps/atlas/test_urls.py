@@ -89,7 +89,7 @@ class AtlasUrlTestCase(TestCase):
 
     def test_add_concept_contrast(self):
         found = resolve('/concept/add/contrast/fake_123/')
-        self.assertEqual(found.view_name, 'add_concept_contrast')
+        self.assertEqual(found.view_name, 'add_concept_contrast_task')
 
     def test_add_contrast(self):
         found = resolve('/contrast/add/fake_123/')

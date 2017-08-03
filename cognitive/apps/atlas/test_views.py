@@ -4,8 +4,8 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 
 from cognitive.apps.atlas import views
-from cognitive.apps.atlas.query import (Battery, Concept, Condition, Contrast,
-                                        Disorder, ExternalDataset,
+from cognitive.apps.atlas.query import (Assertion, Battery, Concept, Condition,
+                                        Contrast, Disorder, ExternalDataset,
                                         Implementation, Task, Theory, Indicator)
 from cognitive.apps.users.models import User
 from cognitive.settings import graph
@@ -60,13 +60,6 @@ class AtlasViewTestCase(TestCase):
         self.assertEqual(response.context['term_type'], 'task')
         self.assertEqual(len(response.context['nodes']), count)
         self.assertEqual(response.status_code, 200)
-
-    def test_all_theories(self):
-        theory = Theory()
-        count = theory.count()
-        response = self.client.get(reverse('all_theories'))
-        self.assertEqual(response.context['term_type'], 'theorie')
-        self.assertEqual(len(response.context['nodes']), count)
 
     def test_concepts_by_letter(self):
         for letter in string.ascii_lowercase:
@@ -141,7 +134,7 @@ class AtlasViewTestCase(TestCase):
             {'term_type': 'concept', 'term_name': concept_name,
              'definition_text': definition}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         uid = response.context['concept']['id']
         con = concept.get(uid)
         self.assertEqual(len(con), 1)
@@ -159,7 +152,7 @@ class AtlasViewTestCase(TestCase):
             {'term_type': 'task', 'term_name': task_name,
              'definition_text': definition}
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         uid = response.context['task']['id']
         tsk = task.get(uid)
         self.assertEqual(len(tsk), 1)
@@ -405,7 +398,7 @@ class AtlasViewTestCase(TestCase):
         tsk.delete()
         ds = graph.find_one("external_dataset", "id", ds[0]['id'])
 
-def test_add_task_indicator(self):
+    def test_add_task_indicator(self):
         task = Task()
         tsk = task.create('test_add_task_indicator', {'prop': 'prop'})
         self.assertTrue(self.client.login(
@@ -424,3 +417,25 @@ def test_add_task_indicator(self):
         tsk.delete_related()
         tsk.delete()
         ind = graph.find_one("indicator", "id", ind[0]['id'])
+
+    def test_add_theory_assertion(self):
+        Asrt = Assertion()
+        Thry = Theory()
+        assertion = Asrt.create('test_add_theory_assertion')
+        theory = Thry.create('test_add_theory_assertion')
+        data = {
+            'assertions': assertion.properties['id']
+        }
+
+        self.assertTrue(self.client.login(
+            username=self.user.username, password=self.password))
+        response = self.client.post(
+            reverse('add_theory_assertion',
+                    kwargs={'theory_id': theory.properties['id']}), data
+        )
+        self.assertEqual(response.status_code, 200)
+        thry = Asrt.get_relation(assertion.properties['id'], "INTHEORY")
+        self.assertEqual(thry[0]['name'], 'test_add_theory_assertion')
+        assertion.delete_related()
+        assertion.delete()
+        theory.delete()

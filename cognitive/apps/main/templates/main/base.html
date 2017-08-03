@@ -37,6 +37,7 @@
             <div id="userbar">
     
                 {% if user.is_authenticated %}
+                    {{ user }}
                     <a href="{% url 'logout' %}"><input type="button" class="tsbutton" value="Logout" title="Logout" aria-label="Logout"></a><small> to end your session </small>
                 {% else %}
                     <!--Don't show login on login pages-->

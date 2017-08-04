@@ -2,7 +2,7 @@ FROM       java:openjdk-8-jdk
 
 ENV HDFS_HOST hdfs://hdfs:9000
 
-ENV NEO4j_VERSION community-2.2.3
+ENV NEO4j_VERSION community-2.2.10
 #ENV NEO4j_VERSION enterprise-2.2.3
 
 # Install Neo4j
@@ -25,14 +25,6 @@ COPY ./compose/graphdb/neo4j/conf /var/lib/neo4j/conf
 # COPY sbin/bootstrap.sh /etc/bootstrap.sh
 #RUN chown root:root /etc/bootstrap.sh && \
 #    chmod 700 /etc/bootstrap.sh
-
-# Customize configurations
-RUN apt-get clean && \
-    sed -i "s|data/graph.db|/opt/data/graph.db|g" /var/lib/neo4j/conf/neo4j-server.properties && \
-    sed -i "s|dbms.security.auth_enabled=true|dbms.security.auth_enabled=false|g" /var/lib/neo4j/conf/neo4j-server.properties && \
-    sed -i "s|rrdb.location=data/rrd|rrdb.location=/rrd/rrd|g" /var/lib/neo4j/conf/neo4j-server.properties && \
-    sed -i "s|#org.neo4j.server.webserver.address|org.neo4j.server.webserver.address|g" /var/lib/neo4j/conf/neo4j-server.properties && \
-    sed -i "s|#org.neo4j.server.thirdparty_jaxrs_classes=org.neo4j.examples.server.unmanaged=/examples/unmanaged|org.neo4j.server.thirdparty_jaxrs_classes=extension=/service|g" /var/lib/neo4j/conf/neo4j-server.properties
 
 # Expose the Neo4j browser to the host OS on port 7474 and 1337
 EXPOSE 7474

@@ -12,6 +12,8 @@ graphdb:
   dockerfile: ./compose/graphdb/Dockerfile
   volumes:
     - ./compose/graphdb/data:/opt/data
+    - ./compose/graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
+    - ./compose/graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
   ports:
    - "7474:7474"
    - "1337:1337"

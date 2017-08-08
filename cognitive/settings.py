@@ -42,16 +42,16 @@ SITE_ID = 1
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'cognitive.apps.main',
+    'cognitive.apps.atlas',
+    'cognitive.apps.users',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'cognitive.apps.main',
-    'cognitive.apps.atlas',
-    'cognitive.apps.users',
+    'django.contrib.admin',
 ]
 
 THIRD_PARTY_APPS = [
@@ -205,3 +205,5 @@ CACHES = {
 AUTH_USER_MODEL = 'users.User'
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')
 DEBUG = os.environ.get('DJANGO_DEBUG', False)
+LOGIN_REDIRECT_URL='/'
+LOGOUT_REDIRECT_URL='/logged_out/'

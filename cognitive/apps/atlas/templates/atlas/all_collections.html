@@ -24,7 +24,7 @@
     {% for node in theories %}
         <li>
             <span class="theory">
-                <a href="/theory/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name|escape}}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name|escape }}</a>
+                <a href="/theory/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name|escape}}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name|safe }}</a>
             </span>
         </li>
     {% endfor %}
@@ -44,7 +44,7 @@
     {% for node in batteries %}
         <li>
             <span class="battery">
-                <a href="/battery/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name }}</a>
+                <a href="/battery/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name|safe }}</a>
             </span>
         </li>
     {% endfor %}

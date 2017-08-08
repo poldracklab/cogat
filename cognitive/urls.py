@@ -2,6 +2,7 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic import TemplateView
 
 from cognitive.apps.main import urls as main_urls
 from cognitive.apps.users import urls as users_urls
@@ -15,6 +16,7 @@ urlpatterns = [
     # enable this (and disable above) when ready to set up social auth
     #url(r'^accounts/', include('allauth.urls')),
     url(r'^admin/', admin.site.urls),
+    url(r'^logged_out/$', TemplateView.as_view(template_name='registration/logout.html')),
     ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += staticfiles_urlpatterns()

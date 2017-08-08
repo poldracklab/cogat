@@ -30,18 +30,28 @@ class NodeAPI(APIView):
 
     def post(self, request, format=None):
         form = self.form_class(request.data)
-        if form.is_valid():
-            node_data = form.cleaned_data
-            name = node_data[self.name_field]
-            node = self.node_class.create(name=name, properties=node_data,
-                                          request=request)
-            request.GET = request.GET.copy()
-            request.GET['id'] = node.properties['id']
-            return self.get(request)
-        else:
-            # return a 422 response
+        if not form.is_valid():
             return Response(form.errors,
                             status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        node_data = form.cleaned_data
+
+        name_exists = self.node_class.get(node_data[self.name_field],
+                                          field=self.name_field,
+                                          get_relations=False)
+        if len(name_exists) > 1:
+            error_key = "Name {} already exists".format(
+                    node_data[self.name_field])
+            error_value = "nodes with this name: {}".format(
+                    [i['id'] for i in name_exists])
+            error = {error_key: error_value}
+            return Response(error, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        name = node_data[self.name_field]
+        node = self.node_class.create(name=name, properties=node_data,
+                                      request=request)
+        request.GET = request.GET.copy()
+        request.GET['id'] = node.properties['id']
+        return self.get(request)
 
     def get(self, request, format=None):
         id = request.GET.get('id', None)

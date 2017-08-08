@@ -2,7 +2,7 @@ FROM       java:openjdk-8-jdk
 
 ENV HDFS_HOST hdfs://hdfs:9000
 
-ENV NEO4j_VERSION community-2.2.10
+ENV NEO4j_VERSION community-2.3.11
 #ENV NEO4j_VERSION enterprise-2.2.3
 
 # Install Neo4j

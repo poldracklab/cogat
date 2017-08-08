@@ -722,6 +722,7 @@ class Assertion(Node):
         self.relations = {
             "PREDICATE": "tasks",
             "SUBJECT": "concepts",
+            "PREDICATE_DEF": "contrasts",
             "INTHEORY": "theories",
             "HASCITATION": "citations"
         }

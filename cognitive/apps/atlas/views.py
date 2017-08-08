@@ -3,8 +3,6 @@
 from collections import OrderedDict
 import json
 
-from py2neo import Graph, Node, Relationship
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
@@ -26,7 +24,7 @@ from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Implementation, Indicator,
                                         ExternalDataset, Citation, ExternalLink,
                                         search)
-from cognitive.apps.atlas.utils import clean_html, update_lookup, add_update
+from cognitive.apps.atlas.utils import clean_html, add_update
 from cognitive.settings import DOMAIN, graph
 
 Assertion = Assertion()
@@ -112,13 +110,15 @@ def all_collections(request, return_context=False):
 
 
 def disorder_populate(disorders):
+    ''' recursive function that fills a dictionary with all disorders and their
+        children disorders'''
     if bool(disorders) is False:
         return None
     ret = OrderedDict()
     for dis in disorders:
         key = (str(dis.properties['id']), str(dis.properties['name']))
         children = [x.start_node for x in dis.match_incoming(rel_type="ISA")]
-        if children: 
+        if children:
             children.sort(key=lambda x: str.lower(x.properties['name']))
         ret[key] = disorder_populate(children)
     return ret
@@ -620,7 +620,7 @@ def add_concept_contrast(request, uid, tid):
         cleaned_data = form.cleaned_data
         contrast_id = cleaned_data['contrasts']
         rel = Concept.link(uid, contrast_id, "MEASUREDBY", "contrast")
-        concept_task_contrast_assertion(uid, tid, contrast_id)
+        concept_task_contrast_assertion(request, uid, tid, contrast_id)
         return view_concept(request, uid)
     else:
         # would have to insert the form into the assertions_no_contrast list.
@@ -635,15 +635,21 @@ def add_concept_contrast_task(request, uid):
         relation_type = "MEASUREDBY" #concept --MEASUREDBY-> contrast
         contrast_selection = request.POST.get('contrast_selection', '')
         concept_id = request.POST.get('concept_id', '')
-        Concept.link(concept_id, contrast_selection, relation_type,
-                     endnode_type="contrast")
-        concept_task_contrast_assertion(request, concept_id, uid, contrast_selection)
+        con_link = Concept.link(concept_id, contrast_selection, relation_type,
+                                endnode_type="contrast")
+        if con_link is not None:
+            concept_task_contrast_assertion(request, concept_id, uid, contrast_selection)
     return view_task(request, uid)
 
 @login_required
 def concept_task_contrast_assertion(request, concept_id, task_id, contrast_id):
-    ''' function to generate assertion node along with all three relations assocaited with it'''
-    pass
+    ''' function to generate assertion node along with all three relations
+        assocaited with it. Link function will not create duplicate links if
+        they already exist.'''
+    asrt = Assertion.create("", request=request)
+    Assertion.link(asrt.properties['id'], concept_id, "SUBJECT", endnode_type='concept')
+    Assertion.link(asrt.properties['id'], task_id, "PREDICATE", endnode_type='task')
+    Assertion.link(asrt.properties['id'], contrast_id, "PREDICATE_DEF", endnode_type='contrast')
 
 @login_required
 def add_contrast(request, task_id):
@@ -713,7 +719,8 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
     clean_data = form.cleaned_data
 
     if create is True:
-        dest_node = dest_label.create(clean_data[name_field], properties=clean_data, request=request)
+        dest_node = dest_label.create(clean_data[name_field],
+                                      properties=clean_data, request=request)
     else:
         dest_node = graph.find_one(dest_label.name, "id", clean_data[name_field])
 
@@ -725,13 +732,13 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
         link_made = src_label.link(src_id, dest_node.properties['id'],
                                    rel, endnode_type=dest_label.name)
     elif reverse is True:
-        link_made = dest_label.link(dest_node.properties['id'], src_id, 
-                                   rel, endnode_type=src_label.name)
+        link_made = dest_label.link(dest_node.properties['id'], src_id,
+                                    rel, endnode_type=src_label.name)
 
     if link_made is None:
         graph.delete(dest_node)
         error_msg = "Was unable to associate {} and {}".format(
-                src_label.name, dest_label.name)
+            src_label.name, dest_label.name)
         messages.error(request, error_msg)
     return view(request, src_id)
 
@@ -755,7 +762,7 @@ def add_task_dataset(request, task_id):
 def add_task_indicator(request, task_id):
     ''' From the task view we can create a link to indicator that is associated
         with a given task.'''
-    return make_link(request, task_id, Task, Indicator, IndicatorForm, 
+    return make_link(request, task_id, Task, Indicator, IndicatorForm,
                      'type', view_task, "HASINDICATOR")
 
 @login_required

@@ -24,7 +24,7 @@
     {% for node in theories %}
         <li>
             <span class="theory">
-                <a href="/theory/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name|escape}}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name|safe}</a>
+                <a href="/theory/id/{{ node.id }}" class="collection tooltip" title="<big><b>{{ node.name|escape}}:</b></big><br/>{{ node.collection_description }}<br/><br/>">{{ node.name|safe }}</a>
             </span>
         </li>
     {% endfor %}

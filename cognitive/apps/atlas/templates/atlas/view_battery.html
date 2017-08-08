@@ -6,6 +6,7 @@
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
 .asholder {position:relative;}
 </style>
+<link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
 {% endblock %}
 {% load staticfiles %}
 
@@ -30,7 +31,7 @@
     </div><!-- .CATerm.task -->
 
     <div class="defn">
-        {{ battery.description | safe }}<br><br>
+        {{ battery.collection_description | safe }}<br><br>
     {% if user.is_authenticated %}
     <a id="update-button"><button>update description</button></a>
     {% endif %}
@@ -57,7 +58,7 @@
 </div>
 
 <!-- Constituents -->
-<div style="width: 960px;"><div class="block-thirdwide block-back">
+<div style="width: 960px;"><div class="block-halfwide block-back">
     <strong>Constituent Tasks</strong><br>
     {% for task in constituent_tasks %}
         <a href="{% url 'task' task.id %}">{{ task.name }}</a><br>
@@ -84,15 +85,17 @@
 </div>
 
 <!-- Phylogeny -->
+<!--
 <div class="block-thirdwide block-back block-margin">
     Task Battery <strong>PHYLOGENY</strong>
     <div>
+    No progenitors or descendants have been added to this battery.
     </div>
 </div>  
-<a name="contrasts"></a><br/>
+-->
 
 <!-- INDICATORS -->
-<div class="block-thirdwide block-back block-margin">
+<div class="block-halfwide block-back block-margin">
     <strong>INDICATORS</strong>
     {% for indicator in indicators %}
         <div class="conblock-inner-wide">
@@ -119,7 +122,7 @@
     {% for citation in citations %}
         <div id="{{ citation.id }}">
             <span class="citation">
-                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc|safe }}</b></a>
             </span>
             <br>
             <em>{{ citation.citation_authors }}</em>
@@ -179,7 +182,9 @@ $(document).ready(function() {
         $("#constituent-forms").addClass('hidden');
     })
 
+    $(".select").select2({width: 'resolve'});
 
 });
 </script>
+<script src="{% static "js/select2.min.js"%}" type="text/javascript"></script>
 {% endblock %}

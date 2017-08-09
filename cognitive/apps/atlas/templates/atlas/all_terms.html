@@ -40,7 +40,7 @@
         {% for node in nodes %}
             <li>
                 <span class="{{ term_type }}">
-                    <a href="/{{ term_type }}/id/{{ node.id }}" class="{{ term_type }} tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.definition }}<br/><br/>">{{ node.name }}</a>
+                    <a href="/{{ term_type }}/id/{{ node.id }}" class="{{ term_type }} tooltip" title="<big><b>{{ node.name }}:</b></big><br/>{{ node.definition }}<br/><br/>">{{ node.name|safe }}</a>
                 </span>
             </li>
         {% endfor %}

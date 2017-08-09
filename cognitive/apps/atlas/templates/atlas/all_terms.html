@@ -23,13 +23,13 @@
        <!-- Contribute New Term Form -->
        {% include "atlas/_contribute_term.html" %}
 
-       <h1 class="CATitle">Browse <strong class="{{ term_type_plural }}">{{ term_type_plural|capfirst }}s</strong></h1>
+       <h1 class="CATitle">Browse <strong class="{{ term_type_plural }}">{{ term_type_plural|capfirst }}</strong></h1>
 
        {% if term_type != "theory" %}
            <div class='inset padtop charstring'><a href='/{{ term_type_plural }}' class=' selected-letter '>ALL</a>
            {% for let in "abcdefghijklmnopqrstuvwxyz"|make_list %}
                 <span class='finb'>&nbsp;</span>
-                 <a href='/{{ term_type_plural }}s/{{ let }}' class=' non-selected-letter '>{{ let|capfirst }}</a>
+                 <a href='/{{ term_type_plural }}/{{ let }}' class=' non-selected-letter '>{{ let|capfirst }}</a>
            {% endfor %}
            </div><br>
        {% endif %}

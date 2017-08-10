@@ -4,6 +4,16 @@
 <style>
 .ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
 .asholder {position:relative;}
+.condition-table {
+    display: table;
+    border-color: gray;
+    padding-left: 20px;
+    border-spacing: 5px 0px;
+    width: 100%;
+}
+.condition-table>thead {
+    border-bottom: 1px dotted #bebebe;
+}
 </style>
 {% endblock %}
 {% load staticfiles %}
@@ -270,7 +280,23 @@
         {% for contrast in contrasts %}
         <div id="contrast_container_{{ contrast.id }}">
             <div class="conblock-inner-wide">
-                <a name="{{ contrast.name }}" class="task" href="#">{{ contrast.name }}</a>
+                <a name="{{ contrast.name }}" class="task" href="#">{{ contrast.name }}</a><br/>
+                {% if contrast.conditions %}
+                <table class=condition-table>
+                <thead><tr>
+                <th>Condition</th>
+                <th>Weight</th>
+                </tr></thead>
+                <tbody>
+                {% for cond in contrast.conditions %}
+                    <tr>
+                        <td>{{ cond.0.name }}</td>
+                        <td>{{ cond.1.weight }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                {% endif %}
             </div>
             <div id="editcont_{{ contrast.id}}" style="display:none" class="popstar marbot"><br/>
             <form method="post" action="/post/" name="conteditform">

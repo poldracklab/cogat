@@ -479,7 +479,16 @@ class Task(Node):
         query = '''MATCH (t:task)-[:HASCONTRAST]->(c:contrast) WHERE t.id='{}'
                    RETURN c'''.format(task_id)
         contrasts = do_query(query, "null", "list")
-        return [x[0].properties for x in contrasts]
+        ret = [dict(x[0].properties) for x in contrasts]
+        for contrast in ret:
+            query = '''MATCH (cont:contrast)<-[r:HASCONTRAST]-(cond:condition)
+                       WHERE cont.id='{}' return cont, r, cond'''.format(contrast['id'])
+            results = settings.graph.cypher.execute(query)
+            contrast.update({
+                'conditions': [(x['cond'].properties, x['r'].properties) for x in results]
+            })
+        return ret
+
 
     def api_get_disorders(self, task_id):
         query = '''

@@ -241,7 +241,6 @@ def view_task(request, uid, return_context=False):
 
     concept_lookup = dict()
 
-    # Retrieve conditions, make associations with contrasts
     conditions = Task.get_conditions(task["id"])
 
     implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
@@ -598,9 +597,9 @@ def add_disorder_disorder(request, disorder_id):
         rel_dis_id = cleaned_data['disorders']
         rel_type = cleaned_data['type']
         if rel_type == 'parent':
-            rel = Disorder.link(disorder_id, rel_dis_id, "ISA", "disorder")
+            Disorder.link(disorder_id, rel_dis_id, "ISA", "disorder")
         else:
-            rel = Disorder.link(rel_dis_id, disorder_id, "ISA", "disorder")
+            Disorder.link(rel_dis_id, disorder_id, "ISA", "disorder")
         return view_disorder(request, disorder_id)
     else:
         context = view_disorder(request, disorder_id, return_context=True)

@@ -1,11 +1,13 @@
 graphdb:
   build: .
   dockerfile: ./compose/graphdb/Dockerfile
+  volumes:
+    - ./compose/graphdb/data:/opt/data
+    - ./compose/graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
+    - ./compose/graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
   ports:
    - "7474:7474"
    - "1337:1337"
-  volumes:
-    - ./compose/graphdb/data:/opt/data
 
 postgres:
     image: postgres:9.4
@@ -37,16 +39,3 @@ nginx:
         - uwsgi
     ports:
         - "80:80"
-
-import:
-    build: .
-    dockerfile: ./compose/import/Dockerfile
-    command: /code/compose/import/entrypoint.sh
-    env_file: .env
-    volumes:
-        - .:/code
-    links:
-        - postgres
-        - nginx
-        - uwsgi
-        - graphdb

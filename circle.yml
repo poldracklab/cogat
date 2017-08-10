@@ -13,5 +13,5 @@ machine:
 
 test:
   override:
-    - docker-compose run uwsgi python manage.py makemigrations
-    - docker-compose run uwsgi python manage.py test
+    - docker-compose -f /home/ubuntu/cogat/docker-compose-circle.yml run uwsgi python manage.py makemigrations
+    - docker-compose -f /home/ubuntu/cogat/docker-compose-circle.yml run uwsgi python manage.py test

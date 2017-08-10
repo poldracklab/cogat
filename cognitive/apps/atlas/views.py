@@ -236,19 +236,18 @@ def view_task(request, uid, return_context=False):
         return HttpResponseNotFound('<h1>Task with uid {} not found.</h1>'.format(uid))
 
     # Replace newlines with <br>, etc.
-    task["definition"] = clean_html(task.get("definition", "No definition provided"))
+    task["definition_text"] = clean_html(task.get("definition_text", "No definition provided"))
     contrasts = Task.api_get_contrasts(task["id"])
 
     concept_lookup = dict()
 
-    # Retrieve conditions, make associations with contrasts
     conditions = Task.get_conditions(task["id"])
 
     implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
     citations = Task.get_relation(task["id"], "HASCITATION")
-    disorders = Task.get_relation(task["id"], "ASSERTS")
+    disorders = Task.get_relation(task["id"], "ASSERTS", label="disorder")
 
     context = {
         "task": task,
@@ -437,7 +436,7 @@ def add_term(request):
 
         properties = None
         if definition_text != '':
-            properties = {"definition": definition_text}
+            properties = {"definition_text": definition_text}
 
         if term_type == "concept":
             node = Concept.create(name=term_name, properties=properties, request=request)
@@ -467,16 +466,16 @@ def add_condition(request, task_id):
 @login_required
 def update_concept(request, uid):
     if request.method == "POST":
-        definition = request.POST.get('definition', '')
-        updates = add_update("definition", definition)
+        definition = request.POST.get('definition_text', '')
+        updates = add_update("definition_text", definition)
         Concept.update(uid, updates=updates)
     return view_concept(request, uid)
 
 @login_required
 def update_task(request, uid):
     if request.method == "POST":
-        definition = request.POST.get('definition', '')
-        updates = add_update("definition", definition)
+        definition = request.POST.get('definition_text', '')
+        updates = add_update("definition_text", definition)
         Task.update(uid, updates=updates)
     return view_task(request, uid)
 
@@ -598,9 +597,9 @@ def add_disorder_disorder(request, disorder_id):
         rel_dis_id = cleaned_data['disorders']
         rel_type = cleaned_data['type']
         if rel_type == 'parent':
-            rel = Disorder.link(disorder_id, rel_dis_id, "ISA", "disorder")
+            Disorder.link(disorder_id, rel_dis_id, "ISA", "disorder")
         else:
-            rel = Disorder.link(rel_dis_id, disorder_id, "ISA", "disorder")
+            Disorder.link(rel_dis_id, disorder_id, "ISA", "disorder")
         return view_disorder(request, disorder_id)
     else:
         context = view_disorder(request, disorder_id, return_context=True)

@@ -236,7 +236,7 @@ def view_task(request, uid, return_context=False):
         return HttpResponseNotFound('<h1>Task with uid {} not found.</h1>'.format(uid))
 
     # Replace newlines with <br>, etc.
-    task["definition"] = clean_html(task.get("definition", "No definition provided"))
+    task["definition_text"] = clean_html(task.get("definition_text", "No definition provided"))
     contrasts = Task.api_get_contrasts(task["id"])
 
     concept_lookup = dict()
@@ -437,7 +437,7 @@ def add_term(request):
 
         properties = None
         if definition_text != '':
-            properties = {"definition": definition_text}
+            properties = {"definition_text": definition_text}
 
         if term_type == "concept":
             node = Concept.create(name=term_name, properties=properties, request=request)
@@ -467,16 +467,16 @@ def add_condition(request, task_id):
 @login_required
 def update_concept(request, uid):
     if request.method == "POST":
-        definition = request.POST.get('definition', '')
-        updates = add_update("definition", definition)
+        definition = request.POST.get('definition_text', '')
+        updates = add_update("definition_text", definition)
         Concept.update(uid, updates=updates)
     return view_concept(request, uid)
 
 @login_required
 def update_task(request, uid):
     if request.method == "POST":
-        definition = request.POST.get('definition', '')
-        updates = add_update("definition", definition)
+        definition = request.POST.get('definition_text', '')
+        updates = add_update("definition_text", definition)
         Task.update(uid, updates=updates)
     return view_task(request, uid)
 

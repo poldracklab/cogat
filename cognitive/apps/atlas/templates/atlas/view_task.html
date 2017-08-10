@@ -32,7 +32,7 @@
         </div><!-- .CATerm.task -->
 
         <div class="defn">
-            {{ task.definition | safe }}<br><br>
+            {{ task.definition_text | safe }}<br><br>
         {% if user.is_authenticated %}
         <a id="update_definition_button"><button>update definition</button></a>
         {% endif %}
@@ -45,7 +45,7 @@
     <div id="update_definition" class="hidden">
         <form method="POST" action="{% url 'update_task' task.id %}">
             <div class="modal-body">
-                <textarea name="definition" rows="4" cols="50">{{ task.definition }}</textarea>
+                <textarea name="definition" rows="4" cols="50">{{ task.definition_text }}</textarea>
             </div>
             {% csrf_token %}
             <button id="cancel_button" type="button" class="btn btn-primary">Cancel</button>

@@ -157,7 +157,7 @@ class Node(object):
                 for relation in relations:
                     if relation["id"] not in lookup[node_type]:
                         lookup[node_type].append(relation["id"])
-                        nodes.append(cypher_node(relation["id"], node_type, relation["name"],
+                        nodes.append(cypher_node(relation["id"], node_type, relation["relationship_type"],
                                                  relation["_id"]))
                         links.append(cypher_relation(relation_type, base["_id"], relation["_id"]))
 

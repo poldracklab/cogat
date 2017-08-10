@@ -247,7 +247,7 @@ def view_task(request, uid, return_context=False):
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
     citations = Task.get_relation(task["id"], "HASCITATION")
-    disorders = Task.get_relation(task["id"], "ASSERTS")
+    disorders = Task.get_relation(task["id"], "ASSERTS", label="disorder")
 
     context = {
         "task": task,

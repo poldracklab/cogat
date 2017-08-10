@@ -180,7 +180,7 @@
                                 <div id="contrast_search_box_{{ relation.id }}" style="padding-left:13px;padding-bottom:20px" class="hidden">
                                     <div>
                                     {% if contrasts|length > 0 %}
-                                    <form style="padding-top:20px" method="post" action="{% url 'add_concept_contrast' task.id %}">
+                                    <form style="padding-top:20px" method="post" action="{% url 'add_task_contrast' task.id %}">
                                         <select name="contrast_selection" id="add_contrast_{{ relation.id }}" style="width:220px" size="3" style="padding-left:10px;">
                                         {% for id,contrast in contrasts.items %}
                                         <option value="{{ contrast.0.id }}">{{ contrast.0.name }}</option>

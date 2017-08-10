@@ -13,5 +13,5 @@ machine:
 
 test:
   override:
-    - docker-compose run uwsgi python manage.py makemigrations
-    - docker-compose run uwsgi python manage.py test
+    - /opt/circleci/python/3.5.3/bin/docker-compose run uwsgi python manage.py makemigrations
+    - /opt/circleci/python/3.5.3/bin/docker-compose run uwsgi python manage.py test

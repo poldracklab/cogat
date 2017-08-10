@@ -13,5 +13,5 @@ machine:
 
 test:
   override:
-    - /home/ubuntu/virtualenvs/venv-3.5.3/bin/docker-compose run uwsgi python manage.py makemigrations
-    - /home/ubuntu/virtualenvs/venv-3.5.3/bin/docker-compose run uwsgi python manage.py test
+    - docker-compose -f /root/project/docker-compose-circle.yml run uwsgi python manage.py makemigrations
+    - docker-compose -f /root/project/docker-compose-circle.yml run uwsgi python manage.py test

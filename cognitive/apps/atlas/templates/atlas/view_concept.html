@@ -6,6 +6,14 @@
 <style>
 .ui-autocomplete-loading { background: white url("{% static "images/facebox/loading.gif" %}") right center no-repeat; }
 .asholder {position:relative;}
+.concept-assertion-list {
+    width: 24%;
+    float: left;
+    padding-right: 4px
+}
+.concept-assertion-list>li {
+    list-style-position: inside;
+}
 </style>
 {% endblock %}
 
@@ -94,10 +102,10 @@
                     <label>is a kind of</label>
                     <br/>
                     <input type="radio" value="REVPARTOF" name="relation_type" title='You must select a relation type!' aria-label='type of relation' />
-                    <label>are a part of</label>
+                    <label>parts of</label>
                     <br/>
                     <input type="radio" value="REVKINDOF" name="relation_type" title='You must select a relation type!' aria-label='type of relation' />
-                    <label>are a kind of</label>
+                    <label>kinds of</label>
                     <br/>
                     <br>
 
@@ -126,7 +134,7 @@
                 </div>
                 </td>
                 </tr>
-</table>
+            </table>
             </form>
     </div>
     </div>
@@ -136,40 +144,34 @@
     <div class="panes">
 
     <div class="discdiv tablist">
-        <table class='block-4t'>
-        <tr>
-            <td class="block-4td"><br/><b>{{ concept.name }}<br/>
+        <div class="concept-assertion-list">
+            <b>{{ concept.name }}<br/>
             <span class="connector-lite">is a kind of</span></b><hr class="dotty" />
             {% if "KINDOF" in concept.relations %}
-            <div>
             {% for relation in concept.relations.KINDOF %}
                 <li class="hoverator-list" rel="{{ relation.id }}"><span style="float:right;width:10px;display:none;" id="list_hovercard_{{ relation.id }}"><a href="{% url 'concept' relation.id %}"><img src="{% static "img/assert.png"%}" title="Click to view concept {{ relation.name }}: {{ relation.definition_text }}"></a></span><a href="{% url 'concept' relation.id %}" id="options_{{ relation.id }}" class="optionator concept" title="Click to view the page for {{ relation.name }}">{{ relation.name }}</a></li>
             {% endfor %}
-            </div>
-
             {% else %}
-            <div>No associations</div></td>
+            <div>No associations</div>
             {% endif %}
+        </div>
 
-            <td class="block-4td"><br /><b>{{ concept.name }}<br />
-
+        <div class="concept-assertion-list">
+            <b>{{ concept.name }}<br/>
             <span class="connector-lite">is a part of</span></b><hr class="dotty" />
 
             {% if "PARTOF" in concept.relations %}
-            <div>
             {% for relation in concept.relations.PARTOF %}
                 <li class="hoverator-list" rel="{{ relation.id }}"><span style="float:right;width:10px;display:none;" id="list_hovercard_{{ relation.id }}"><a href="{% url 'concept' relation.id %}"><img src="{% static "images/icons/assert.png"%}" title="Click to view concept {{ relation.name }}: {{ relation.definition_text }}"></a></span><a href="{% url 'concept' relation.id %}" id="options_{{ relation.id }}" class="optionator concept" title="Click to view the page for {{ relation.name }}">{{ relation.name }}</a></li>
             {% endfor %}
-            </div>
 
             {% else %}
-            <div>No associations</div></td>
+            <div>No associations</div>
             {% endif %}
-        </tr>
-        <tr>
-            <td class="block-4td">
-                <span class="connector-lite">are a kind of</span></b>
-                <br/><b>{{ concept.name }}<br/>
+        </div>
+        <div class="concept-assertion-list">
+                <span class="connector-lite">are a kind of</span>
+                <br/><b>{{ concept.name }}</b><br/>
                 <hr class="dotty" />
                 {% for relation in are_kinds_of %}
                     <li class="hoverator-list" rel="{{ relation.id }}">
@@ -182,10 +184,10 @@
                 {% empty %}
                     <div>No associations</div>
                 {% endfor %}
-            </td>
-            <td class="block-4td">
-                <span class="connector-lite">are a part of</span></b>
-                <br/><b>{{ concept.name }}<br/>
+        </div>
+        <div class="concept-assertion-list">
+                <span class="connector-lite">are a part of</span>
+                <br/><b>{{ concept.name }}</b><br/>
                 <hr class="dotty" />
                 {% for relation in are_parts_of %}
                     <li class="hoverator-list" rel="{{ relation.id }}">
@@ -198,11 +200,12 @@
                 {% empty %}
                     <div>No associations</div>
                 {% endfor %}
-            </td>
-        </tr>
-    </table></div></div></div></div><!-- #block-atlas.block-full -->
+                
+            </div>
+</div></div></div></div><!-- #block-atlas.block-full -->
 <div class="clear_all">
 </div>
+
 
 <!-- TASKS -->
 <div id="block-holder" class="block-full"><div id="block-measurements" class="block-half">  

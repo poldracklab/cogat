@@ -188,9 +188,9 @@ def import_assertions():
 
             # Figure out relationship type
             if id_rel == 'T1':
-                relationship_type = "PARTOF"
-            elif id_rel == 'T2':
                 relationship_type = "KINDOF"
+            elif id_rel == 'T2':
+                relationship_type = "PARTOF"
             elif id_rel == 'T10':
                 relation_type = "SYNONYM"
             elif id_rel == 'T5':

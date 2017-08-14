@@ -50,9 +50,8 @@
 
             </div>
 
-           {% include 'main/search.html' %}
-
-            <a href="{% url 'explore_graph' %}"><img id="explore_icon" src="{% static "img/graph.png" %}" class="img" alt="Explore the graph" width="30" style="padding-left:20px; padding-right:8px"></a><small style="position: relative; top:-10px"> explore the graph </small>
+          {% include 'main/search.html' %}
+            <a href="http://{{ request.get_host }}:7474"><img id="explore_icon" src="{% static "img/graph.png" %}" class="img" alt="Explore the graph" width="30" style="padding-left:20px; padding-right:8px"></a><small style="position: relative; top:-10px"> explore the graph </small>
 
 
         </div><!--container-->

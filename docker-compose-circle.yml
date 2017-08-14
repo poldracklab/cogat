@@ -1,13 +1,16 @@
 graphdb:
   build: .
   dockerfile: ./compose/graphdb/Dockerfile
+  hostname: graphdb
   volumes:
     - ./compose/graphdb/data:/opt/data
     - ./compose/graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
     - ./compose/graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
   ports:
-   - "7474:7474"
-   - "1337:1337"
+    - "7474:7474"
+    - "1337:1337"
+    - "5001:5001"
+    - "6002:6002"
 
 postgres:
     image: postgres:9.4

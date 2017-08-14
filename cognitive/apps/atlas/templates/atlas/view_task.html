@@ -171,11 +171,13 @@
                 <span class="noassoc">No associations have been added.</span><br><br>
             {% endfor %}
         </div>
+    {% if user.is_authenticated %}
         <button style="float:right;margin-top:10px" id="add_disorder_button">ADD DISORDER</button>		
         <form class="hidden" action="{% url 'add_task_disorder' task.id %}" method="post" id="id-disorderform">
             {% csrf_token %}
             {% crispy task_disorder_form task_disorder_form.helper %}
         </form>
+    {% endif %}
     </div>
 </div><br clear="all">	
 

@@ -1,3 +1,4 @@
+import html
 import re
 
 from py2neo import Graph, Node, Relationship
@@ -16,7 +17,7 @@ def make_node(nodetype, uid, name, properties=None, property_key="id"):
         timestamp = graph.cypher.execute("RETURN timestamp()").one
         node = Node(
             str(nodetype),
-            name=str(name),
+            name=html.unescape(str(name)),
             id=str(uid),
             creation_time=timestamp,
             last_updated=timestamp)
@@ -188,9 +189,9 @@ def import_assertions():
 
             # Figure out relationship type
             if id_rel == 'T1':
-                relationship_type = "PARTOF"
-            elif id_rel == 'T2':
                 relationship_type = "KINDOF"
+            elif id_rel == 'T2':
+                relationship_type = "PARTOF"
             elif id_rel == 'T10':
                 relation_type = "SYNONYM"
             elif id_rel == 'T5':

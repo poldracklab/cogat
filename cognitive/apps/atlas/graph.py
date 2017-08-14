@@ -32,12 +32,12 @@ def explore_graph(request):
 
 # Return just json
 def task_json(request, uid):
-    nodes = Task.get_graph(uid)
+    nodes = Task.get_full(uid, 'id')
     return JsonResponse(nodes)
 
 
 def concept_json(request, uid):
-    nodes = Concept.graph(uid)
+    nodes = Concept.get_full(uid, 'id')
     return JsonResponse(nodes)
 
 # GRAPH GIST #############################################################

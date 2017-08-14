@@ -45,13 +45,15 @@ class AtlasViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
     '''
 
+    ''' Can't count all, need a count from disorder populate
     def test_all_disorders(self):
         disorder = Disorder()
         count = disorder.count()
         response = self.client.get(reverse('all_disorders'))
         self.assertEqual(response.context['active'], 'disorders')
-        self.assertEqual(len(response.context['nodes']), count)
+        self.assertEqual(len(response.context['disorders']), count)
         self.assertEqual(response.status_code, 200)
+    '''
 
     def test_all_tasks(self):
         task = Task()
@@ -132,14 +134,14 @@ class AtlasViewTestCase(TestCase):
         response = self.client.post(
             reverse('add_term'),
             {'term_type': 'concept', 'term_name': concept_name,
-             'definition_text': definition}
+             'definition_text': definition},
+            follow = True
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         uid = response.context['concept']['id']
-        con = concept.get(uid)
-        self.assertEqual(len(con), 1)
         con = concept.graph.find_one('concept', 'id', uid)
-        con.delete()
+        self.assertNotEqual(con, None)
+        # con.delete()
 
     def test_add_term_task(self):
         self.assertTrue(self.client.login(
@@ -150,14 +152,15 @@ class AtlasViewTestCase(TestCase):
         response = self.client.post(
             reverse('add_term'),
             {'term_type': 'task', 'term_name': task_name,
-             'definition_text': definition}
+             'definition_text': definition},
+            follow = True
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         uid = response.context['task']['id']
         tsk = task.get(uid)
         self.assertEqual(len(tsk), 1)
         tsk = task.graph.find_one('task', 'id', uid)
-        tsk.delete()
+        # tsk.delete()
 
     ''' No URL exists
     def test_contribute_disorder(self):
@@ -190,14 +193,14 @@ class AtlasViewTestCase(TestCase):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         concept = Concept()
-        con = concept.create('test_update_concept', {'definition': 'old def'})
+        con = concept.create('test_update_concept', {'definition_text': 'old def'})
         response = self.client.post(
             reverse('update_concept', kwargs={'uid': con.properties['id']}),
-            {'definition': 'new def'}
+            {'definition_text': 'new def'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertNotEqual('old def', response.context['concept']['definition'])
-        self.assertEqual('new def', response.context['concept']['definition'])
+        self.assertNotEqual('old def', response.context['concept']['definition_text'])
+        self.assertEqual('new def', response.context['concept']['definition_text'])
         con.delete()
 
     def test_update_concept_no_def(self):
@@ -207,10 +210,10 @@ class AtlasViewTestCase(TestCase):
         con = concept.create('test_update_concept', {'prop': 'prop'})
         response = self.client.post(
             reverse('update_concept', kwargs={'uid': con.properties['id']}),
-            {'definition': 'new def'}
+            {'definition_text': 'new def'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('new def', response.context['concept']['definition'])
+        self.assertEqual('new def', response.context['concept']['definition_text'])
         con.delete()
 
     def test_update_task(self):
@@ -220,10 +223,10 @@ class AtlasViewTestCase(TestCase):
         tsk = task.create('test_update_task', {'prop': 'prop'})
         response = self.client.post(
             reverse('update_task', kwargs={'uid': tsk.properties['id']}),
-            {'definition': 'new def'}
+            {'definition_text': 'new def'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('new def', response.context['task']['definition'])
+        self.assertEqual('new def', response.context['task']['definition_text'])
         tsk.delete()
 
     def test_update_theory(self):
@@ -327,6 +330,7 @@ class AtlasViewTestCase(TestCase):
         con.delete()
         cont.delete()
 
+    ''' dispabled for the time being. Want all concept-contrast relations to happen in task view
     def test_add_concept_contrast(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
@@ -354,6 +358,7 @@ class AtlasViewTestCase(TestCase):
         tsk.delete()
         con.delete()
         cont.delete()
+    '''
 
     def test_add_task_implementation(self):
         task = Task()
@@ -361,9 +366,9 @@ class AtlasViewTestCase(TestCase):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         data = {
-            'uri': 'http://example.com',
-            'name': 'add_task_implementation',
-            'description': 'task imp desc'
+            'implementation_uri': 'http://example.com',
+            'implementation_name': 'add_task_implementation',
+            'implementation_description': 'task imp desc'
         }
         response = self.client.post(
             reverse('add_task_implementation', kwargs={'task_id': tsk.properties['id']}),
@@ -383,8 +388,8 @@ class AtlasViewTestCase(TestCase):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         data = {
-            'uri': 'http://example.com',
-            'name': 'add_task_dataset',
+            'dataset_uri': 'http://example.com',
+            'dataset_name': 'add_task_dataset',
         }
         response = self.client.post(
             reverse('add_task_dataset', kwargs={'task_id': tsk.properties['id']}),

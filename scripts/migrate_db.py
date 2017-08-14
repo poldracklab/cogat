@@ -1,3 +1,4 @@
+import html
 import re
 
 from py2neo import Graph, Node, Relationship
@@ -16,7 +17,7 @@ def make_node(nodetype, uid, name, properties=None, property_key="id"):
         timestamp = graph.cypher.execute("RETURN timestamp()").one
         node = Node(
             str(nodetype),
-            name=str(name),
+            name=html.unescape(str(name)),
             id=str(uid),
             creation_time=timestamp,
             last_updated=timestamp)

@@ -56,8 +56,10 @@ INSTALLED_APPS = [
 
 THIRD_PARTY_APPS = [
     'rest_framework',
+    'rest_framework.authtoken',
     'crispy_forms',
     'opbeat.contrib.django',
+    'corsheaders',
 ]
 #    'allauth',
 #    'allauth.account',
@@ -80,6 +82,7 @@ INSTALLED_APPS += THIRD_PARTY_APPS
 MIDDLEWARE_CLASSES = [
     'opbeat.contrib.django.middleware.OpbeatAPMMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -208,3 +211,13 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisn
 DEBUG = os.environ.get('DJANGO_DEBUG', False)
 LOGIN_REDIRECT_URL='/'
 LOGOUT_REDIRECT_URL='/logged_out/'
+CORS_ORIGIN_ALLOW_ALL=True
+CORS_ALLOW_CREDENTIALS = False
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}

@@ -20,6 +20,7 @@ urlpatterns = [
         auth_views.password_reset_confirm,name='password_reset_confirm'),
     url(r'^profile/edit$', views.edit_user, name="edit_user"),
     url(r'^profile/.*$', views.view_profile, name="my_profile"),
+    url(r'^token/$', views.get_token, name="token"),
     url(r'^(?P<username>[A-Za-z0-9@/./+/-/_]+)/$', views.view_profile,
-        name="profile")
+        name="profile"),
 ]

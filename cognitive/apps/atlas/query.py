@@ -472,7 +472,7 @@ class Task(Node):
                      "RETURN con").format(concept['concept_id'], task_id)
             contrast = do_query(query, "null", "list")
             if contrast:
-                concept['contrast_id'] = contrast[0].properties.id
+                concept['contrast_ids'] = [x[0].properties['id'] for x in contrast]
         return concepts
 
     def api_get_contrasts(self, task_id):
@@ -501,12 +501,12 @@ class Task(Node):
             rel = disorder[1]
             # ret_disorders.append({**node.properties, 'id_disorder': node.properties.id})
             ret_disorders.append({
-                'id': rel.properties.id,
-                'id_user': node.properties.id_user,
-                'id_disorder': node.properties.id,
+                'id': rel.properties['id'],
+                'id_user': node.properties['id_user'],
+                'id_disorder': node['properties.id'],
                 'id_task': task_id,
-                'id_contrast': rel.properties.id_contrast,
-                'event_stamp': rel.properties.event_stamp
+                'id_contrast': rel.properties['id_contrast'],
+                'event_stamp': rel.properties['event_stamp']
             })
         return ret_disorders
 

@@ -311,8 +311,12 @@ def view_theory(request, uid, return_context=False):
     citations = Theory.get_relation(uid, "HASCITATION")
     referenced_terms = {}
     for asrt in assertions:
-        pred = Assertion.get_relation(asrt['id'], "PREDICATE")[0]
-        subj = Assertion.get_relation(asrt['id'], "SUBJECT")[0]
+        pred = Assertion.get_relation(asrt['id'], "PREDICATE")
+        subj = Assertion.get_relation(asrt['id'], "SUBJECT")
+        if not pred or not subj:
+            continue
+        pred = pred[0]
+        subj = subj[0]
         for term in [pred, subj]:
             term_node = graph.cypher.execute(
                 "match (t) where t.id = '{}' return t".format(term['id'])

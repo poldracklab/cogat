@@ -9,10 +9,12 @@ services:
       - ./compose/graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
       - ./compose/graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
     ports:
-     - "7474"
-     - "1337"
-     - "5001"
-     - "6002"
+      - "6362:6362"
+    expose:
+      - "7474"
+      - "1337"
+      - "5001"
+      - "6002"
     networks:
       graphs:
         aliases:
@@ -30,10 +32,11 @@ services:
       - ./compose/graphdb/neo4j/ro_conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
       - ./compose/graphdb/neo4j/ro_conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
     ports:
-     - "7474:7474"
-     - "1338"
-     - "5001"
-     - "6002"
+      - "7474:7474"
+    expose:
+      - "1338"
+      - "5001"
+      - "6002"
     networks:
       graphs:
         aliases:

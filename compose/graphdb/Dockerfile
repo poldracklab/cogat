@@ -42,9 +42,9 @@ RUN conda config --add channels conda-forge && \
     conda install -y pandas 
 RUN pip install cognitiveatlas "py2neo<3"
 
-RUN mkdir /code
-ADD . /code
-WORKDIR /code
+#RUN mkdir /code
+#ADD . /code
+#WORKDIR /code
 #RUN bash scripts/docker_import.sh
 
 # make invalid rrd so neo attempts to replace it instead of defaulting to datadir

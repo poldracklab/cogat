@@ -501,12 +501,12 @@ class Task(Node):
             rel = disorder[1]
             # ret_disorders.append({**node.properties, 'id_disorder': node.properties.id})
             ret_disorders.append({
-                'id': rel.properties.id,
-                'id_user': node.properties.id_user,
-                'id_disorder': node.properties.id,
+                'id': rel.properties['id'],
+                'id_user': node.properties['id_user'],
+                'id_disorder': node['properties.id'],
                 'id_task': task_id,
-                'id_contrast': rel.properties.id_contrast,
-                'event_stamp': rel.properties.event_stamp
+                'id_contrast': rel.properties['id_contrast'],
+                'event_stamp': rel.properties['event_stamp']
             })
         return ret_disorders
 

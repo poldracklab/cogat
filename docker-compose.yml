@@ -46,6 +46,8 @@ services:
   postgres:
       image: postgres:9.4
       env_file: .env
+      volumes:
+        - ./compose/postgres/data:/var/lib/postgres
       expose:
           - "5432"
       networks:

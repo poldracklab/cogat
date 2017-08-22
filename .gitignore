@@ -85,4 +85,4 @@ compose/graphdb/data/*
 
 compose/postgres/data/*
 
-static/
+/static/

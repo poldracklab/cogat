@@ -12,7 +12,6 @@ iframe {
 </style>
 {% endblock %}
 {% load staticfiles %}
-
 {% block branding %}
 {% include 'atlas/branding.html'%}
 {% block navigation %}
@@ -22,7 +21,12 @@ iframe {
 {% endblock %}
 
 {% block content %}
-{{ query }}
+{% if query %}
+<div>
+Copy and paste the following into the prompt below:<br>
+</div>
+<code>{{ query }}</code>
+{% endif %}
 <iframe src="http://{{ request.get_host }}:7474"></iframe>
 {% endblock %}
 {% block scripts %}

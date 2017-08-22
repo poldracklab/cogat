@@ -82,3 +82,7 @@ compose/graphdb/data/*
 
 # only allow changes to .env manually
 .env
+
+compose/postgres/data/*
+
+static/

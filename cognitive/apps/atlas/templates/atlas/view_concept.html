@@ -68,6 +68,12 @@
             <a target="_blank" href="{% url 'concept_graph' concept.id %}">graph</a>
         </div>
         <div class="unterbutton_left">
+            <form method="post" action="http://192.168.99.100:7474/db/data/transaction">
+                <input type="hidden" name="statements" value='[{"statement": "MATCH (n:assertion) RETURN n LIMIT 25", "resultDataContents": [ "row", "graph" ], "includeStats": true}]'></input>
+            <button type="submit">graph</button>
+            </form>
+        </div>
+        <div class="unterbutton_left">
             <a target="_blank" href="{% url 'concept_json' concept.id %}">json</a>
         </div>
     </div><!-- .defn -->

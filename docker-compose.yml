@@ -76,8 +76,8 @@ services:
           - ./compose/nginx/uwsgi_params.par:/etc/nginx/uwsgi_params.par:ro
           - .:/code
           - ./static:/var/www/static
-          - certs:/etc/letsencrypt
-          - certs-data:/data/letsencrypt
+          - ./.certs:/etc/letsencrypt
+          - ./.certs-data:/data/letsencrypt
       ports:
           - "80:80"
           - "443:443"

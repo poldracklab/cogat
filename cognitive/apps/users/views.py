@@ -1,16 +1,19 @@
 from functools import wraps
 
+from django.contrib import auth
+from django.contrib.auth.decorators import login_required
+# from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.http.response import (HttpResponseRedirect, JsonResponse)
 from django.shortcuts import (render, get_object_or_404, render_to_response,
                               redirect)
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
-from django.contrib import auth
-from .forms import UserEditForm, UserCreateForm
-from django.contrib.auth.decorators import login_required
 from django.template.context import RequestContext
-from rest_framework import status
 
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+
+from cognitive.apps.users.models import User
+from .forms import UserEditForm, UserCreateForm
 
 def to_json_response(response):
     status_code = response.status_code
@@ -101,3 +104,11 @@ def login(request):
      return render_to_response('login.html', {
         #'plus_id': getattr(settings, 'SOCIAL_AUTH_GOOGLE_PLUS_KEY', None)
      }, RequestContext(request))
+
+@login_required
+def get_token(request):
+    context = {'active':'home'}
+    if request.user.is_authenticated:
+        token, created = Token.objects.get_or_create(user=request.user)
+        context["token"] = token.key
+    return render(request, 'registration/token.html', context)

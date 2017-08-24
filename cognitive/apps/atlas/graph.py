@@ -12,6 +12,10 @@ Contrast = Contrast()
 
 # Return full graph visualizations
 
+def graph_view(request, label, uid):
+    query = "MATCH (n:{}) where n.id = '{}' OPTIONAL MATCH (n)-[]-(r) return n, r"
+    query = query.format(label, uid)
+    return render(request, "graph/graph.html", {'query': query})
 
 def task_graph(request, uid):
     nodes = Task.get_graph(uid)
@@ -47,7 +51,7 @@ def concept_json(request, uid):
 
 def contrast_gist(request, uid, query=None, return_gist=False):
     '''contrast_gist is currently a sub for some "view_contrast" view (that should
-    be defined as views.view_contrast, as a simple graph seems more appropriate 
+    be defined as views.view_contrast, as a simple graph seems more appropriate
     to show a contrast and its conditions than some static thing we would render!
     :param uid: the uid for the contrast
     :param query: a custom query. If not defined, will show a table of concepts asserted.
@@ -57,7 +61,7 @@ def contrast_gist(request, uid, query=None, return_gist=False):
     contrast_cypher = add_cypher_relations(contrast_cypher, lookup)
 
     contrast = Contrast.get(uid)[0]
-    if query == None:
+    if query is None:
         query = "MATCH (c:condition)-[r:HASCONTRAST]->(con:contrast) WHERE con.id='%s' RETURN c.name as condition_name,con.name as contrast_name;" % (uid)
 
     # Join by newline
@@ -69,7 +73,7 @@ def contrast_gist(request, uid, query=None, return_gist=False):
                "node_type": "contrast",
                "node_name": contrast["name"],
                "query": query}
-    if return_gist == True:
+    if return_gist is True:
         return context
     return render(request, 'graph/gist.html', context)
 
@@ -86,7 +90,7 @@ def task_gist(request, uid, query=None, return_gist=False):
     task_cypher = add_cypher_relations(task_cypher, lookup)
 
     task = Task.get(uid)[0]
-    if query == None:
+    if query is None:
         query = "MATCH (t:task)-[r:ASSERTS]->(c:concept) RETURN t.name as task_name,c.name as concept_name;"
 
     # Join by newline
@@ -98,7 +102,7 @@ def task_gist(request, uid, query=None, return_gist=False):
                "node_type": "task",
                "node_name": task["name"],
                "query": query}
-    if return_gist == True:
+    if return_gist is True:
         return context
     return render(request, 'graph/gist.html', context)
 

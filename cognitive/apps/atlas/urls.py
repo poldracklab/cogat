@@ -1,4 +1,7 @@
 from django.conf.urls import url
+from django.views.generic import TemplateView
+
+from rest_framework.authtoken import views as drf_views
 
 from . import api_views, views, graph
 
@@ -144,12 +147,20 @@ urlpatterns = [
     ),
 
     # Graph views
-    url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),
-    url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)/$', graph.concept_graph, name="concept_graph"),
-    url(r'^graph/$', graph.explore_graph, name="explore_graph"),
-    url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/gist$', graph.task_gist, name="task_gist"),
-    url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/gist/download$', graph.download_task_gist,
-        name="download_task_gist"),
+    url(r'^graph/(?P<label>[\w\+])/(?P<uid>[\w\+%_& ]+)', graph.graph_view,
+        name="graph_view"),
+    url(r'^graph/task/(?P<uid>[\w\+%_& ]+)', graph.graph_view,
+        {'label': 'task'}, name="task_graph"),
+    url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)', graph.graph_view,
+        {'label': 'concept'}, name="concept_graph"),
+    # url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),
+    # url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)/$', graph.concept_graph, name="concept_graph"),
+    # url(r'^graph/$', graph.explore_graph, name="explore_graph"),
+    # url(r'^graph/$', TemplateView.as_view(template_name='graph/graph.html'),
+    #    name="explore_graph"),
+    # url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/gist$', graph.task_gist, name="task_gist"),
+    # url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/gist/download$', graph.download_task_gist,
+    #    name="download_task_gist"),
 ]
 
 api_urls = [
@@ -221,6 +232,8 @@ api_urls = [
         api_views.TheoryAssertion.as_view(), name="add_theory_assertion"),
     url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/citation/$',
         api_views.TheoryCitationAPI.as_view(), name="add_theory_citation"),
+    url(r'^api-token-auth/', drf_views.obtain_auth_token),
+
 ]
 
 urlpatterns += api_urls

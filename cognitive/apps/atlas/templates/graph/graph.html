@@ -1,0 +1,35 @@
+{% extends "main/base.html" %}
+{% block head %}
+<style>
+{% include "atlas/multicolumn_lists.css" %}
+iframe {
+    display: block;       /* iframes are inline by default */
+    background: #000;
+    border: none;         /* Reset default border */
+    width: 100%;
+    height: 100vh;        /* Viewport-relative units */
+}
+</style>
+{% endblock %}
+{% load staticfiles %}
+{% block branding %}
+{% include 'atlas/branding.html'%}
+{% block navigation %}
+{% include "atlas/middle_navigation.html" %}
+{% endblock %}
+
+{% endblock %}
+
+{% block content %}
+{% if query %}
+<div>
+Copy and paste the following into the prompt below:<br>
+</div>
+<code>{{ query }}</code>
+{% endif %}
+<iframe src="http://{{ request.get_host }}:7474"></iframe>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+</script>
+{% endblock %}

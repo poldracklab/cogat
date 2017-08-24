@@ -30,6 +30,12 @@ audio:not([controls]) {
     display: none
 }
 
+code { 
+    background:#F8F8FF;
+    border: black dashed 1px;
+    padding: 2px;
+}
+
 html {
     font-family: sans-serif;
     -ms-text-size-adjust: 100%;
@@ -234,7 +240,6 @@ acronym,
 address,
 big,
 cite,
-code,
 del,
 dfn,
 em,

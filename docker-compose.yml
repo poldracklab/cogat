@@ -46,6 +46,8 @@ services:
   postgres:
       image: postgres:9.4
       env_file: .env
+      volumes:
+        - ./compose/postgres/data:/var/lib/postgresql/data
       expose:
           - "5432"
       networks:
@@ -60,7 +62,7 @@ services:
       env_file: .env
       volumes:
           - .:/code
-          - /var/www/static
+          - ./static:/var/www/static
       networks:
         web:
           aliases:
@@ -73,7 +75,7 @@ services:
           - ./compose/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
           - ./compose/nginx/uwsgi_params.par:/etc/nginx/uwsgi_params.par:ro
           - .:/code
-          - /var/www/static
+          - ./static:/var/www/static
       ports:
           - "80:80"
       networks:

@@ -59,7 +59,6 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'crispy_forms',
     'opbeat.contrib.django',
-    'corsheaders',
 ]
 #    'allauth',
 #    'allauth.account',
@@ -82,7 +81,6 @@ INSTALLED_APPS += THIRD_PARTY_APPS
 MIDDLEWARE_CLASSES = [
     'opbeat.contrib.django.middleware.OpbeatAPMMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

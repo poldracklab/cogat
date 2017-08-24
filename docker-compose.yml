@@ -33,6 +33,7 @@ services:
       - ./compose/graphdb/neo4j/ro_conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
     ports:
       - "7474:7474"
+      - "7473:7473"
     expose:
       - "1338"
       - "5001"

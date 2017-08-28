@@ -31,6 +31,7 @@ services:
       - ./compose/graphdb/data_ro:/opt/data
       - ./compose/graphdb/neo4j/ro_conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
       - ./compose/graphdb/neo4j/ro_conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
+      - ./compose/graphdb/neo4j/backup:/backup
     ports:
       - "7474:7474"
       - "7473:7473"

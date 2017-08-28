@@ -1,21 +1,22 @@
-from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Hidden
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, TabHolder, Tab, StrictButton
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, PasswordChangeForm
-from django.contrib.auth.models import User
-from crispy_forms.helper import FormHelper
 from django import forms
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm, PasswordChangeForm
+from cognitive.apps.users.models import User
 
+from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, TabHolder, Tab, StrictButton
+from crispy_forms.layout import Layout, HTML, Button, Row, Field, Hidden
+from crispy_forms.helper import FormHelper
 
 class UserCreateForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
     class Meta:
         model = User
-        fields = ("username", "email", "password1", "password2")
+        fields = ("email", "first_name", "last_name", "password1", "password2")
 
     def save(self, commit=True):
         user = super(UserCreateForm, self).save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.username = user.email
         if commit:
             user.save()
         return user
@@ -36,11 +37,12 @@ class UserEditForm(UserChangeForm):
 
     class Meta:
         model = User
-        fields = ("username", "email")
+        fields = ("email", "first_name", "last_name")
 
     def save(self, commit=True):
         user = super(UserChangeForm, self).save(commit=False)
         user.email = self.cleaned_data["email"]
+        user.username = user.email
         if commit:
             user.save()
         return user
@@ -58,4 +60,3 @@ class UserEditForm(UserChangeForm):
         self.helper.field_class = 'col-lg-8'
         self.helper.layout = Layout()
         tab_holder = TabHolder()
-

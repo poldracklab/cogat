@@ -209,8 +209,6 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisn
 DEBUG = os.environ.get('DJANGO_DEBUG', False)
 LOGIN_REDIRECT_URL='/'
 LOGOUT_REDIRECT_URL='/logged_out/'
-CORS_ORIGIN_ALLOW_ALL=True
-CORS_ALLOW_CREDENTIALS = False
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -221,3 +219,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ),
 }
+
+USE_RECAPTCHA = os.environ.get('USE_RECAPTCHA', False)
+GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')

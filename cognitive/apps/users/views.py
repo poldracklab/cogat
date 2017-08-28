@@ -1,8 +1,8 @@
+import urllib
 from functools import wraps
 
-from django.contrib import auth
+from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
-# from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http.response import (HttpResponseRedirect, JsonResponse)
 from django.shortcuts import (render, get_object_or_404, render_to_response,
@@ -60,11 +60,26 @@ def create_user(request, template_name='registration/signup.html'):
     if request.method == "POST":
         form = UserCreateForm(request.POST, request.FILES, instance=User())
         if form.is_valid():
+            if settings.USE_CAPTCHA is True:
+                recaptcha_response = request.POST.get('g-recaptcha-response')
+                url = 'https://www.google.com/recaptcha/api/siteverify'
+                values = {
+                    'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
+                    'response': recaptcha_response
+                }
+                data = urllib.parse.urlencode(values).encode()
+                req =  urllib.request.Request(url, data=data)
+                response = urllib.request.urlopen(req)
+                recaptcha_result = json.loads(response.read().decode())
+            else:
+                recaptcha_result = {'success': True}
+            if recaptcha_result['success'] is False:
+                messages.error(request, "Captcha failed, unable to generate new account")
+                return (HttpResponseRedirect(reverse("index")))
             form.save()
             new_user = auth.authenticate(username=request.POST['username'],
                                          password=request.POST['password1'])
             auth.login(request, new_user)
-            # Do something. Should generally end with a redirect. For example:
             if request.POST['next']:
                 return HttpResponseRedirect(request.POST['next'])
             else:

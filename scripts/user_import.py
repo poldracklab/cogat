@@ -55,7 +55,7 @@ def user_imports():
     )
     post_cur = post_conn.cursor()
 
-    my_conn = pymysql.connect(db='cogat', user='root')
+    my_conn = pymysql.connect(host='localhost', db='cogat', user='root')
     my_cur = my_conn.cursor()
 
     select_query = '''select id, user_first_name, user_last_name, user_interest_tags,
@@ -73,6 +73,8 @@ def user_imports():
 
     my_cur.execute(select_query)
     old_users = my_cur.fetchall()
+    my_cur.close()
+    my_conn.close()
     for old_user in old_users:
         post_cur.execute(old_user_lookup.format(old_user[0]))
         if not post_cur.fetchone():

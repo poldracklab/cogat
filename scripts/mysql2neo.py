@@ -279,3 +279,6 @@ types = cursor.fetchall()
 for type in types:
     pass
 
+
+cursor.close()
+conn.close()

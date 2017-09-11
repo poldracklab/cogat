@@ -323,3 +323,5 @@ if __name__ == '__main__':
     import_theory()
     import_theory_relations()
     import_collection_relations()
+    cursor.close()
+    conn.close()

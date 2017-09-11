@@ -6,7 +6,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed
+from django.http import Http404, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 
 
@@ -184,7 +184,10 @@ def tasks_by_letter(request, letter):
 # VIEWS FOR SINGLE NODES ##########################################################
 
 def view_concept(request, uid):
-    concept = Concept.get(uid)[0]
+    try:
+        concept = Concept.get(uid)[0]
+    except IndexError:
+        raise Http404("Concept does not exist")
 
     # For each measured by (contrast), get the task
     if "MEASUREDBY" in concept["relations"]:
@@ -233,7 +236,7 @@ def view_task(request, uid, return_context=False):
     try:
         task = Task.get(uid)[0]
     except IndexError:
-        return HttpResponseNotFound('<h1>Task with uid {} not found.</h1>'.format(uid))
+        raise Http404("Task does not exist")
 
     # Replace newlines with <br>, etc.
     task["definition_text"] = clean_html(task.get("definition_text", "No definition provided"))
@@ -273,7 +276,10 @@ def view_task(request, uid, return_context=False):
 
 def view_battery(request, uid, return_context=False):
     ''' detail view for a battery. '''
-    battery = Battery.get(uid)[0]
+    try:
+        battery = Battery.get(uid)[0]
+    except IndexError:
+        raise Http404("Theory does not exist")
     progenitors = Battery.get_relation(uid, "PARTOF")
     descendants = Battery.get_reverse_relation(uid, "PARTOF")
     indicators = Battery.get_relation(uid, "HASINDICATOR")
@@ -303,7 +309,10 @@ def view_battery(request, uid, return_context=False):
 
 def view_theory(request, uid, return_context=False):
     ''' detail view for a given assertion '''
-    theory = Theory.get(uid)[0]
+    try:
+        theory = Theory.get(uid)[0]
+    except IndexError:
+        raise Http404("Theory does not exist")
     assertions = Theory.get_reverse_relation(uid, "INTHEORY")
     # test if logged in, this might be an expensive operation since choices
     # field is populated on each instantiation
@@ -343,7 +352,10 @@ def view_theory(request, uid, return_context=False):
 
 def view_disorder(request, uid, return_context=False):
     ''' detail view for a given disorder '''
-    disorder = Disorder.get(uid)[0]
+    try:
+        disorder = Disorder.get(uid)[0]
+    except IndexError:
+        raise Http404("Disorder does not exist")
     assertions = []
     tasks = Disorder.get_reverse_relation(uid, "ASSERTS")
     contrasts = Disorder.get_reverse_relation(uid, "HASDIFFERENCE")

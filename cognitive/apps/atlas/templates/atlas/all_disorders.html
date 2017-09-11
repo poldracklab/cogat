@@ -6,6 +6,7 @@
 .ui-autocomplete-loading { background: white url("/img/facebox/loading.gif") right center no-repeat; }
 .asholder {position:relative;}
 .dis-elem {padding-left: 20px;}
+.dis-list-toggle {cursor: pointer;}
 </style>
 <link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
 {% endblock %}
@@ -79,7 +80,7 @@ $(document).ready(function() {
         if ($(this).parent().children("ul").hasClass("hidden")) {
             $(this).parent().children("ul").removeClass("hidden");    
             $(this).text('-');
-        } else {
+        } else if ($(this).parent().children("ul").length > 0) {
             $(this).parent().children("ul").addClass("hidden");    
             $(this).text('+');
         }

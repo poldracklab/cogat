@@ -15,7 +15,7 @@ class AtlasViewTestCase(TestCase):
         self.password = 'pass'
         self.user = User.objects.create_user(
             username='user', email='email@example.com', password=self.password,
-            first_name="fn", last_name="ln")
+            first_name="fn", last_name="ln", rank="3")
 
     ''' not currently linked
     def test_all_batteries(self):

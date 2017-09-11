@@ -8,12 +8,11 @@
         {{form | crispy }}
 
         <div class="extra-errors"></div>
-
+        <div class="g-recaptcha" data-sitekey="6LcENy4UAAAAAIyBAt2WAFMByCkn_2uq2jBMMwi3"></div>
         <button type="submit" class="btn btn-primary" data-disable-with="Signing Up…">
           Sign Up
         </button>
         <span class="pull-right auth-alt-method"><a href="{% url 'my_profile' %}">Log In</a></span>
-        <div class="g-recaptcha" data-sitekey="6LcENy4UAAAAAIyBAt2WAFMByCkn_2uq2jBMMwi3"></div>
         <input type="hidden" name="next" value="{{ request.GET.next }}" />
     </form>
 </div>

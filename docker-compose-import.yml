@@ -101,6 +101,8 @@ services:
         - nginx
         - uwsgi
         - graphdb
+    expose:
+        - "3306"
     networks:
       web:
         aliases:

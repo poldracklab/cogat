@@ -6,7 +6,8 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed
+from django.http import (Http404, HttpResponse, HttpResponseNotFound,
+                         HttpResponseNotAllowed, HttpResponseRedirect)
 from django.shortcuts import redirect, render
 
 
@@ -17,13 +18,14 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         TheoryForm, BatteryForm,
                                         ConceptTaskForm, ConceptContrastForm,
                                         DisorderDisorderForm, ExternalLinkForm,
-                                        BatteryBatteryForm, BatteryTaskForm)
+                                        BatteryBatteryForm, BatteryTaskForm,
+                                        ReviewForm)
 
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
                                         Implementation, Indicator,
                                         ExternalDataset, Citation, ExternalLink,
-                                        search)
+                                        Node, search)
 from cognitive.apps.atlas.utils import clean_html, add_update
 from cognitive.settings import DOMAIN, graph
 
@@ -491,6 +493,19 @@ def add_condition(request, task_id):
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
+def set_reviewed(request, uid):
+    Node.update(uid, {'review_status': True})
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def unset_reviewed(request, uid):
+    Node.update(uid, {'review_status': False})
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
 def update_concept(request, uid):
     if request.method == "POST":
         definition = request.POST.get('definition_text', '')
@@ -623,6 +638,8 @@ def add_disorder_task(request, disorder_id):
 
     return redirect('disorder', disorder_id)
 
+@login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_disorder_disorder(request, disorder_id):
     ''' process form from disorder view that relates disorders to disorders '''
     if request.method != "POST":

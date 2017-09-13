@@ -114,12 +114,14 @@ class Node(object):
                 return relation
         return None
 
-    def update(self, uid, updates):
+    def update(self, uid, updates, label=None):
         '''update will update a particular field of a node with a new entry
         :param uid: the unique id of the node
         :param updates: a dictionary with {field:value} to update node with
         '''
-        node = self.graph.find_one(self.name, 'id', uid)
+        if label is None:
+            label = self.name
+        node = self.graph.find_one(label, 'id', uid)
         if node != None:
             for field, update in updates.items():
                 node[field] = update

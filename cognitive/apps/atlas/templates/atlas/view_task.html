@@ -38,6 +38,18 @@
                 <em>{{ task.name }}</em>
                 </a>
                 <span class="typebutton task_type"><a href="{% url 'all_tasks' %}">TASK</a></span>
+                {% if task.review_status %}
+                    <span class="reviewed-span">Reviewed</span>
+                {% else %}
+                    <span class="unreviewed-span">Unreviewed</span>
+                {%endif%} 
+                {% if user.is_authenticated %}
+                    {% if task.review_status%}
+                        <span class="reviewbutton"><a href="{% url 'set_unreviewed' 'task' task.id %}">Set as unreviewed</a></span>
+                    {% else %}
+                        <span class="reviewbutton"><a href="{% url 'set_reviewed' 'task' task.id %}">Set as reviewed</a></span>
+                    {%endif%}
+                {% endif %}
             </h1>
         </div><!-- .CATerm.task -->
 

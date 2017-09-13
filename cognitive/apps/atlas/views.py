@@ -18,8 +18,7 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         TheoryForm, BatteryForm,
                                         ConceptTaskForm, ConceptContrastForm,
                                         DisorderDisorderForm, ExternalLinkForm,
-                                        BatteryBatteryForm, BatteryTaskForm,
-                                        ReviewForm)
+                                        BatteryBatteryForm, BatteryTaskForm)
 
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
@@ -40,6 +39,7 @@ ExternalDataset = ExternalDataset()
 ExternalLink = ExternalLink()
 Implementation = Implementation()
 Indicator = Indicator()
+Node = Node()
 Task = Task()
 Theory = Theory()
 
@@ -493,14 +493,14 @@ def add_condition(request, task_id):
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
-def set_reviewed(request, uid):
-    Node.update(uid, {'review_status': True})
+def set_reviewed(request, uid, label):
+    Node.update(uid, {'review_status': 'True'}, label=label)
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     
 @login_required
 @user_passes_test(rank_check, login_url='/403')
-def unset_reviewed(request, uid):
-    Node.update(uid, {'review_status': False})
+def unset_reviewed(request, uid, label):
+    Node.update(uid, {'review_status': False}, label=label)
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     
 

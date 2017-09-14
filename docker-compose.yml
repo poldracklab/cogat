@@ -50,6 +50,7 @@ services:
       env_file: .env
       volumes:
         - ./compose/postgres/data:/var/lib/postgresql/data
+        - ./compose/postgres/backup:/pg_backup
       expose:
           - "5432"
       networks:

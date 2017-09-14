@@ -1,0 +1,59 @@
+{% extends "main/base.html" %}
+{% block head %}{% endblock %}
+{% load staticfiles %}
+{% block branding %}
+        <!-- Branding only huge on homepage -->
+        <div class="container">
+            <div id="brand">
+                <div id="logo">
+                <a href="/">
+                <img src="{% static "img/logo-front.png" %}" class="img" alt="Cognitive Atlas" width="485" height="168"></a>
+            </div><!--logo-->
+            <span id="tagline">a collaborative knowledge base characterizing the state of current thought in Cognitive Science.</span><!--tagline-->
+
+            </div><!--/#brand-->
+        </div><!--container-->
+
+{% block navigation %}
+{% include "atlas/middle_navigation.html" %}
+{% endblock %}
+{% endblock %}
+
+{% block content %}
+<h1>Internal Server Error</h1>
+{{ exception }}
+{% endblock %}
+{% block scripts %}
+    <script language="javascript">
+    $(document).ready(function() { 
+        function autoFill(id, v){
+    $(id).css({ color: "#b2adad" }).attr({ value: v }).focus(function(){
+    if($(this).val()==v){
+        $(this).val("").css({ color: "#333" });
+    }
+    }).blur(function(){
+        if($(this).val()==""){
+           $(this).css({ color: "#b2adad" }).val(v);
+        }
+    });
+    }
+    if ($("#username")){
+        autoFill($("#username"), "your email address");
+    }
+    if ($("#user_email")){
+        autoFill($("#user_email"), "your email address");
+    }
+    if ($("#password")){
+        autoFill($("#password"), "XXXXXXXXXXXXXX");
+    }
+    });
+    </script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-104264432-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+{% endblock %}

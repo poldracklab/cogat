@@ -195,6 +195,9 @@ for disorder in disorders:
                            property_value=disorder[2])
 
     if not found:
+        # skip over legacy test disorders.
+        if disorder[4] == "Flapjacks" or disorder[4] == "Wingnut":
+            continue
         gret = graph.create(
             Node("disorder", id=disorder[2], id_protocol=disorder[3],
                  name=disorder[4], definition=disorder[5],
@@ -276,3 +279,6 @@ types = cursor.fetchall()
 for type in types:
     pass
 
+
+cursor.close()
+conn.close()

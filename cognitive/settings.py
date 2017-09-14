@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import sys
 import os
+from distutils.util import strtobool
 from os.path import join, abspath, dirname
 
 from py2neo import Graph
@@ -206,7 +207,7 @@ CACHES = {
 
 AUTH_USER_MODEL = 'users.User'
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')
-DEBUG = os.environ.get('DJANGO_DEBUG', False)
+DEBUG = strtobool(os.environ.get('DJANGO_DEBUG', 'False'))
 LOGIN_REDIRECT_URL='/'
 LOGOUT_REDIRECT_URL='/logged_out/'
 REST_FRAMEWORK = {
@@ -220,5 +221,5 @@ REST_FRAMEWORK = {
     ),
 }
 
-USE_RECAPTCHA = os.environ.get('USE_RECAPTCHA', False)
+USE_RECAPTCHA = strtobool(os.environ.get('USE_RECAPTCHA', 'False'))
 GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')

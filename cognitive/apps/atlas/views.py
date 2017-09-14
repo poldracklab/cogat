@@ -4,9 +4,10 @@ from collections import OrderedDict
 import json
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseNotAllowed
+from django.http import (Http404, HttpResponse, HttpResponseNotFound,
+                         HttpResponseNotAllowed, HttpResponseRedirect)
 from django.shortcuts import redirect, render
 
 
@@ -23,7 +24,7 @@ from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
                                         Implementation, Indicator,
                                         ExternalDataset, Citation, ExternalLink,
-                                        search)
+                                        Node, search)
 from cognitive.apps.atlas.utils import clean_html, add_update
 from cognitive.settings import DOMAIN, graph
 
@@ -38,6 +39,7 @@ ExternalDataset = ExternalDataset()
 ExternalLink = ExternalLink()
 Implementation = Implementation()
 Indicator = Indicator()
+Node = Node()
 Task = Task()
 Theory = Theory()
 
@@ -51,6 +53,12 @@ counts = {
     "batteries": Battery.count(),
     "collections": (Battery.count() + Theory.count()),
 }
+
+def rank_check(user):
+    try:
+        return int(user.rank) > 2
+    except ValueError:
+        return False
 
 # VIEWS FOR ALL NODES #############################################################
 
@@ -184,7 +192,10 @@ def tasks_by_letter(request, letter):
 # VIEWS FOR SINGLE NODES ##########################################################
 
 def view_concept(request, uid):
-    concept = Concept.get(uid)[0]
+    try:
+        concept = Concept.get(uid)[0]
+    except IndexError:
+        raise Http404("Concept does not exist")
 
     # For each measured by (contrast), get the task
     if "MEASUREDBY" in concept["relations"]:
@@ -233,7 +244,7 @@ def view_task(request, uid, return_context=False):
     try:
         task = Task.get(uid)[0]
     except IndexError:
-        return HttpResponseNotFound('<h1>Task with uid {} not found.</h1>'.format(uid))
+        raise Http404("Task does not exist")
 
     # Replace newlines with <br>, etc.
     task["definition_text"] = clean_html(task.get("definition_text", "No definition provided"))
@@ -273,7 +284,10 @@ def view_task(request, uid, return_context=False):
 
 def view_battery(request, uid, return_context=False):
     ''' detail view for a battery. '''
-    battery = Battery.get(uid)[0]
+    try:
+        battery = Battery.get(uid)[0]
+    except IndexError:
+        raise Http404("Theory does not exist")
     progenitors = Battery.get_relation(uid, "PARTOF")
     descendants = Battery.get_reverse_relation(uid, "PARTOF")
     indicators = Battery.get_relation(uid, "HASINDICATOR")
@@ -303,7 +317,10 @@ def view_battery(request, uid, return_context=False):
 
 def view_theory(request, uid, return_context=False):
     ''' detail view for a given assertion '''
-    theory = Theory.get(uid)[0]
+    try:
+        theory = Theory.get(uid)[0]
+    except IndexError:
+        raise Http404("Theory does not exist")
     assertions = Theory.get_reverse_relation(uid, "INTHEORY")
     # test if logged in, this might be an expensive operation since choices
     # field is populated on each instantiation
@@ -343,7 +360,10 @@ def view_theory(request, uid, return_context=False):
 
 def view_disorder(request, uid, return_context=False):
     ''' detail view for a given disorder '''
-    disorder = Disorder.get(uid)[0]
+    try:
+        disorder = Disorder.get(uid)[0]
+    except IndexError:
+        raise Http404("Disorder does not exist")
     assertions = []
     tasks = Disorder.get_reverse_relation(uid, "ASSERTS")
     contrasts = Disorder.get_reverse_relation(uid, "HASDIFFERENCE")
@@ -382,6 +402,7 @@ def view_disorder(request, uid, return_context=False):
 # ADD NEW TERMS ###################################################################
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def contribute_term(request):
     '''contribute_term will return the contribution detail page for a term that is
     posted, or visiting the page without a POST will return the original form
@@ -408,6 +429,7 @@ def contribute_term(request):
     return render(request, 'atlas/contribute_term.html', context)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def contribute_disorder(request):
     ''' contribute_disorder will return the detail page for the new disorder '''
     if request.method == "POST":
@@ -429,6 +451,7 @@ def contribute_disorder(request):
 
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_term(request):
     '''add_term will add a new term to the atlas
     '''
@@ -451,6 +474,7 @@ def add_term(request):
             return redirect('task', node["id"])
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_condition(request, task_id):
     '''add_condition will associate a condition with the given task
     :param task_id: the uid of the task, to return to the correct page after creation
@@ -468,6 +492,26 @@ def add_condition(request, task_id):
 # UPDATE TERMS ####################################################################
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
+def set_reviewed(request, uid, label):
+    Node.update(uid, {'review_status': 'True'}, label=label)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def set_unreviewed(request, uid, label):
+    Node.update(uid, {'review_status': 'False'}, label=label)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def unset_reviewed(request, uid, label):
+    Node.update(uid, {'review_status': False}, label=label)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
 def update_concept(request, uid):
     if request.method == "POST":
         definition = request.POST.get('definition_text', '')
@@ -476,6 +520,7 @@ def update_concept(request, uid):
     return view_concept(request, uid)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def update_task(request, uid):
     if request.method == "POST":
         definition = request.POST.get('definition_text', '')
@@ -484,6 +529,7 @@ def update_task(request, uid):
     return view_task(request, uid)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def update_theory(request, uid):
     if request.method == "POST":
         description = request.POST.get('theory_description', '')
@@ -494,6 +540,7 @@ def update_theory(request, uid):
     return view_theory(request, uid)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def update_battery(request, uid):
     if request.method == "POST":
         description = request.POST.get('description', '')
@@ -503,6 +550,7 @@ def update_battery(request, uid):
 
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def update_disorder(request, uid):
     if request.method == "POST":
         definition = request.POST.get('disorder_definition', '')
@@ -515,6 +563,7 @@ def update_disorder(request, uid):
 # ADD RELATIONS ###################################################################
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_concept_relation(request, uid):
     '''add_concept_relation will add a relation from a concept to another concept (PARTOF or KINDOF)
     :param uid: the uid of the concept page, for returning to the page after creation
@@ -529,6 +578,7 @@ def add_concept_relation(request, uid):
     return view_concept(request, uid)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_task_contrast(request, uid):
     ''' add_task_contrast will display the view to add a contrast to a
         task, meaning a set of conditions and an operator over the
@@ -541,6 +591,7 @@ def add_task_contrast(request, uid):
 
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_task_concept(request, uid):
     '''add_task_concept will add a cognitive concept to the list on a
        task page, making the assertion that the concept is associated
@@ -554,6 +605,7 @@ def add_task_concept(request, uid):
     return view_task(request, uid)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_concept_task(request, concept_id):
     '''add_concept_task will add a cognitive task to the list on a
        concept page, making the assertion that the task is associated
@@ -567,6 +619,7 @@ def add_concept_task(request, concept_id):
     return view_concept(request, concept_id)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_disorder_task(request, disorder_id):
     '''add_disorder_task will add a cognitive task to the list on a
        disorder page, making the assertion that the task is associated
@@ -591,6 +644,8 @@ def add_disorder_task(request, disorder_id):
 
     return redirect('disorder', disorder_id)
 
+@login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_disorder_disorder(request, disorder_id):
     ''' process form from disorder view that relates disorders to disorders '''
     if request.method != "POST":
@@ -614,6 +669,7 @@ def add_disorder_disorder(request, disorder_id):
     return redirect('disorder', disorder_id)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_concept_contrast(request, uid, tid):
     ''' process form from concept view to add contrast that measures concept '''
     if request.method != "POST":
@@ -630,6 +686,7 @@ def add_concept_contrast(request, uid, tid):
         return view_concept(request, uid)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_concept_contrast_task(request, uid):
     '''add_concept_contrast will add a contrast associated with conditions--> task via the task view
     :param uid: the uid of the task, to return to the correct page after creation
@@ -645,6 +702,7 @@ def add_concept_contrast_task(request, uid):
     return view_task(request, uid)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def concept_task_contrast_assertion(request, concept_id, task_id, contrast_id):
     ''' function to generate assertion node along with all three relations
         assocaited with it. Link function will not create duplicate links if
@@ -655,6 +713,7 @@ def concept_task_contrast_assertion(request, concept_id, task_id, contrast_id):
     Assertion.link(asrt.properties['id'], contrast_id, "PREDICATE_DEF", endnode_type='contrast')
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_contrast(request, task_id):
     '''add_contrast is the function called when the user submits a set
        of conditions and an operator to specify a new contrast.
@@ -689,6 +748,7 @@ def add_contrast(request, task_id):
     return view_task(request, task_id)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_task_disorder(request, task_id):
     ''' From the task we can create a link between the task we are viewing and
         a disorder.'''
@@ -708,6 +768,7 @@ def add_task_disorder(request, task_id):
 
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def make_link(request, src_id, src_label, dest_label, form_class, name_field,
               view, rel, reverse=False, create=True):
     ''' make link processes forms in a request and attempts to create links
@@ -746,6 +807,7 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
     return view(request, src_id)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_task_implementation(request, task_id):
     ''' From the task view we can create an implementation that is associated
         with a given task'''
@@ -754,6 +816,7 @@ def add_task_implementation(request, task_id):
                      "HASIMPLEMENTATION")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_task_dataset(request, task_id):
     ''' From the task view we can create a link to dataset that is associated
         with a given task'''
@@ -762,6 +825,7 @@ def add_task_dataset(request, task_id):
                      "HASEXTERNALDATASET")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_task_indicator(request, task_id):
     ''' From the task view we can create a link to indicator that is associated
         with a given task.'''
@@ -769,6 +833,7 @@ def add_task_indicator(request, task_id):
                      'type', view_task, "HASINDICATOR")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_task_citation(request, task_id):
     ''' From the task view we can create a link to citation that is associated
         with a given task.'''
@@ -776,6 +841,7 @@ def add_task_citation(request, task_id):
                      'citation_desc', view_task, "HASCITATION")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_concept_citation(request, concept_id):
     ''' From the task view we can create a link to citation that is associated
         with a given task.'''
@@ -783,6 +849,7 @@ def add_concept_citation(request, concept_id):
                      'citation_desc', view_concept, "HASCITATION")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_disorder_citation(request, disorder_id):
     ''' From the task view we can create a link to citation that is associated
         with a given task.'''
@@ -791,6 +858,7 @@ def add_disorder_citation(request, disorder_id):
 
 # need to add ExternalLink to query and make form
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_disorder_external_link(request, disorder_id):
     ''' From the task view we can create a link to citation that is associated
         with a given task.'''
@@ -798,33 +866,39 @@ def add_disorder_external_link(request, disorder_id):
                      ExternalLinkForm, 'uri', view_disorder, "HASLINK")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_theory_citation(request, theory_id):
     return make_link(request, theory_id, Theory, Citation, CitationForm,
                      'citation_desc', view_theory, "HASCITATION")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_battery_citation(request, battery_id):
     return make_link(request, battery_id, Battery, Citation, CitationForm,
                      'citation_desc', view_battery, "HASCITATION")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_battery_indicator(request, battery_id):
     return make_link(request, battery_id, Battery, Indicator, IndicatorForm,
                      'type', view_battery, "HASINDICATOR")
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_battery_battery(request, battery_id):
     return make_link(request, battery_id, Battery, Battery, BatteryBatteryForm,
                      'batteries', view_battery, "INBATTERY", reverse=True,
                      create=False)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_battery_task(request, battery_id):
     return make_link(request, battery_id, Battery, Task, BatteryTaskForm,
                      'tasks', view_battery, "INBATTERY", reverse=True,
                      create=False)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_theory_assertion(request, theory_id):
     ''' from theory detail view we can add assertions to the theory that we
         are looking at. '''
@@ -842,6 +916,7 @@ def add_theory_assertion(request, theory_id):
         return render(request, 'atlas/view_theory.html', context)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_theory(request):
     ''' from all collections we can add new theories, this view handles that '''
     if request.method != "POST":
@@ -858,6 +933,7 @@ def add_theory(request):
         return render(request, 'atlas/all_collections.html', context)
 
 @login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_battery(request):
     ''' from all collections we can add new theories, this view handles that '''
     if request.method != "POST":

@@ -4,6 +4,7 @@ from functools import wraps
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
+from django.db import IntegrityError
 from django.http.response import (HttpResponseRedirect, JsonResponse)
 from django.shortcuts import (render, get_object_or_404, render_to_response,
                               redirect)
@@ -12,6 +13,7 @@ from django.template.context import RequestContext
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
+from cognitive import settings
 from cognitive.apps.users.models import User
 from .forms import UserEditForm, UserCreateForm
 
@@ -60,7 +62,7 @@ def create_user(request, template_name='registration/signup.html'):
     if request.method == "POST":
         form = UserCreateForm(request.POST, request.FILES, instance=User())
         if form.is_valid():
-            if settings.USE_CAPTCHA is True:
+            if settings.USE_RECAPTCHA is True:
                 recaptcha_response = request.POST.get('g-recaptcha-response')
                 url = 'https://www.google.com/recaptcha/api/siteverify'
                 values = {
@@ -76,8 +78,12 @@ def create_user(request, template_name='registration/signup.html'):
             if recaptcha_result['success'] is False:
                 messages.error(request, "Captcha failed, unable to generate new account")
                 return (HttpResponseRedirect(reverse("index")))
-            form.save()
-            new_user = auth.authenticate(username=request.POST['username'],
+            try:
+                form.save()
+            except IntegrityError:
+                messages.error(request, "Email address already in use.")
+                return render(request, template_name, {'form': form})
+            new_user = auth.authenticate(username=request.POST['email'],
                                          password=request.POST['password1'])
             auth.login(request, new_user)
             if request.POST['next']:

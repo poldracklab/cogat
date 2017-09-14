@@ -14,6 +14,28 @@
 .condition-table>thead {
     border-bottom: 1px dotted #bebebe;
 }
+
+.reviewbutton {
+    font-weight: 800;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    padding: 4px 10px;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: #fff;
+    font-style: normal;
+    float: none;
+    display: inline;
+    margin: 0 0 0 5px;
+    position: relative;
+    top: -6px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    background: #707070;
+    font-family: 'OpenSans', Helvetica, Arial, sans-serif;
+}
+
+.review-container {
+    float: right;
+}
 </style>
 {% endblock %}
 {% load staticfiles %}
@@ -38,18 +60,20 @@
                 <em>{{ task.name }}</em>
                 </a>
                 <span class="typebutton task_type"><a href="{% url 'all_tasks' %}">TASK</a></span>
-                {% if task.review_status %}
+            <div class="review-container">
+                {% if task.review_status == "True" %}
                     <span class="reviewed-span">Reviewed</span>
                 {% else %}
                     <span class="unreviewed-span">Unreviewed</span>
                 {%endif%} 
                 {% if user.is_authenticated %}
                     {% if task.review_status%}
-                        <span class="reviewbutton"><a href="{% url 'set_unreviewed' 'task' task.id %}">Set as unreviewed</a></span>
+                        <a class="reviewbutton" href="{% url 'set_unreviewed' 'task' task.id %}">Set as unreviewed</a>
                     {% else %}
-                        <span class="reviewbutton"><a href="{% url 'set_reviewed' 'task' task.id %}">Set as reviewed</a></span>
+                        <button class="reviewbutton"><a href="{% url 'set_reviewed' 'task' task.id %}">Set as reviewed</a></button>
                     {%endif%}
                 {% endif %}
+            </div>
             </h1>
         </div><!-- .CATerm.task -->
 

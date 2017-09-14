@@ -148,7 +148,7 @@ urlpatterns = [
     url(r'^reviewed/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
         views.set_reviewed, name="set_reviewed"),
     url(r'^unreviewed/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
-        views.set_reviewed, name="set_unreviewed"),
+        views.set_unreviewed, name="set_unreviewed"),
 
     # Graph views
     url(r'^graph/(?P<label>[\w\+])/(?P<uid>[\w\+%_& ]+)', graph.graph_view,

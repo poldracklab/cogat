@@ -496,6 +496,12 @@ def add_condition(request, task_id):
 def set_reviewed(request, uid, label):
     Node.update(uid, {'review_status': 'True'}, label=label)
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def set_unreviewed(request, uid, label):
+    Node.update(uid, {'review_status': 'False'}, label=label)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     
 @login_required
 @user_passes_test(rank_check, login_url='/403')

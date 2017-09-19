@@ -233,9 +233,9 @@ api_urls = [
 
     url(r'^api/theory$', api_views.TheoryAPI.as_view(), name="theory_list_api"),
     url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/assertion/$',
-        api_views.TheoryAssertion.as_view(), name="add_theory_assertion"),
+        api_views.TheoryAssertion.as_view(), name="add_theory_assertion_api"),
     url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/citation/$',
-        api_views.TheoryCitationAPI.as_view(), name="add_theory_citation"),
+        api_views.TheoryCitationAPI.as_view(), name="add_theory_citation_api"),
     url(r'^api-token-auth/', drf_views.obtain_auth_token),
 
 ]

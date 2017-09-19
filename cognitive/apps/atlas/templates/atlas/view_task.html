@@ -67,7 +67,7 @@
                     <span class="unreviewed-span">Unreviewed</span>
                 {%endif%} 
                 {% if user.is_authenticated %}
-                    {% if task.review_status%}
+                    {% if task.review_status == "True" %}
                         <a class="reviewbutton" href="{% url 'set_unreviewed' 'task' task.id %}">Set as unreviewed</a>
                     {% else %}
                         <button class="reviewbutton"><a href="{% url 'set_reviewed' 'task' task.id %}">Set as reviewed</a></button>
@@ -90,7 +90,7 @@
     <div id="update_definition" class="hidden">
         <form method="POST" action="{% url 'update_task' task.id %}">
             <div class="modal-body">
-                <textarea name="definition" rows="4" cols="50">{{ task.definition_text }}</textarea>
+                <textarea name="definition_text" rows="4" cols="50">{{ task.definition_text }}</textarea>
             </div>
             {% csrf_token %}
             <button id="cancel_button" type="button" class="btn btn-primary">Cancel</button>

@@ -532,10 +532,11 @@ def update_task(request, uid):
 @user_passes_test(rank_check, login_url='/403')
 def update_theory(request, uid):
     if request.method == "POST":
-        description = request.POST.get('theory_description', '')
+        collection_description = request.POST.get('collection_description', '')
         name = request.POST.get('theory_name', '')
         updates = add_update("name", name)
-        updates = add_update("description", description, updates)
+        updates = add_update("collection_description", collection_description,
+                             updates)
         Theory.update(uid, updates=updates)
     return view_theory(request, uid)
 

@@ -29,7 +29,7 @@
   </h1>
 </div><!-- .CATerm.collection -->
 
-<div class="defncol">{{ theory.description }}
+<div class="defncol">{{ theory.collection_description | safe }}
 <div class="attribo">
     <div class="classification">
     </div>
@@ -46,11 +46,12 @@
 </div>
 <div id="edit_theory" style="margin-bottom:30px;" class="hidden popstar"><br />
     <form method="post" action="{% url 'update_theory' theory.id %}" id="form_update_collection">
+        {% csrf_token %}
         <fieldset class="fsetter">
             <input type="hidden" name="theory_id" id="id_collection" value="{{ theory.id }}" />
             <input type="hidden" name="theory_name" id="theory_name" value="{{ theory.name }}" />
             <label class="collabel">Theory Description:</label><br />
-            <textarea name="theory_description" id="theory_description" class="required" rows="8" cols="80" title="theory description" aria-label="theory description" >{{ theory.description }}</textarea><br /><br />
+            <textarea name="collection_description" id="collection_description" class="required" rows="8" cols="80" title="theory description" aria-label="theory description" >{{ theory.collection_description }}</textarea><br /><br />
                 <label class="collabel"></label>
                 <input type="button" value="cancel" onclick="window.location.reload()" title="cancel submission" aria-label="cancel submission"  />
             <input type="submit" value="submit" title="submit form" aria-label="submit form" />

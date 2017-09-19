@@ -90,7 +90,7 @@
     <div id="update_definition" class="hidden">
         <form method="POST" action="{% url 'update_task' task.id %}">
             <div class="modal-body">
-                <textarea name="definition" rows="4" cols="50">{{ task.definition_text }}</textarea>
+                <textarea name="definition_text" rows="4" cols="50">{{ task.definition_text }}</textarea>
             </div>
             {% csrf_token %}
             <button id="cancel_button" type="button" class="btn btn-primary">Cancel</button>

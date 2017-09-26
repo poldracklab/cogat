@@ -15,6 +15,7 @@
     list-style-position: inside;
 }
 </style>
+<link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
 {% endblock %}
 
 {% block branding %}
@@ -91,7 +92,7 @@
     <div id="add_relation" class="hidden">
 
             <form method="POST" action="{% url 'add_concept_relation' concept.id %}">
-
+            Select a concept and its relationship to <a class="color-concept" href=""><em>{{ concept.name }}</em></a>:
             <table class='block-4t'>
                 <tr><td>
                 <div id="ttblock" style="padding-top:20px">
@@ -113,7 +114,7 @@
                     <div id="relation_search_box" style="padding-bottom:20px">
                         <div id="searchformwrap">
                             <div class="ui-widget">
-                                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="relationterm" size="20" name="relationterm" aria-label="search for concept" title="Search for concept" placeholder="search for concept" />
+                                <select id="concept_selection" name="concept_selection" ></select>
                             </div>
                        </div>
                     </div>
@@ -123,15 +124,6 @@
                 <button id="cancel_relation_button" type="button" class="btn btn-primary">Cancel</button>
                 <input type="submit" value="submit" class="btn btn-primary"></input>
 
-                </td>
-
-                <td>
-
-                <!--Search results-->
-                <div>
-                    <h3>Concept Results</h3>
-                    <select name="concept_selection" id="relation_search_results" style="width:400px" class="hidden"></select>
-                </div>
                 </td>
                 </tr>
             </table>
@@ -149,7 +141,7 @@
             <span class="connector-lite">is a kind of</span></b><hr class="dotty" />
             {% if "KINDOF" in concept.relations %}
             {% for relation in concept.relations.KINDOF %}
-                <li class="hoverator-list" rel="{{ relation.id }}"><span style="float:right;width:10px;display:none;" id="list_hovercard_{{ relation.id }}"><a href="{% url 'concept' relation.id %}"><img src="{% static "img/assert.png"%}" title="Click to view concept {{ relation.name }}: {{ relation.definition_text }}"></a></span><a href="{% url 'concept' relation.id %}" id="options_{{ relation.id }}" class="optionator concept" title="Click to view the page for {{ relation.name }}">{{ relation.name }}</a></li>
+                <li class="hoverator-list" rel="{{ relation.id }}"><span style="float:right;display:none;" id="list_hovercard_{{ relation.id }}"><a href="{% url 'concept' relation.id %}"><img src="{% static "img/assert.png"%}" title="Click to view concept {{ relation.name }}: {{ relation.definition_text }}"></a></span><a href="{% url 'concept' relation.id %}" id="options_{{ relation.id }}" class="optionator concept" title="Click to view the page for {{ relation.name }}">{{ relation.name }}</a></li>
             {% endfor %}
             {% else %}
             <div>No associations</div>
@@ -217,14 +209,7 @@
     <!-- add task box -->
     <form method="POST" action="{% url 'add_concept_task' concept.id %}">
         <div id="task_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
-            <div id="searchformwrap">
-                <div class="ui-widget">
-                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="taskterm" size="20" name="taskterm" aria-label="search for task" title="Search for task" placeholder="search for task" />
-                </div>
-            </div>
-            <div>
-                <select name="task_selection" id="task_search_results" style="width:400px" class="hidden"></select>
-            </div>
+            <select name="task_selection" id="task_selection">
             {% csrf_token %}
             <button id="task_cancel_button" type="button" class="btn btn-primary">Cancel</button>
             <input type="submit" value="submit" class="btn btn-primary"></input>    
@@ -316,6 +301,7 @@
 
 {% endblock %}
 {% block scripts %}
+<script src="{% static "js/select2.min.js"%}" type="text/javascript"></script>
 <script type="text/javascript">
 $(document).ready(function() {
     $(function() {
@@ -361,74 +347,66 @@ $(document).ready(function() {
 
     // Add relation search
     $(function() {
-
-    $('#relationterm').click(function() {
-        $("#relation_search_results").addClass("hidden")
-        $("#relation_search_results").html("")
-        $("#relation_search_results").attr("size","0")
-    });
-
-    $('#relationterm').keyup(function() {
-
-        $.ajax({
-            type: "POST",
-            url: "{% url 'search_concept' %}",
-            data: {
-                'relationterm' : $('#relationterm').val(),
-                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
-            },
-            complete: function (data, error){
-                  $("#relation_search_results").html("")
-                  var results = JSON.parse(data.responseText);
-                  $.each(results,function(i,e){
-                      $("#relation_search_results").append('<option value="' + e.id +'">'+ e.name +'</option>');
-                  });
-
-                  $("#relation_search_results").removeClass("hidden")
-                  $("#relation_search_results").attr("size","5")
-
-            },
-            dataType: 'html',
+        $('#concept_selection').select2({
+            width: '100%',
+            placeholder: 'Search for concept',
+            minimumInputLength: 2,
+            tags: [],
+            ajax: {
+                type: "POST",
+                url: "{% url 'search_concept' %}",
+                data: function (params) {
+                    console.log(params);
+                    var queryParams = {
+                        'relationterm' : params['term'],
+                        'csrfmiddlewaretoken' : '{{ csrf_token }}'
+                    }
+                    return queryParams;
+                },
+                dataType: 'json',
+                processResults: function (data) {
+                    console.log(data);
+                    return {
+                        results: $.map(data, function(datum) {
+                            return {id: datum.id, text: datum.name};
+                        })
+                    }
+                }
+            }
         });
-
-    });
 
     });
 
     {% if user.is_authenticated %}
     // Add concept
     $(function() {
-
-    $('#taskterm').click(function() {
-        $("#task_search_results").addClass("hidden")
-        $("#task_search_results").html("")
-        $("#task_search_results").attr("size","0")
-    });
-
-    $('#taskterm').keyup(function() {
-
-        $.ajax({
-            type: "POST",
-            url: "{% url 'search_task' %}",
-            data: {
-                'relationterm' : $('#taskterm').val(),
-                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
-            },
-            complete: function (data, error){
-                  $("#task_search_results").html("")
-                  var results = JSON.parse(data.responseText);
-                  $.each(results,function(i,e){
-                      $("#task_search_results").append('<option value="' + e.id +'">'+ e.name +'</option>');
-                  });
-
-                  $("#task_search_results").removeClass("hidden")
-                  $("#task_search_results").attr("size","5")
-
-            },
-            dataType: 'html',
+        $('#task_selection').select2({
+            width: '100%',
+            placeholder: 'Search for task',
+            minimumInputLength: 2,
+            tags: [],
+            ajax: {
+                type: "POST",
+                url: "{% url 'search_task' %}",
+                data: function (params) {
+                    console.log(params);
+                    var queryParams = {
+                        'relationterm' : params['term'],
+                        'csrfmiddlewaretoken' : '{{ csrf_token }}'
+                    }
+                    return queryParams;
+                },
+                dataType: 'json',
+                processResults: function (data) {
+                    console.log(data);
+                    return {
+                        results: $.map(data, function(datum) {
+                            return {id: datum.id, text: datum.name};
+                        })
+                    }
+                }
+            }
         });
-
-    });
     });
     {% endif %}
 

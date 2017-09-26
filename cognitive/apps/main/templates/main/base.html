@@ -22,8 +22,8 @@
     <link type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel='stylesheet'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Crimson+Text:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
-
     <link type="text/css" href="{% static "css/jquery-ui-1.8.14.custom.css"%}" rel="stylesheet" media="screen">
+    <link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
     {% endblock %}
     {% block head %}{% endblock %}
     {% block functions %}{% endblock %}
@@ -126,15 +126,45 @@
     <script src="{% static "js/jquery.tipsy.js"%}" type="text/javascript"></script>
     <script src="{% static "js/jquery-ui-1.8.14.custom.min.js"%}" type="text/javascript"></script>
     <script src="{% static "js/jquery.html5-placeholder-shim.js"%}" type="text/javascript"></script>
+    <script src="{% static "js/select2.min.js"%}" type="text/javascript"></script>
     <script>
     $(function() {
+        $('#searchterm').select2({
+            width: '287px',
+            placeholder: 'Search for term',
+            minimumInputLength: 2,
+            tags: [],
+            ajax: {
+                type: "POST",
+                url: "{% url 'search' %}",
+                data: function (params) {
+                    console.log(params);
+                    var queryParams = {
+                        'searchterm' : params['term'],
+                        'csrfmiddlewaretoken' : '{{ csrf_token }}'
+                    }
+                    return queryParams;
+                },
+                dataType: 'json',
+                processResults: function (data) {
+                    console.log(data);
+                    return {
+                        results: $.map(data, function(datum) {
+                            return {id: datum.id, text: datum.name, url: '/' + datum.label + '/id/' + datum.id};
+                        })
+                    }
+                }
+            }
+        });
+    /*
+    */
 
+    /*
     $('#searchterm').click(function() {
         $("#search_results").html("")
     });
 
     $('#searchterm').keyup(function() {
-
         $.ajax({
             type: "POST",
             url: "{% url 'search' %}",
@@ -163,8 +193,9 @@
             },
             dataType: 'html',
         });
-
     });
+    */
+
 
     });
 

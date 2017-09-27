@@ -23,7 +23,13 @@
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Crimson+Text:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
     <link type="text/css" href="{% static "css/jquery-ui-1.8.14.custom.css"%}" rel="stylesheet" media="screen">
-    <link type="text/css" href="{% static "css/select2.min.css"%}" rel="stylesheet" media="screen">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+        .searchLink {
+            display: block;
+        }
+    </style>
     {% endblock %}
     {% block head %}{% endblock %}
     {% block functions %}{% endblock %}
@@ -126,14 +132,24 @@
     <script src="{% static "js/jquery.tipsy.js"%}" type="text/javascript"></script>
     <script src="{% static "js/jquery-ui-1.8.14.custom.min.js"%}" type="text/javascript"></script>
     <script src="{% static "js/jquery.html5-placeholder-shim.js"%}" type="text/javascript"></script>
-    <script src="{% static "js/select2.min.js"%}" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
     <script>
+    function selectFormat(term) {
+        if (!term.id) {
+            return term.text;
+        }
+        return $('<a class="searchLink" href="/' + term.label + '/id/' + term.id +'">' + term.text + '</a>');
+    }
+
     $(function() {
         $('#searchterm').select2({
             width: '287px',
             placeholder: 'Search for term',
             minimumInputLength: 2,
             tags: [],
+            templateResult: selectFormat,
+            templateSelection: selectFormat,
+            escapeMarkup: function(x) {return x;},
             ajax: {
                 type: "POST",
                 url: "{% url 'search' %}",
@@ -150,53 +166,15 @@
                     console.log(data);
                     return {
                         results: $.map(data, function(datum) {
-                            return {id: datum.id, text: datum.name, url: '/' + datum.label + '/id/' + datum.id};
+                            return {id: datum.id, text: datum.name, label: datum.label};
                         })
                     }
                 }
             }
         });
-    /*
-    */
-
-    /*
-    $('#searchterm').click(function() {
-        $("#search_results").html("")
     });
-
-    $('#searchterm').keyup(function() {
-        $.ajax({
-            type: "POST",
-            url: "{% url 'search' %}",
-            data: {
-                'searchterm' : $('#searchterm').val(),
-                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
-            },
-            complete: function (data, error){
-                  $("#search_results").html("")
-                  var results = JSON.parse(data.responseText);
-                  $.each(results,function(i,e){
-                      $("#search_results").append('<li class="ui-menu-item" role="menuitem"><a href="/' + e.label + '/id/' + e.id + '" class="ui-corner-all uia" tabindex="-1">' + e.name +'</a></li>');
-                  });
-
-                  // Search should highlight on mouseover
-                  $(".ui-menu-item").hover(function(){
-                      $(this).attr("id","ui-active-menuitem")
-                      $("#ui-active-menuitem").addClass("ui-state-hover")
-                  })
-
-                  $(".ui-menu-item").mouseleave(function(){
-                      $("#ui-active-menuitem").removeClass("ui-state-hover")
-                      $(this).attr("id","")
-                  })
-
-            },
-            dataType: 'html',
-        });
-    });
-    */
-
-
+    $('#searchterm').on('select2:select', function(e) {
+        window.location.href = '/' + e.params.data.label + '/id/' + e.params.data.id;
     });
 
     </script>

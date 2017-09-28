@@ -42,15 +42,9 @@
     {% if user.is_authenticated %}
     <!-- Update definition -->
         <div id="update_definition" class="hidden">
-                <form method="POST" action="{% url 'update_concept' concept.id %}">
-                    <div class="modal-body">
-                        <textarea name="definition_text" rows="4" cols="50">{{ concept.definition_text }}</textarea>
-                    </div>
-                    {% csrf_token %}
-                    <button id="cancel_button" type="button" class="btn btn-primary">Cancel</button>
-                    <input type="submit" value="submit" class="btn btn-primary"></input>
-                </form>
+            {% crispy concept_form concept_form.helper %}
         </div>
+
     {% endif %}
 
 </div><!-- .assertion -->

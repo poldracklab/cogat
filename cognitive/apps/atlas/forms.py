@@ -4,14 +4,24 @@ from django.urls import reverse
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Reset, Submit
 
-from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery
+from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass
 
 class TaskForm(forms.Form):
     term_name = forms.CharField(required=True)
     definition_text = forms.CharField(required=True)
 
-class ConceptForm(TaskForm):
-    pass
+class ConceptForm(forms.Form):
+    name = forms.CharField(required=True)
+    definition_text = forms.CharField(required=True)
+    def __init__(self, concept_id, *args, **kwargs):
+        super(ConceptForm, self).__init__(*args, **kwargs)
+        concept_class = ConceptClass()
+        choices = [(x['id'], x['name']) for x in concept_class.all()]
+        self.fields['concept_class'] = forms.ChoiceField(choices=choices)
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('concept-cancel', 'Cancel', type="button"))
+        self.helper.form_action = reverse('update_concept', kwargs={'uid': concept_id,})
 
 class ContrastForm(forms.Form):
     name = forms.CharField(required=True)

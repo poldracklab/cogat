@@ -474,7 +474,8 @@ class Task(Node):
                      "RETURN con").format(concept['concept_id'], task_id)
             contrast = do_query(query, "null", "list")
             if contrast:
-                concept['contrast_ids'] = [x[0].properties['id'] for x in contrast]
+                concept['contrasts'] = [(x[0].properties['id'], x[0].properties['name'])
+                                        for x in contrast]
         return concepts
 
     def api_get_contrasts(self, task_id):

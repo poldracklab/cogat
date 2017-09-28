@@ -18,7 +18,8 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         TheoryForm, BatteryForm,
                                         ConceptTaskForm, ConceptContrastForm,
                                         DisorderDisorderForm, ExternalLinkForm,
-                                        BatteryBatteryForm, BatteryTaskForm)
+                                        BatteryBatteryForm, BatteryTaskForm,
+                                        ConceptForm)
 
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
@@ -234,7 +235,8 @@ def view_concept(request, uid):
         "assertions_no_cont": assertions_no_cont,
         "citations": citations,
         "citation_form": CitationForm(),
-        "concept_task_form": ConceptTaskForm()
+        "concept_task_form": ConceptTaskForm(),
+        "concept_form": ConceptForm(concept["id"], concept)
     }
 
     return render(request, 'atlas/view_concept.html', context)

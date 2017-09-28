@@ -413,7 +413,8 @@ class Concept(Node):
             "PARTOF": "concepts",
             "KINDOF": "concepts",
             "MEASUREDBY": "contrasts",
-            "HASCITATION": "citations"
+            "HASCITATION": "citations",
+            "CLASSIFIEDUNDER": "conceptclasses",
         }
         self.color = "#3C7263" # sea green
 
@@ -755,6 +756,13 @@ class ExternalLink(Node):
         super().__init__()
         self.name = "external_link"
         self.fields = ["uri"]
+
+class ConceptClass(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "concept_class"
+        self.fields = ["id", "name", "description", "display_order"]
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

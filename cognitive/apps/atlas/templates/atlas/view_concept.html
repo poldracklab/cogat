@@ -41,9 +41,12 @@
 
     {% if user.is_authenticated %}
     <!-- Update definition -->
-        <div id="update_definition" class="hidden">
+    <div id="update_definition" class="hidden">
+        <div id="block-atlas" class="block-full">
+            <h3><strong>Update Definition</strong></h3>
             {% crispy concept_form concept_form.helper %}
         </div>
+    </div>
 
     {% endif %}
 

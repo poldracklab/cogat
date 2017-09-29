@@ -56,6 +56,8 @@ counts = {
 }
 
 def rank_check(user):
+    ''' function called by function decorators to see if the user has
+        permissions to make changes. '''
     try:
         return int(user.rank) > 2
     except ValueError:
@@ -192,7 +194,8 @@ def tasks_by_letter(request, letter):
 
 # VIEWS FOR SINGLE NODES ##########################################################
 
-def view_concept(request, uid):
+def view_concept(request, uid, return_context=False):
+    ''' detail view for a give concept '''
     try:
         concept = Concept.get(uid)[0]
     except IndexError:
@@ -239,10 +242,14 @@ def view_concept(request, uid):
         "concept_form": ConceptForm(concept["id"], concept)
     }
 
+    if return_context == True:
+        return context
+
     return render(request, 'atlas/view_concept.html', context)
 
 
 def view_task(request, uid, return_context=False):
+    ''' Detail view for a given task '''
     try:
         task = Task.get(uid)[0]
     except IndexError:
@@ -496,30 +503,43 @@ def add_condition(request, task_id):
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def set_reviewed(request, uid, label):
+    ''' Concepts and tasks can be marked as reviewed by users to show they have
+        been vetted '''
     Node.update(uid, {'review_status': 'True'}, label=label)
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def set_unreviewed(request, uid, label):
+    ''' revoke reviewed status of concept or task. '''
     Node.update(uid, {'review_status': 'False'}, label=label)
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    
-@login_required
-@user_passes_test(rank_check, login_url='/403')
-def unset_reviewed(request, uid, label):
-    Node.update(uid, {'review_status': False}, label=label)
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def update_concept(request, uid):
-    if request.method == "POST":
-        definition = request.POST.get('definition_text', '')
-        updates = add_update("definition_text", definition)
-        Concept.update(uid, updates=updates)
-    return view_concept(request, uid)
+    ''' Take concept form, check for making new concept class relation, pass
+        rest of form fields to query update function. '''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+
+    concept_form = ConceptForm(uid, request.POST)
+
+    if concept_form.is_valid():
+        cleaned_data = concept_form.cleaned_data
+        con_class_id = cleaned_data.pop('concept_class')
+        for rel in Concept.get_relation(uid, "CLASSIFIEDUNDER", label="concept_class"):
+            Concept.unlink(uid, rel['id'], "CLASSIFIEDUNDER", "concept_class")
+        Concept.link(uid, con_class_id, "CLASSIFIEDUNDER", "concept_class")
+        Concept.update(uid, cleaned_data)
+        return view_concept(request, uid)
+    else:
+        context = view_concept(request, uid, return_context=True)
+        context['concept_form'] = concept_form
+        return render(request, 'atlas/view_concept.html', context)
+
+    return redirect('concept', uid)
+
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')

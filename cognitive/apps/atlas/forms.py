@@ -2,26 +2,43 @@ from django import forms
 from django.urls import reverse
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Reset, Submit
+from crispy_forms.layout import Div, Layout, Field, Reset, Submit
 
-from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass
+from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass, Concept
 
 class TaskForm(forms.Form):
     term_name = forms.CharField(required=True)
     definition_text = forms.CharField(required=True)
 
 class ConceptForm(forms.Form):
-    name = forms.CharField(required=True)
-    definition_text = forms.CharField(required=True)
+    name = forms.CharField(required=True, label="Term:")
+    definition_text = forms.CharField(required=True, widget=forms.Textarea(),
+                                      label="Your Definition:")
     def __init__(self, concept_id, *args, **kwargs):
         super(ConceptForm, self).__init__(*args, **kwargs)
         concept_class = ConceptClass()
-        choices = [(x['id'], x['name']) for x in concept_class.all()]
-        self.fields['concept_class'] = forms.ChoiceField(choices=choices)
+        choices = [(x['id'], "-yes- " + str(x['name'])) for x in concept_class.all()]
+        choices.insert(0, (None, "-no-"))
+        cc_label = "In your opinion, does this concept belong to a larger class of concepts?"
+        self.fields['concept_class'] = forms.ChoiceField(choices=choices, label=cc_label,
+                                                         required=False)
+        concept = Concept()
+        con_class = concept.get_relation(concept_id, "CLASSIFIEDUNDER",
+                                         label="concept_class")
+        if con_class:
+           self.fields['concept_class'].initial = con_class[0]['id']
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('concept-cancel', 'Cancel', type="button"))
         self.helper.form_action = reverse('update_concept', kwargs={'uid': concept_id,})
+        self.helper.layout = Layout(
+            Div(
+                Field('name'),
+                Field('definition_text'),
+                Field('concept_class'),
+                css_class="formline"
+            )
+        )
 
 class ContrastForm(forms.Form):
     name = forms.CharField(required=True)

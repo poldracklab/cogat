@@ -114,6 +114,25 @@ class Node(object):
                 return relation
         return None
 
+    def unlink(self, uid, endnode_id, relation_type, endnode_type=None):
+        ''' attempt to unlink the two nodes specified by the relation specified. '''
+
+        if endnode_type is None:
+            endnode_type = self.name
+
+        query = '''
+            MATCH (n1:{})-[r:{}]->(n2:{})
+            WHERE n1.id = '{}' and n2.id = '{}'
+            DELETE r
+        '''.format(self.name, relation_type, endnode_type, uid, endnode_id)
+
+        try:
+            self.graph.cypher.execute(query)
+            return None
+        except Exception as e:
+            return e
+
+
     def update(self, uid, updates, label=None):
         '''update will update a particular field of a node with a new entry
         :param uid: the unique id of the node

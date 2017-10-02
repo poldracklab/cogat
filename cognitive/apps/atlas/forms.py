@@ -14,19 +14,19 @@ class ConceptForm(forms.Form):
     name = forms.CharField(required=True, label="Term:")
     definition_text = forms.CharField(required=True, widget=forms.Textarea(),
                                       label="Your Definition:")
+    concept_class = ConceptClass()
+    choices = [(x['id'], "-yes- " + str(x['name'])) for x in concept_class.all()]
+    choices.insert(0, (None, "-no-"))
+    cc_label = "In your opinion, does this concept belong to a larger class of concepts?"
+    concept_class = forms.ChoiceField(choices=choices, label=cc_label, required=False)
     def __init__(self, concept_id, *args, **kwargs):
+        if not args[0].get('submit'):
+            concept = Concept()
+            con_class = concept.get_relation(concept_id, "CLASSIFIEDUNDER",
+                                             label="concept_class")
+            if con_class:
+                args[0]['concept_class'] = con_class[0]['id']
         super(ConceptForm, self).__init__(*args, **kwargs)
-        concept_class = ConceptClass()
-        choices = [(x['id'], "-yes- " + str(x['name'])) for x in concept_class.all()]
-        choices.insert(0, (None, "-no-"))
-        cc_label = "In your opinion, does this concept belong to a larger class of concepts?"
-        self.fields['concept_class'] = forms.ChoiceField(choices=choices, label=cc_label,
-                                                         required=False)
-        concept = Concept()
-        con_class = concept.get_relation(concept_id, "CLASSIFIEDUNDER",
-                                         label="concept_class")
-        if con_class:
-           self.fields['concept_class'].initial = con_class[0]['id']
         self.helper = FormHelper()
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('concept-cancel', 'Cancel', type="button"))

@@ -521,7 +521,7 @@ def update_concept(request, uid):
     ''' Take concept form, check for making new concept class relation, pass
         rest of form fields to query update function. '''
     if request.method != "POST":
-        return HttpResponseNotAllowed(['POST'])
+        return redirect('concept', uid)
 
     concept_form = ConceptForm(uid, request.POST)
 
@@ -532,14 +532,11 @@ def update_concept(request, uid):
             Concept.unlink(uid, rel['id'], "CLASSIFIEDUNDER", "concept_class")
         Concept.link(uid, con_class_id, "CLASSIFIEDUNDER", "concept_class")
         Concept.update(uid, cleaned_data)
-        return view_concept(request, uid)
+        return redirect('concept', uid)
     else:
         context = view_concept(request, uid, return_context=True)
         context['concept_form'] = concept_form
         return render(request, 'atlas/view_concept.html', context)
-
-    return redirect('concept', uid)
-
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')

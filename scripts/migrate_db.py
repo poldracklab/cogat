@@ -310,6 +310,18 @@ def import_collection_relations():
             # INBATTERY? PARTOF?
             make_relation(coll1, "PARTOF", coll2)
 
+def import_concept_class():
+    sql = "select id, concept_class, class_desc, display_order from type_concept"
+    cursor.execute(sql)
+    concept_classes = cursor.fetchall()
+    for concept_class in concept_classes:
+        props = {}
+        uid = concept_class[0]
+        name = concept_class[1]
+        props["description"] = concept_class[2]
+        props["display_order"] = concept_class[3]
+        make_node("concept_class", uid, name, props)
+
 if __name__ == '__main__':
     graph = Graph("http://graphdb:7474/db/data/")
     graph.delete_all()
@@ -323,5 +335,6 @@ if __name__ == '__main__':
     import_theory()
     import_theory_relations()
     import_collection_relations()
+    import_concept_class()
     cursor.close()
     conn.close()

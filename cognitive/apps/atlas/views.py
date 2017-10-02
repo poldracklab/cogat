@@ -25,7 +25,7 @@ from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
                                         Implementation, Indicator,
                                         ExternalDataset, Citation, ExternalLink,
-                                        Node, search)
+                                        Node, search, ConceptClass)
 from cognitive.apps.atlas.utils import clean_html, add_update
 from cognitive.settings import DOMAIN, graph
 
@@ -33,6 +33,7 @@ Assertion = Assertion()
 Battery = Battery()
 Citation = Citation()
 Concept = Concept()
+ConceptClass = ConceptClass()
 Condition = Condition()
 Contrast = Contrast()
 Disorder = Disorder()
@@ -119,6 +120,16 @@ def all_collections(request, return_context=False):
 
     return render(request, "atlas/all_collections.html", context)
 
+def all_concept_classes(request):
+    concept_classes = ConceptClass.all(order_by="name")
+    for cc in concept_classes:
+        concepts = ConceptClass.get_reverse_relation(cc['id'], 'CLASSIFIEDUNDER',
+                                                     'concept')
+        cc['concepts'] = concepts
+    context = {
+        'concept_classes': concept_classes
+    }
+    return render(request, "atlas/all_concept_classes.html", context)
 
 def disorder_populate(disorders):
     ''' recursive function that fills a dictionary with all disorders and their

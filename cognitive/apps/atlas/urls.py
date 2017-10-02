@@ -9,6 +9,8 @@ from . import api_views, views, graph
 urlpatterns = [
     # List views
     url(r'^concepts$', views.all_concepts, name="all_concepts"),
+    url(r'^concepts/categories/all$', views.all_concept_classes,
+        name="all_concept_classes"),
     url(r'^disorders$', views.all_disorders, name="all_disorders"),
     url(r'^batteries$', views.all_batteries, name="all_batteries"),
     url(r'^theories$', views.all_theories, name="all_theories"),

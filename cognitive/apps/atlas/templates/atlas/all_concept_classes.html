@@ -1,0 +1,33 @@
+{% extends "main/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% block head %}
+<style>
+.ui-autocomplete-loading { background: white url("/img/facebox/loading.gif") right center no-repeat; }
+.asholder {position:relative;}
+</style>
+{% endblock %}
+
+{% block branding %}
+    {% include 'atlas/branding.html'%}
+    {% block navigation %}
+        {% include "atlas/middle_navigation.html" %}
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+<h1 class="CATitle">Concept Categories<strong class="collection"></strong></h1>
+{% for con_class in concept_classes %}
+<div class="stringer">
+    {{ con_class.name }}
+</div>
+    {% for concept in con_class.concepts %}
+        {{ concept.name }}<br>
+    {% endfor %}
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+</script>
+{% endblock %}

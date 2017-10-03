@@ -9,9 +9,10 @@
 .concept-link {
     float: left;
     width: 33%;
-    
 }
 .concepts-container {
+    display: block;
+    overflow: auto;
     margin-bottom: 4em;
 }
 </style>
@@ -30,15 +31,17 @@
     <h3 class="ccc_under">Cassified under {{ con_class.name }}</h3>
     <p class="concept-count">({{ con_class.concepts|length }} Concepts)</p><br>
     <div class="concepts-container">
-        {% for concept in con_class.concepts %}
-            <div class="concept-link"><a class=concept href="/concept/id/{{concept.id}}">{{ concept.name }}</a></div>
-        {% endfor %}
-        </ul>
+    {% for concept in con_class.concepts %}
+        <div class="concept-link">
+            <a class="concept tooltip" title="{{concept.definition_text}}" href="/concept/id/{{concept.id}}">{{ concept.name }}</a>
+        </div>
+    {% endfor %}
     </div>
 {% endfor %}
 {% endblock %}
 
 {% block scripts %}
 <script type="text/javascript">
+$(".tooltip").tipsy({fade:false, gravity:"w", html:true});
 </script>
 {% endblock %}

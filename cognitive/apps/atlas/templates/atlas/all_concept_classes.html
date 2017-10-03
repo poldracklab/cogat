@@ -3,8 +3,17 @@
 {% load crispy_forms_tags %}
 {% block head %}
 <style>
-.ui-autocomplete-loading { background: white url("/img/facebox/loading.gif") right center no-repeat; }
-.asholder {position:relative;}
+.concept-count {
+    margin-left: 5px;
+}
+.concept-link {
+    float: left;
+    width: 33%;
+    
+}
+.concepts-container {
+    margin-bottom: 4em;
+}
 </style>
 {% endblock %}
 
@@ -16,14 +25,16 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="CATitle">Concept Categories<strong class="collection"></strong></h1>
+<h1 class="CATitle">Concept Categories</h1><br>
 {% for con_class in concept_classes %}
-<div class="stringer">
-    {{ con_class.name }}
-</div>
-    {% for concept in con_class.concepts %}
-        {{ concept.name }}<br>
-    {% endfor %}
+    <h3 class="ccc_under">Cassified under {{ con_class.name }}</h3>
+    <p class="concept-count">({{ con_class.concepts|length }} Concepts)</p><br>
+    <div class="concepts-container">
+        {% for concept in con_class.concepts %}
+            <div class="concept-link"><a class=concept href="/concept/id/{{concept.id}}">{{ concept.name }}</a></div>
+        {% endfor %}
+        </ul>
+    </div>
 {% endfor %}
 {% endblock %}
 

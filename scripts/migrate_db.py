@@ -322,6 +322,16 @@ def import_concept_class():
         props["display_order"] = concept_class[3]
         make_node("concept_class", uid, name, props)
 
+def import_concept_class_relations():
+    sql = "select id_term, id_concept_class from table_definition where id_concept_class is not NULL and id_concept_class <> '';"
+    cursor.execute(sql)
+    cc_rels = cursor.fetchall()
+    for cc_rel in cc_rels:
+        concept_class = find_node("concept_class", cc_rel[1])
+        concept = find_node("concept", cc_rel[0])
+        if concept_class and concept:
+            make_relation(concept, "CLASSIFIEDUNDER", concept_class)
+
 if __name__ == '__main__':
     graph = Graph("http://graphdb:7474/db/data/")
     graph.delete_all()
@@ -336,5 +346,6 @@ if __name__ == '__main__':
     import_theory_relations()
     import_collection_relations()
     import_concept_class()
+    import_concept_class_relations()
     cursor.close()
     conn.close()

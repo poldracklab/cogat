@@ -40,6 +40,17 @@ class ConceptForm(forms.Form):
             )
         )
 
+class ConceptClassForm(forms.Form):
+    name = forms.CharField(required=True, label="Category Name:)
+    description = forms.CharField(required=True, widget=forms.Textarea(),
+                                  label="Your Definition:")
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('cancel', 'Cancel', type="button"))
+        self.helper.form_action = reverse('add_concept_class')
+
 class ContrastForm(forms.Form):
     name = forms.CharField(required=True)
 

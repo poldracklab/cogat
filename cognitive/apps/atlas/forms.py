@@ -252,5 +252,15 @@ class ConceptClassForm(forms.Form):
         self.helper.add_input(Reset('concept-class-cancel', 'Cancel'))
         self.helper.form_action = reverse('add_concept_class')
 
+class DisambiguationForm(forms.Form):
+    term1_name = forms.CharField()
+    term1_name_ext = forms.CharField()
+    term1_definition = forms.CharField(required=True, widget=forms.Textarea(),
+                                      label="")
+    term2_name = forms.CharField()
+    term2_name_ext = forms.CharField()
+    term2_definition = forms.CharField(required=True, widget=forms.Textarea(),
+                                      label="")
+
 class AssertionForm(forms.Form):
    pass 

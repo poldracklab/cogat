@@ -197,7 +197,6 @@ class ConceptRelAPI(NodeAPI):
         return self.make_link(request, src_id, self.node_class, dest_id,
                               self.node_class, rel_type)
 
-
 # def all_batteries(request):
 # def all_theories(request):
 # def all_collections(request, return_context=False):
@@ -229,6 +228,7 @@ class DisorderTask(NodeAPI):
     def post(self, request, uid):
         disorder_id = request.POST.get('disorder_id', '')
         return self.make_link(request, uid, self.node_class, disorder_id, Disorder, 'ASSERTS')
+
 
 # def add_task_disorder(request, task_id):
 class TaskDisorderAPI(NodeAPI):
@@ -263,9 +263,6 @@ class ConceptContrastAPI(NodeAPI):
 class ConceptContrastTaskAPI(NodeAPI):
     pass
 # def concept_task_contrast_assertion(concept_id, task_id, contrast_id):
-
-
-
 
 # def add_task_implementation(request, task_id):
 class TaskImplementationAPI(NodeAPI):

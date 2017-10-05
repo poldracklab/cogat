@@ -23,7 +23,8 @@ def generate_uid(node_type):
         "external_dataset": "dst",
         "indicator": "ind",
         "citation": "cit",
-        "assertion": "ass"
+        "assertion": "ass",
+        "concept_class": "ctp"
     }
 
     # generate new node uid that doesn't exist

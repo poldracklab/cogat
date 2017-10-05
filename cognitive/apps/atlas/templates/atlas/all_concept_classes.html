@@ -27,6 +27,12 @@
 
 {% block content %}
 <h1 class="CATitle">Concept Categories</h1><br>
+{% if user.is_authenticated %}
+<a id="add-concept-class-button"><button>update definition</button></a>
+<div id="concept-class-form" class="hidden">
+    {% crispy concept_class_form concept_class_form.helper %}
+</div>
+{% endif %}
 {% for con_class in concept_classes %}
     <h3 class="ccc_under">Cassified under {{ con_class.name }}</h3>
     <p class="concept-count">({{ con_class.concepts|length }} Concepts)</p><br>
@@ -43,5 +49,14 @@
 {% block scripts %}
 <script type="text/javascript">
 $(".tooltip").tipsy({fade:false, gravity:"w", html:true});
+$(document).ready(function() {
+    $("#add-concept-class-button").click(function(){
+        $("#concept-class-form").removeClass('hidden');
+    })
+    $("#concept-class-cancel").click(function(){
+        $("#concept-class-form").addClass('hidden');
+    })
+});
+
 </script>
 {% endblock %}

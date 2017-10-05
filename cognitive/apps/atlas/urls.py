@@ -42,6 +42,7 @@ urlpatterns = [
     url(r'^theory/new/$', views.add_theory, name="add_theory"),
     url(r'^battery/new/$', views.add_battery, name="add_battery"),
     url(r'^terms/add/$', views.add_term, name="add_term"),
+    url(r'^concepts/categories/add$', views.add_concept_class, name="add_concept_class"),
     url(r'^concept/update/(?P<uid>[\w\+%_& ]+)/$', views.update_concept, name="update_concept"),
     url(r'^task/update/(?P<uid>[\w\+%_& ]+)/$', views.update_task, name="update_task"),
     url(r'^disorder/update/(?P<uid>[\w\+%_& ]+)/$', views.update_disorder, name="update_disorder"),

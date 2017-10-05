@@ -21,6 +21,8 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         BatteryBatteryForm, BatteryTaskForm,
                                         ConceptForm)
 
+import cognitive.apps.atlas.forms as forms
+
 from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Contrast, Battery, Theory, Condition,
                                         Implementation, Indicator,
@@ -120,14 +122,15 @@ def all_collections(request, return_context=False):
 
     return render(request, "atlas/all_collections.html", context)
 
-def all_concept_classes(request):
+def all_concept_classes(request, return_context=False):
     concept_classes = ConceptClass.all(order_by="name")
     for cc in concept_classes:
         concepts = ConceptClass.get_reverse_relation(cc['id'], 'CLASSIFIEDUNDER',
                                                      'concept')
         cc['concepts'] = concepts
     context = {
-        'concept_classes': concept_classes
+        'concept_classes': concept_classes,
+        'concept_class_form': forms.ConceptClassForm
     }
     return render(request, "atlas/all_concept_classes.html", context)
 
@@ -797,6 +800,26 @@ def add_task_disorder(request, task_id):
         context['task_disorder_form'] = task_disorder_form
         return render(request, 'atlas/view_task.html', context)
 
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def add_concept_class(request):
+    ''' Concept classes from the old database have name and description fields
+        they always match. We will continue to store the name as a description 
+        for the time being.
+    '''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    form = forms.ConceptClassForm(request.POST)
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        name = cleaned_data.pop('name')
+        ConceptClass.create(name, properties={'description': name},
+                            request=request)
+        return redirect('all_concept_classes')
+    else:
+        context = all_concept_categories(request, return_context=True)
+        context['concept_class_form'] = form
+        return render(request, 'atlas/concept_class.html', context)
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')

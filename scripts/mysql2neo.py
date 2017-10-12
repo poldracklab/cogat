@@ -234,6 +234,20 @@ for dis_assert in dis_asserts:
         )
         #print(str.encode(str(gret), 'utf-8'))
 
+sql = "select * from disorder_url"
+cursor.execute(sql)
+dis_urls = cursor.fetchall()
+
+for dis_url in dis_urls:
+    found = graph.find_one("disorder", property_key="id",
+                           property_value=disorder[2])
+
+    if found:
+        continue
+    gret = graph.create(
+        Node("external_link", id=dis_url[0], url=dis_url[2])
+    )
+
 '''
 sql = "select * from disorder_synonym"
 cursor.execute(sql)

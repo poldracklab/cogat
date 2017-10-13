@@ -24,7 +24,8 @@ def generate_uid(node_type):
         "indicator": "ind",
         "citation": "cit",
         "assertion": "ass",
-        "concept_class": "ctp"
+        "concept_class": "ctp",
+        "disambiguation": "disam"
     }
 
     # generate new node uid that doesn't exist

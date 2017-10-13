@@ -35,6 +35,8 @@ urlpatterns = [
     url(r'^concept/id/(?P<uid>[\w\+%_& ]+)/$', views.view_concept, name="concept"),
     url(r'^task/id/(?P<uid>[\w\+%_& ]+)/$', views.view_task, name="task"),
     url(r'^contrast/id/(?P<uid>[\w\+%_& ]+)/$', graph.contrast_gist, name="contrast"),
+    url(r'^disambiguation/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disambiguation,
+        name="view_disambiguation"),
 
     # Modify terms
     url(r'^terms/new/$', views.contribute_term, name="contribute_term"),
@@ -147,6 +149,11 @@ urlpatterns = [
         r'^battery/add/task/(?P<battery_id>[\w\+%_& ]+)/$',
         views.add_battery_task,
         name="add_battery_task"
+    ),
+    url(
+        r'^disambiguation/add/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
+        view.add_disambiguation,
+        name="add_disambiguation"
     ),
     url(r'^reviewed/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
         views.set_reviewed, name="set_reviewed"),

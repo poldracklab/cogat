@@ -152,7 +152,7 @@ urlpatterns = [
     ),
     url(
         r'^disambiguation/add/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
-        view.add_disambiguation,
+        views.add_disambiguation,
         name="add_disambiguation"
     ),
     url(r'^reviewed/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',

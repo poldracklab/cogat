@@ -10,7 +10,6 @@ from django.http import (Http404, HttpResponse, HttpResponseNotFound,
                          HttpResponseNotAllowed, HttpResponseRedirect)
 from django.shortcuts import redirect, render
 
-
 from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ExternalDatasetForm,
                                         ImplementationForm, IndicatorForm,
@@ -28,6 +27,9 @@ from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
                                         Implementation, Indicator,
                                         ExternalDataset, Citation, ExternalLink,
                                         Node, search, ConceptClass)
+
+import cognitive.apps.atlas.query as query
+
 from cognitive.apps.atlas.utils import clean_html, add_update
 from cognitive.settings import DOMAIN, graph
 
@@ -39,6 +41,7 @@ ConceptClass = ConceptClass()
 Condition = Condition()
 Contrast = Contrast()
 Disorder = Disorder()
+Disambiguation = query.Disambiguation()
 ExternalDataset = ExternalDataset()
 ExternalLink = ExternalLink()
 Implementation = Implementation()
@@ -817,9 +820,70 @@ def add_concept_class(request):
                             request=request)
         return redirect('all_concept_classes')
     else:
-        context = all_concept_categories(request, return_context=True)
+        context = all_concept_classes(request, return_context=True)
         context['concept_class_form'] = form
         return render(request, 'atlas/concept_class.html', context)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def add_disambiguation(request, label, uid):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+
+    form = forms.DisambiguationForm(request.POST)
+
+    if not form.is_valid():
+        return ...
+
+    cleaned_data = form.cleaned_data
+    node_class = node_class_lookup(label)
+    terms = node_class.get(uid, label=label)
+    if len(terms) > 1:
+        return ...
+    elif len(terms) < 1:
+        return ...
+    else:
+        orig_node = terms[0]
+        orig_id = orig_node.properties['id']
+    # copy orig term
+    new_node_name = "{} ({})".format(
+        cleaned_data['term2_name'],
+        cleaned_data['term2_ext']
+    )
+    new_node = node_class.create(new_node_name,
+                                 {"description": cleaned_data['term2_description']})
+    new_id = new_node.properties['id']
+
+    # update orig term name
+    new_node_name = "{} ({})".format(
+        cleaned_data['term1_name'],
+        cleaned_data['term1_ext']
+    )
+
+    node_class.update(
+        orig_node.properties['id'],
+        {"name": new_node_name, "description": cleaned_data['term1_description']}
+    )
+    # new diam node
+    disam = Disambiguation.create(cleaned_data['term1_name'])
+    disam_id = disam.properties['id']
+
+    # link terms to disambig
+    Disambiguation.link(disam_id, new_id, "DISAMBIGUATES", label)
+    Disambiguation.link(disam_id, orig_id, "DISAMBIGUATES", label)
+    return redirect("view_disambiguation", uid=disam_id)
+
+def view_disambiguation(request, uid):
+    try:
+        disam = Disambiguation.get(uid)[0]
+    except IndexError:
+        raise Http404("Concept does not exist")
+
+    context = {
+        "disam": disam,
+    }
+    return render(request, 'atlas/view_disambiguation.html', context)
+
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')

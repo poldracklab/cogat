@@ -261,6 +261,3 @@ class DisambiguationForm(forms.Form):
     term2_name_ext = forms.CharField()
     term2_definition = forms.CharField(required=True, widget=forms.Textarea(),
                                       label="")
-
-class AssertionForm(forms.Form):
-   pass 

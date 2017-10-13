@@ -16,15 +16,19 @@
     <meta name="keywords" content="cognitive atlas, cognitive science, neurobiology, taxonomy, semantic web, collaborative tools, neuroscience" />
     <meta name="description" content="The Cognitive Atlas is a collaborative knowledge building project that aims to develop a knowledge base (or ontology) that characterizes the state of current thought in cognitive science.">
     <link type="text/css" href="{# static "css/bootstrap-theme.min.css"#}" rel="stylesheet" media="screen">
-    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">-->
-    <link type="text/css" href="{% static "css/cogat_app.css"%}" rel="stylesheet" media="screen">
-    <link type="text/css" href="{% static "css/print.css"%}" rel="stylesheet" media="print">
+    <!--
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    -->
     <link type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel='stylesheet'>
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Crimson+Text:400,400italic,700,700italic' rel='stylesheet' type='text/css'>
     <link type="text/css" href="{% static "css/jquery-ui-1.8.14.custom.css"%}" rel="stylesheet" media="screen">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css" rel="stylesheet" />
 
+    <link type="text/css" href="{% static "css/cogat_app.css"%}" rel="stylesheet" media="screen">
+    <!--
+    <link type="text/css" href="{% static "css/print.css"%}" rel="stylesheet" media="print">
+    -->
     <style>
         .searchLink {
             display: block;
@@ -37,11 +41,9 @@
 </head>
 {% block body %}
 <body id="main" class="{{ active }}">
-
     <div class="fullwrap" id="utility">
     <div class="container">
             <div id="userbar">
-    
                 {% if user.is_authenticated %}
                     {{ user }}
                     <a href="{% url 'logout' %}"><input type="button" class="tsbutton" value="Logout" title="Logout" aria-label="Logout"></a><small> to end your session </small>

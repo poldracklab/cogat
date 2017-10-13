@@ -28,18 +28,20 @@ class Node(object):
         return self.graph.cypher.execute(query).one
 
 
-    def create(self, name, properties=None, property_key="id", request=None):
+    def create(self, name, properties=None, property_key="id", request=None, unique_name=False, label=None):
         '''create will create a new node of nodetype with unique id uid, and properties
         :param uid: the unique identifier
         :param name: the name of the node
         :param properties: a dictionary of properties with {field:value} for the node
         '''
+        if label is None:
+            label = self.name
         node = None
         # creation also checks for existence of uid
-        uid = generate_uid(self.name)
-        if self.graph.find_one(self.name, property_key=property_key, property_value=uid) is None:
+        uid = generate_uid(label)
+        if self.graph.find_one(label, property_key=property_key, property_value=uid) is None:
             timestamp = self.graph.cypher.execute("RETURN timestamp()").one
-            node = NeoNode(self.name, name=name, id=uid, creation_time=timestamp,
+            node = NeoNode(label, name=name, id=uid, creation_time=timestamp,
                            last_updated=timestamp)
             create_ret = self.graph.create(node)
             if properties != None:
@@ -298,7 +300,7 @@ class Node(object):
         fields = fields + ["_id"]
         return do_query(query, fields=fields, output_format=format)
 
-    def get(self, uid, field="id", get_relations=True, relations=None):
+    def get(self, uid, field="id", get_relations=True, relations=None, label=None):
         ''' get returns one or more nodes based on a field of interest. If
             get_relations is true, will also return the default relations for
             the node, or those defined in the relations variable
@@ -307,7 +309,9 @@ class Node(object):
         :param get_relations: default True, return relationships
         :paiam relations: list of relations to include. If not defined, will return all
         '''
-        parents = self.graph.find(self.name, field, uid)
+        if label is None:
+            label = self.name
+        parents = self.graph.find(label, field, uid)
         nodes = []
         for parent in parents:
             new_node = {}
@@ -582,8 +586,6 @@ class Task(Node):
 
         return do_query(query, fields=fields)
 
-
-
 class Disorder(Node):
 
     def __init__(self):
@@ -782,6 +784,16 @@ class ConceptClass(Node):
         super().__init__()
         self.name = "concept_class"
         self.fields = ["id", "name", "description", "display_order"]
+
+class Disambiguation(Node):
+    def __init__(self):
+        super().__init__()
+        self.name = "disambiguation"
+        self.fields = ["id", "name", "description"]
+        self.relations = {
+            "DISAMBIGUATES": "concepts",
+            "DISAMBIGUATES": "tasks",
+        }
 
 # General search function across nodes
 def search(searchstring, fields=["name", "id"], node_type=None):

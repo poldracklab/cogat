@@ -14,10 +14,6 @@ Docker Compose: [https://docs.docker.com/compose/install/](https://docs.docker.c
 
 Docker file for neo4j taken from [https://github.com/kbastani/docker-neo4j](https://github.com/kbastani/docker-neo4j) and modified to do some data imports.
 
-## Setting up social authentication
-
-To set up the social auth backend, after starting the server you will need to [follow these instructions](https://django-allauth.readthedocs.io/en/latest/installation.html#post-installation).
-
 ## Create default user
 
 Add `MAKE_DEFAULT_USER=True` to the `.env` file in the root of the project. The user specificed in scripts/create_superuser.py will then be created on startup of the uwsgi container.

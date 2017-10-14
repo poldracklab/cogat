@@ -335,7 +335,6 @@ def view_battery(request, uid, return_context=False):
         "constituent_batteries": constituent_batteries,
         "task_form": BatteryTaskForm(),
         "battery_form": BatteryBatteryForm()
-
     }
     if return_context:
         return context
@@ -581,7 +580,7 @@ def update_theory(request, uid):
 def update_battery(request, uid):
     if request.method == "POST":
         description = request.POST.get('description', '')
-        updates = add_update("description", description)
+        updates = add_update("collection_description", description)
         Battery.update(uid, updates=updates)
     return view_battery(request, uid)
 

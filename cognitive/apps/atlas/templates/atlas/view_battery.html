@@ -32,7 +32,7 @@
     <div class="defn">
         {{ battery.collection_description | safe }}<br><br>
     {% if user.is_authenticated %}
-    <a id="update-button"><button>update description</button></a>
+    <a id="update-definition-button"><button>update description</button></a>
     {% endif %}
     </div><!-- .defn -->
 
@@ -41,7 +41,7 @@
 <div id="id-updateform" class="hidden">
     <form method="POST" action="{% url 'update_battery' battery.id %}">
         <div class="modal-body">
-            <textarea name="description" rows="4" cols="50">{{ battery.description }}</textarea>
+            <textarea name="description" rows="4" cols="50">{{ battery.collection_description }}</textarea>
         </div>
         {% csrf_token %}
         <button id="id-reset-update-button" type="button" class="btn btn-primary">Cancel</button>
@@ -161,7 +161,7 @@ $(document).ready(function() {
     $("#update-definition-button").click(function(){
         $("#id-updateform").removeClass('hidden');
     })
-    $("#reset-id-update-cancel").click(function(){
+    $("#id-reset-update-button").click(function(){
         $("#id-updateform").addClass('hidden');
     })
     $("#add-indicator-button").click(function(){

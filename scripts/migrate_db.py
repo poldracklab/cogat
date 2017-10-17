@@ -332,6 +332,21 @@ def import_concept_class_relations():
         if concept_class and concept:
             make_relation(concept, "CLASSIFIEDUNDER", concept_class)
 
+def import_forks():
+    sql = "select id, parent_term_text, child_id_term from match_forked"
+    cursor.execute(sql)
+    forks = cursor.fetchall()
+    for fork in forks:
+        term = find_node("concept", fork[2])
+        if term is None:
+            continue
+
+        disam = find_node("disambiguation", fork[0])
+        if disam is None:
+            disam = make_node("disambiguation", fork[0], fork[1])
+
+        make_relation(disam, "DISAMBIGUATES", term)
+        
 if __name__ == '__main__':
     graph = Graph("http://graphdb:7474/db/data/")
     graph.delete_all()
@@ -347,5 +362,6 @@ if __name__ == '__main__':
     import_collection_relations()
     import_concept_class()
     import_concept_class_relations()
+    import_forks()
     cursor.close()
     conn.close()

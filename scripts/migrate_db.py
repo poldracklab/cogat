@@ -333,17 +333,18 @@ def import_concept_class_relations():
             make_relation(concept, "CLASSIFIEDUNDER", concept_class)
 
 def import_forks():
-    sql = "select id, parent_term_text, child_id_term from match_forked"
+    sql = "select id, parent_id_term, parent_term_text, child_id_term from match_forked"
     cursor.execute(sql)
     forks = cursor.fetchall()
     for fork in forks:
-        term = find_node("concept", fork[2])
+        term = find_node("concept", fork[3])
         if term is None:
             continue
 
-        disam = find_node("disambiguation", fork[0])
+        disam = find_node("disambiguation", fork[1])
         if disam is None:
-            disam = make_node("disambiguation", fork[0], fork[1])
+            disam = make_node("disambiguation", fork[1], fork[2])
+        print(disam)
 
         make_relation(disam, "DISAMBIGUATES", term)
         

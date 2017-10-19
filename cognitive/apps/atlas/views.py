@@ -284,7 +284,8 @@ def view_task(request, uid, return_context=False):
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
     citations = Task.get_relation(task["id"], "HASCITATION")
-    disorders = Task.get_relation(task["id"], "ASSERTS", label="disorder")
+    disorders = Task.api_get_disorders(task["id"])
+
 
     context = {
         "task": task,
@@ -390,29 +391,27 @@ def view_disorder(request, uid, return_context=False):
         disorder = Disorder.get(uid)[0]
     except IndexError:
         raise Http404("Disorder does not exist")
-    assertions = []
-    tasks = Disorder.get_reverse_relation(uid, "ASSERTS")
     contrasts = Disorder.get_reverse_relation(uid, "HASDIFFERENCE")
     parent_disorders = Disorder.get_relation(uid, "ISA")
     child_disorders = Disorder.get_reverse_relation(uid, "ISA")
     external_links = Disorder.get_relation(uid, "HASLINK")
 
-    assertions = []
-    for task in tasks:
-        task_contrasts = Task.get_relation(task["id"], "HASCONTRAST")
-        return_contrasts = []
-        for task_contrast in task_contrasts:
-            for contrast in contrasts:
-                if task_contrast["id"] == contrast["id"]:
-                    return_contrasts.append(task_contrast)
-        assertions.append((task, return_contrasts))
+    tasks = {}
+    for contrast in contrasts:
+        contrast_task = Contrast.get_reverse_relation(contrast["id"], "HASCONTRAST", "task")
+        print(contrast_task)
+        try:
+            tasks[contrast_task[0]]
+        except KeyError:
+            tasks[contrast_task[0]] = []
+        tasks[contrast_task[0]].append(contrast)
 
     citations = Disorder.get_relation(disorder["id"], "HASCITATION")
     context = {
         "disorder":disorder,
         "citations": citations,
         "citation_form": CitationForm(),
-        "assertions": assertions,
+        "assertions": tasks,
         "disorder_form": DisorderDisorderForm(),
         "parent_disorders": parent_disorders,
         "child_disorders": child_disorders,

@@ -276,8 +276,6 @@ def view_task(request, uid, return_context=False):
     task["definition_text"] = clean_html(task.get("definition_text", "No definition provided"))
     contrasts = Task.api_get_contrasts(task["id"])
 
-    concept_lookup = dict()
-
     conditions = Task.get_conditions(task["id"])
 
     implementations = Task.get_relation(task["id"], "HASIMPLEMENTATION")
@@ -286,10 +284,19 @@ def view_task(request, uid, return_context=False):
     citations = Task.get_relation(task["id"], "HASCITATION")
     disorders = Task.api_get_disorders(task["id"])
 
+    concepts = {}
+    for contrast in contrasts:
+        contrast_concept = Contrast.get_reverse_relation(contrast["id"], "MEASUREDBY", "concept")
+        try:
+            concepts[contrast_concept[0]]
+        except KeyError:
+            concepts[contrast_concept[0]] = []
+        concepts[contrast_concept[0]].append(contrast)
+
 
     context = {
         "task": task,
-        "concepts": concept_lookup,
+        "concepts": concepts,
         "contrasts": contrasts,
         "conditions": conditions,
         "implementations": implementations,
@@ -399,7 +406,6 @@ def view_disorder(request, uid, return_context=False):
     tasks = {}
     for contrast in contrasts:
         contrast_task = Contrast.get_reverse_relation(contrast["id"], "HASCONTRAST", "task")
-        print(contrast_task)
         try:
             tasks[contrast_task[0]]
         except KeyError:

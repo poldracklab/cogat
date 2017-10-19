@@ -7,6 +7,10 @@ from cognitive.apps.atlas.utils import (color_by_relation, generate_uid,
                                         do_query, get_relation_nodetype)
 import cognitive.settings as settings
 
+class InvalidNodeOperation(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 class Node(object):
 
     def __init__(self, name="generic", fields=None, graph=settings.graph):
@@ -106,8 +110,7 @@ class Node(object):
         if startnode != None and endnode != None:
             # If the relation_type is allowed for the node type
             if relation_type not in self.relations:
-                # throw something
-                return None
+                raise InvalidNodeOperation("Relationship type not used by this node type")
             if self.graph.match_one(start_node=startnode,
                                     rel_type=relation_type, end_node=endnode) is None:
                 relation = Relationship(startnode, relation_type, endnode)
@@ -532,6 +535,7 @@ class Task(Node):
             # ret_disorders.append({**node.properties, 'id_disorder': node.properties.id})
             ret_disorders.append({
                 'id': rel.properties['id'],
+                'name': rel.properties['name'],
                 'id_user': node.properties['id_user'],
                 'id_disorder': node['properties.id'],
                 'id_task': task_id,

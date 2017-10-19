@@ -1,5 +1,7 @@
 ''' This file contains classes that are used to query and update the neo4j
     graph.'''
+import re
+
 from py2neo import Path, Node as NeoNode, Relationship
 import pandas
 
@@ -813,10 +815,12 @@ def search(searchstring, fields=["name", "id"], node_type=None):
         node_type = ""
     else:
         node_type = ":{}".format(node_type.lower())
+    
+    searchstring = re.escape(searchstring)
 
     query = '''MATCH (n%s)
                WHERE str(n.name) =~ '(?i).*%s.*'
-               RETURN %s, labels(n);''' %(node_type, searchstring, return_fields)
+               RETURN %s, labels(n);''' %(node_type, searchstring.__repr__()[1:-1], return_fields)
     fields = fields + ["_id", "label"]
     result = do_query(query, fields=fields, drop_duplicates=False, output_format="df")
     result["label"] = [r[0] for r in result['label']]

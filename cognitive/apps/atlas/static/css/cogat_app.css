@@ -1564,6 +1564,7 @@ a.microslider {
 }
 
 input[type=submit],
+input[type=reset],
 input.obutt,
 a.action_buttonish,
 a.slide_def,
@@ -1608,6 +1609,7 @@ a.microslider {
 }
 
 input[type=submit]:hover,
+input[type=reset]:hover,
 a.action_buttonish:hover,
 a.slide_def:hover,
 input[type=button].tsbutton:hover,

@@ -2,7 +2,7 @@ from django import forms
 from django.urls import reverse
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, HTML, Layout, Field, Reset, Submit
+from crispy_forms.layout import Div, HTML, Layout, Field, Reset, Submit, Button
 
 from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass, Concept
 
@@ -28,15 +28,15 @@ class ConceptForm(forms.Form):
                 args[0]['concept_class'] = con_class[0]['id']
         super(ConceptForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.add_input(Submit('submit', 'Submit'))
-        self.helper.add_input(Reset('concept-cancel', 'Cancel', type="button"))
         self.helper.form_action = reverse('update_concept', kwargs={'uid': concept_id,})
         self.helper.layout = Layout(
             Div(
                 Field('name'),
                 Field('definition_text'),
                 Field('concept_class'),
-                css_class="formline"
+                Submit('submit', 'Submit'),
+                Reset('concept-cancel', 'Cancel', type="reset"),
+                css_class="formline",
             )
         )
 

@@ -1480,7 +1480,6 @@ input[type=password] {
     border: 1px solid #ddd;
     border-bottom: 1px dashed #ccc;
     font-size: inherit;
-    width: auto;
     color: #555;
     padding: 4px;
     background: white;

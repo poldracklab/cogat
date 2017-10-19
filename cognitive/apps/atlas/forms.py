@@ -2,7 +2,7 @@ from django import forms
 from django.urls import reverse
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout, Field, Reset, Submit
+from crispy_forms.layout import Div, HTML, Layout, Field, Reset, Submit
 
 from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass, Concept
 
@@ -253,11 +253,46 @@ class ConceptClassForm(forms.Form):
         self.helper.form_action = reverse('add_concept_class')
 
 class DisambiguationForm(forms.Form):
-    term1_name = forms.CharField()
-    term1_name_ext = forms.CharField()
+    term1_name = forms.CharField(label="")
+    term1_name_ext = forms.CharField(label="")
     term1_definition = forms.CharField(required=True, widget=forms.Textarea(),
-                                      label="")
-    term2_name = forms.CharField()
-    term2_name_ext = forms.CharField()
+                                      label="Original Term Description")
+    term2_name = forms.CharField(label="")
+    term2_name_ext = forms.CharField(label="")
     term2_definition = forms.CharField(required=True, widget=forms.Textarea(),
-                                      label="")
+                                      label="New Term Description")
+
+    def __init__(self, label, uid, term=None, *args, **kwargs):
+        super(DisambiguationForm, self).__init__(*args, **kwargs)
+        if term is not None:
+            self.initial = {
+                'term1_name': term['name'],
+                'term2_name': term['name'],
+                'term1_definition': term['definition_text']
+            }
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('disambiguate_cancel_button', 'Cancel'))
+        self.helper.form_action = reverse('add_disambiguation',
+                                          kwargs={'label': label, 'uid': uid})
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Field('term1_name', css_class='disam-name'),
+                    HTML('('),
+                    Field('term1_name_ext', css_class='disam-name-ext'),
+                    HTML(')'),
+                    css_class='name-ext-inputs'
+                ),
+                Field('term1_definition', css_class='disam-def'),
+                Div(
+                    Field('term2_name', css_class='disam-name'),
+                    HTML('('),
+                    Field('term2_name_ext', css_class='disam-name-ext'),
+                    HTML(')'),
+                    css_class='name-ext-inputs'
+                ),
+                Field('term2_definition', css_class='disam-def'),
+                css_class='popstar',
+        )
+    )

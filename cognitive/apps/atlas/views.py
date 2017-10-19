@@ -302,6 +302,7 @@ def view_task(request, uid, return_context=False):
         "citation_form": CitationForm(),
         "disorders": disorders,
         "task_disorder_form": TaskDisorderForm(uid),
+        "disambiguation_form": forms.DisambiguationForm("task", uid, task),
     }
 
     if return_context is True:
@@ -806,7 +807,7 @@ def add_task_disorder(request, task_id):
 @user_passes_test(rank_check, login_url='/403')
 def add_concept_class(request):
     ''' Concept classes from the old database have name and description fields
-        they always match. We will continue to store the name as a description 
+        they always match. We will continue to store the name as a description
         for the time being.
     '''
     if request.method != "POST":
@@ -829,41 +830,49 @@ def add_disambiguation(request, label, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
 
-    form = forms.DisambiguationForm(request.POST)
+    form = forms.DisambiguationForm(label, uid, data=request.POST, term=None)
 
     if not form.is_valid():
-        return ...
+        if label == "task":
+            context = view_task(request, uid, return_context=True)
+            context['disambiguation_form'] = form
+            return render(request, 'atlas/view_task.html', context)
+        elif label == "concept":
+            context = view_concept(request, uid, return_context=True)
+            context['disambiguation_form'] = form
+            return render(request, 'atlas/view_concept.html', context)
+        else:
+            return HttpResponseNotFound(content='label in request has no disambiguation response')
 
     cleaned_data = form.cleaned_data
-    node_class = node_class_lookup(label)
-    terms = node_class.get(uid, label=label)
-    if len(terms) > 1:
-        return ...
-    elif len(terms) < 1:
-        return ...
+    terms = Node.get(uid, label=label)
+    if len(terms) < 1:
+        raise Exception("to short")
+        return HttpResponseNotFound('Uid {} with label {} not found'.format(uid, label))
     else:
         orig_node = terms[0]
-        orig_id = orig_node.properties['id']
+        orig_id = orig_node['id']
     # copy orig term
     new_node_name = "{} ({})".format(
         cleaned_data['term2_name'],
-        cleaned_data['term2_ext']
+        cleaned_data['term2_name_ext']
     )
-    new_node = node_class.create(new_node_name,
-                                 {"description": cleaned_data['term2_description']})
+    new_node = Node.create(new_node_name,
+                           {"definition_text": cleaned_data['term2_definition']}, label=label)
     new_id = new_node.properties['id']
 
     # update orig term name
     new_node_name = "{} ({})".format(
         cleaned_data['term1_name'],
-        cleaned_data['term1_ext']
+        cleaned_data['term1_name_ext']
     )
 
-    node_class.update(
-        orig_node.properties['id'],
-        {"name": new_node_name, "description": cleaned_data['term1_description']}
+    Node.update(
+        orig_node['id'],
+        {"name": new_node_name, "definition_text": cleaned_data['term1_definition']},
+        label=label
     )
-    # new diam node
+    # new disambiguation node
     disam = Disambiguation.create(cleaned_data['term1_name'])
     disam_id = disam.properties['id']
 
@@ -881,7 +890,23 @@ def view_disambiguation(request, uid):
     context = {
         "disam": disam,
     }
-    return render(request, 'atlas/view_disambiguation.html', context)
+
+    try:
+        rel_id = disam['relations']['DISAMBIGUATES'][0]['id']
+    except (KeyError, IndexError) as e:
+        # disambiguation isn't disambiguating anything.
+        pass
+
+    rel_node = Task.get(rel_id)
+
+    # now disambiguation only happens on tasks and concepts. If the id is found
+    # to be a task we use the task version of the disam template, otherwise the
+    # the concept version is used. Future might be best to have query node agnostic
+    # search to derive the proper label.
+    if len(rel_node) > 0:
+        return render(request, 'atlas/view_task_disambiguation.html', context)
+    else:
+        return render(request, 'atlas/view_concept_disambiguation.html', context)
 
 
 @login_required

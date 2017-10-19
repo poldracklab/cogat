@@ -37,7 +37,7 @@
         </h1>
     </div><!-- .CATerm.concept -->
 
-    <div class="defn">{{ concept.definition_text }}</div><br>
+    <div class="defn">{{ concept.definition_text|safe }}</div><br>
 
     {% if user.is_authenticated %}
     <!-- Update definition -->

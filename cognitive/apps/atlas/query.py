@@ -49,7 +49,7 @@ class Node(object):
                     node.properties[property_name] = properties[property_name]
                 node.push()
             if request and (len(create_ret) > 0):
-                self.log_create(request, uid)
+                self.log_create(request, uid, label)
         return node
 
     def neo_user_lookup(self, request):
@@ -65,10 +65,13 @@ class Node(object):
             user.create(user_id, properties={'username': request.user.username,
                                              'id': user_id})
 
-    def log_create(self, request, node_id):
+    def log_create(self, request, node_id, label=None):
         ''' associate user node who created a given node to the newly created
             node
         '''
+        if label is None:
+            label = self.name
+
         self.neo_user_lookup(request)
         user = User()
         user.link(request.user.id, node_id, "CREATED", endnode_type=self.name)

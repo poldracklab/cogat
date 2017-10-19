@@ -1,0 +1,56 @@
+{% extends "main/base.html" %}
+{% load crispy_forms_tags %}
+{% load staticfiles %}
+{% block head %}
+<style>
+.disam-li {
+    list-style: numeral;
+}
+</style>
+{% endblock %}
+{% load staticfiles %}
+
+{% block branding %}
+{% include 'atlas/branding.html'%}
+{% block navigation %}
+{% include "atlas/middle_navigation.html" %}
+{% endblock %}
+
+{% endblock %}
+
+{% block content %}
+<div id="block-definition" class="block-full">	
+    <div class="assertion">
+        <div class="CATerm task">
+            <h1 class="termtext">
+                <a class="color-concept" href=""><em>{{ disam.name }}</em></a>
+                <span class="typebutton concept_type"><a href="{% url 'all_concepts' %}">CONCEPT</a></span>
+            </h1>
+        </div>
+        <div class="defn">
+            <small>
+            This disambiguation page lists concepts associated with the same term.<br>
+            If an external link led you here, you may wish to change the link to point directly to the intended sense.
+            </small>
+        </div>
+    </div>
+    <div class="defn">
+        <ol>
+        {% for term in disam.relations.DISAMBIGUATES %}
+            <li class="disam-li">
+                <a class="CATerm color-concept" href="{% url 'concept' term.id %}"><em>{{ term.name }}</em></a> <br>
+                <div class="inset def">
+                {{ term.definition_text|safe }}
+                </div>
+            </li>
+        {% endfor %}
+        </ol>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+$(document).ready(function() {
+});
+</script>
+{% endblock %}

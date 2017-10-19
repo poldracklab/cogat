@@ -36,6 +36,28 @@
 .review-container {
     float: right;
 }
+
+.name-ext-inputs {
+    display: flex;
+    flex-direction: row;
+    margin-top: 5px;
+}
+
+.disam-def {
+    margin: 5px;
+    width: 52em;
+    height: 8em;
+}
+
+.disam-name {
+    width: 30em;
+    margin-right: 5px;
+}
+
+.disam-name-ext {
+    width: 20em;
+}
+    
 </style>
 {% endblock %}
 {% load staticfiles %}
@@ -81,6 +103,7 @@
             {{ task.definition_text | safe }}<br><br>
         {% if user.is_authenticated %}
         <a id="update_definition_button"><button>update definition</button></a>
+        <a id="disambiguate_button"><button>disambiguate term</button></a>
         {% endif %}
         <a target="_blank" href="{% url 'task_graph' task.id %}"><button>graph</button></a>
         </div><!-- .defn -->
@@ -97,6 +120,10 @@
             <input type="submit" value="submit" class="btn btn-primary"></input>
         </form>
     </div>
+    <div id="disambiguate" class="hidden">
+        {% crispy disambiguation_form disambiguation_form.helper %}
+    </div>
+
     {% endif %}
 
 
@@ -449,6 +476,14 @@ $(document).ready(function() {
         $("#update_definition").addClass('hidden');
     })
 
+    // Show/hide form to disambiguate form
+    $("#disambiguate_button").click(function(){
+        $("#disambiguate").removeClass('hidden');
+    })
+    $("#disambiguate_cancel_button").click(function(){
+        $("#disambiguate").addClass('hidden');
+    })
+
     // Show form to add concept
     $("#add_concept_button").click(function(){
         $("#concept_search_box").removeClass('hidden');
@@ -456,7 +491,6 @@ $(document).ready(function() {
     $("#concept_cancel_button").click(function(){
         $("#concept_search_box").addClass('hidden');
     })
-
 
     // Show input to add condition
     $("#add_condition").click(function(){

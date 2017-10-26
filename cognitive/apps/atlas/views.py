@@ -49,6 +49,7 @@ Indicator = Indicator()
 Node = Node()
 Task = Task()
 Theory = Theory()
+Trait = query.Trait()
 
 # Needed on all pages
 counts = {
@@ -161,12 +162,17 @@ def all_disorders(request, return_context=False):
     top_level_disorders = [x['dis'] for x in dis_records]
     top_level_disorders.sort(key=lambda x: str.lower(x.properties['name']))
     disorders = disorder_populate(top_level_disorders)
+    traits = Trait.all(order_by="name")
+    #behaviours = Behaviour.all(order_by="name")
 
     context = {
         'appname': "The Cognitive Atlas",
         'active': "disorders",
         'disorder_form': disorder_form,
         'disorders': disorders,
+        'phenotype_form': forms.PhenotypeForm(),
+        'traits': traits,
+        #'behaviours': behaviours
     }
 
     if return_context:
@@ -259,7 +265,7 @@ def view_concept(request, uid, return_context=False):
         "concept_form": ConceptForm(concept["id"], concept)
     }
 
-    if return_context == True:
+    if return_context is True:
         return context
 
     return render(request, 'atlas/view_concept.html', context)
@@ -429,6 +435,38 @@ def view_disorder(request, uid, return_context=False):
         return context
     return render(request, 'atlas/view_disorder.html', context)
 
+def view_trait(request, uid, return_context=False):
+    try:
+        trait = Trait.get(uid)[0]
+    except IndexError:
+        raise Http404("Trait does not exist")
+    contrasts = Trait.get_relation(uid, "MEASUREDBY")
+    external_links = Trait.get_relation(uid, "HASLINK")
+    citations = Trait.get_relation(uid, "HASCITATION")
+
+    tasks = {}
+    for contrast in contrasts:
+        contrast_task = Contrast.get_reverse_relation(contrast["id"], "HASCONTRAST", "task")
+        try:
+            tasks[contrast_task[0]]
+        except KeyError:
+            tasks[contrast_task[0]] = []
+        tasks[contrast_task[0]].append(contrast)
+
+    context = {
+        "trait": trait,
+        "citations": citations,
+        "citation_form": CitationForm(),
+        "assertions": tasks,
+        "trait_form": forms.TraitForm(trait['id'], trait=trait),
+        "external_links": external_links,
+        "external_link_form": ExternalLinkForm(),
+    }
+
+    if return_context:
+        return context
+    return render(request, 'atlas/view_trait.html', context)
+
 
 # ADD NEW TERMS ###################################################################
 
@@ -461,6 +499,30 @@ def contribute_term(request):
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
+def add_phenotype(request):
+    ''' contribute_disorder will return the detail page for the new disorder '''
+    if request.method == "POST":
+        form = forms.PhenotypeForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            properties = {"definition": cleaned_data['definition']}
+            new_pheno = Node.create(cleaned_data["name"], properties,
+                                    request=request, label=cleaned_data['type'])
+            if new_pheno is None:
+                messages.error(request, "Was unable to create {}".format(cleaned_data['type']))
+                return all_disorders(request)
+        else:
+            # if form is not valid, regenerate context and use validated form
+            context = all_disorders(request, return_context=True)
+            context['phenotype_form'] = form
+            return render(request, "atlas/all_disorders.html", context)
+    if label == 'disorder':
+        return view_disorder(request, new_pheno.properties["id"])
+    if label == 'trait':
+        return view_trait(request, new_pheno.properties["id"])
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
 def contribute_disorder(request):
     ''' contribute_disorder will return the detail page for the new disorder '''
     if request.method == "POST":
@@ -479,7 +541,6 @@ def contribute_disorder(request):
             return render(request, "atlas/all_disorders.html", context)
     # redirect back to task/id?
     return view_disorder(request, new_dis.properties["id"])
-
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -559,6 +620,22 @@ def update_concept(request, uid):
         context = view_concept(request, uid, return_context=True)
         context['concept_form'] = concept_form
         return render(request, 'atlas/view_concept.html', context)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def update_trait(request, uid):
+    if request.method != "POST":
+        return redirect('concept', uid)
+    try:
+        trait = Trait.get(uid)[0]
+    except IndexError:
+        raise Http404("Trait does not exist")
+    form = forms.TraitForm(uid, request.POST)
+    if form.is_valid:
+        cleaned_data = form.cleaned_data
+        Trait.update(uid, updates={'name': cleaned_data['name'], 'definition': cleaned_data['definition']})
+    else:
+        return
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -659,6 +736,33 @@ def add_concept_task(request, concept_id):
         task_selection = request.POST.get('task_selection', '')
         Task.link(task_selection, concept_id, relation_type, endnode_type="concept")
     return view_concept(request, concept_id)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def link_disam(request, label, uid):
+    ''' link_disam_task will create a link between an existing disambiguation 
+        page and an existing task.
+    :param uid: the unique id of the disambiguation
+    '''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    relation_type = "DISAMBIGUATES"
+    selection = request.POST.get('selection', '')
+    Disambiguation.link(uid, selection, relation_type, endnode_type=label)
+    return redirect('view_disambiguation', uid=uid)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def unlink_disam(request, label, uid, tid):
+    ''' link_disam_task will create a link between an existing disambiguation 
+        page and an existing task.
+    :param uid: the unique id of the disambiguation
+    '''
+    relation_type = "DISAMBIGUATES"
+    unlink_ret = Disambiguation.unlink(uid, tid, relation_type, endnode_type=label)
+    if unlink_ret is not None:
+        messages.error(request, "Was unable to unlink node, received error {}".format(unlink_ret))
+    return redirect('view_disambiguation', uid=uid)
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -1046,6 +1150,16 @@ def add_battery_task(request, battery_id):
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
+def add_trait_contrast(request, uid):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    relation_type = "MEASUREDBY" #task --asserts-> disorder
+    contrast_selection = request.POST.get('task_selection', '')
+    Trait.link(uid, contrast_selection, relation_type, endnode_type="contrast")
+    return redirect('view_trait', uid)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
 def add_theory_assertion(request, theory_id):
     ''' from theory detail view we can add assertions to the theory that we
         are looking at. '''
@@ -1120,7 +1234,6 @@ def search_by_type(request, node_type):
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
 
-
 def search_concept(request):
     ''' Used by ajax in the templates when adding concepts to a task '''
     return search_by_type(request, "concept")
@@ -1128,3 +1241,7 @@ def search_concept(request):
 def search_task(request):
     ''' Used by ajax in the templates when adding concepts to a task '''
     return search_by_type(request, "task")
+
+def search_contrast(request):
+    ''' Used by ajax in the templates when adding concepts to a task '''
+    return search_by_type(request, "contrast")

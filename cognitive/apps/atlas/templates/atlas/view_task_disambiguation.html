@@ -26,6 +26,7 @@
                 <a class="color-task" href=""><em>{{ disam.name }}</em></a>
                 <span class="typebutton task_type"><a href="{% url 'all_tasks' %}">TASK</a></span>
             </h1>
+
         </div>
         <div class="defn">
             <small>
@@ -33,6 +34,20 @@
             If an external link led you here, you may wish to change the link to point directly to the intended sense.
             </small>
         </div>
+        {% if user.is_authenticated %}
+        <button style="float:right;margin-top:10px" id="add_link_button">ADD TASK</button>		
+
+        <!-- add task box -->
+        <form method="POST" action="{% url 'link_disam' 'task' disam.id %}">
+            <div id="link_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
+                <select name="selection" id="selection">
+                {% csrf_token %}
+                <button id="link_cancel_button" type="button" class="btn btn-primary">Cancel</button>
+                <input type="submit" value="submit" class="btn btn-primary"></input>    
+            </form>
+        </div>
+        {% endif %}
+
     </div>
     <div class="defn">
         <ol>
@@ -42,6 +57,9 @@
                 <div class="inset def">
                 {{ term.definition_text|safe }}
                 </div>
+                {% if user.is_authenticated %}
+                <a class"unlink" href="{% url 'unlink_disam' 'task' disam.id term.id %}">Remove from disambiguation</a>
+                {% endif %}
             </li>
         {% endfor %}
         </ol>
@@ -51,6 +69,49 @@
 {% block scripts %}
 <script type="text/javascript">
 $(document).ready(function() {
+    {% if user.is_authenticated %}
+
+    $("#add_link_button").click(function(){
+        $("#link_search_box").removeClass('hidden');
+    })
+    $("#link_cancel_button").click(function(){
+        $("#link_search_box").addClass('hidden');
+    })
+
+
+    // Add concept
+    $(function() {
+        $('#selection').select2({
+            width: '100%',
+            placeholder: 'Search for task',
+            minimumInputLength: 2,
+            tags: [],
+            ajax: {
+                type: "POST",
+                url: "{% url 'search_task' %}",
+                data: function (params) {
+                    console.log(params);
+                    var queryParams = {
+                        'relationterm' : params['term'],
+                        'csrfmiddlewaretoken' : '{{ csrf_token }}'
+                    }
+                    return queryParams;
+                },
+                dataType: 'json',
+                processResults: function (data) {
+                    console.log(data);
+                    return {
+                        results: $.map(data, function(datum) {
+                            return {id: datum.id, text: datum.name};
+                        })
+                    }
+                }
+            }
+        });
+    });
+    {% endif %}
+
+
 });
 </script>
 {% endblock %}

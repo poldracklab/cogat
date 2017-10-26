@@ -610,6 +610,35 @@ class Disorder(Node):
             "HASLINK": "external_links"
         }
 
+class Trait(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "trait"
+        self.fields = ["id", "name", "definition",
+                       "event_stamp", "id_user"]
+        self.color = "#337AB7" # neurovault blue
+        self.relations = {
+            "HASCITATION": "citations",
+            "HASLINK": "external_links",
+            "MEASUREDBY": "contrasts"
+        }
+
+class Behavior(Node):
+
+    def __init__(self):
+        super().__init__()
+        self.name = "behavior"
+        self.fields = ["id", "name", "definition",
+                       "event_stamp", "id_user"]
+        self.color = "#337AB7" # neurovault blue
+        self.relations = {
+            "HASCITATION": "citations",
+            "HASLINK": "external_links",
+            "MEASUREDBY": "contrasts"
+        }
+
+
 class Condition(Node):
 
     def __init__(self):

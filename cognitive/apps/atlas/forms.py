@@ -296,3 +296,34 @@ class DisambiguationForm(forms.Form):
                 css_class='popstar',
         )
     )
+
+class PhenotypeForm(forms.Form):
+
+    name = forms.CharField(required=True, label="Phenotype Name:")
+    definition = forms.CharField(required=True, widget=forms.Textarea(),
+                                 label="Description:")
+    choices = (("disorder", "Disorder"), ("trait", "Trait"), ("behaviour", "Behaviour"))
+    type = forms.ChoiceField(choices=choices, label="Phenotype classification", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('phenotype-cancel-button', 'Cancel'))
+        self.helper.form_action = reverse('add_phenotype')
+
+class TraitForm(forms.Form):
+    name = forms.CharField(required=True, label="Phenotype Name:")
+    definition = forms.CharField(required=True, widget=forms.Textarea(),
+                                 label="Description:")
+    def __init__(self, uid, trait=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if trait is not None:
+            self.initial = {
+                'name': trait['name'],
+                'definition': trait['definition']
+            }
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('trait_cancel_button', 'Cancel'))
+        self.helper.form_action = reverse('update_trait', kwargs={'uid': uid})

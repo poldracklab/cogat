@@ -1,0 +1,236 @@
+{% extends "main/base.html" %}
+{% block head %}
+<style>
+.ui-autocomplete-loading { background: white url("/images/facebox/loading.gif") right center no-repeat; }
+.asholder {position:relative;}
+</style>
+{% endblock %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+
+{% block branding %}
+{% include 'atlas/branding.html'%}
+{% block navigation %}
+{% include "atlas/middle_navigation.html" %}
+{% endblock %}
+
+{% endblock %}
+
+{% block content %}
+    <h1 rel='{{ trait.id }}'>{{ trait.name }}<span class="typebutton disorder_type"><a href="{% url 'all_disorders' %}">TRAIT</a></span></h1>
+    <div class='defn'>{{ trait.definition }}</div>
+    <div id="unterbutton_slide_def">
+        <div class="defn">  
+            <div class="unterbutton_left" id="ub_left">    
+                <a href="#" class="slide_def" id="openpane">+ Edit Trait Details</a>  
+            </div>
+        </div><!-- .defn -->
+    </div><!-- #unterbutton_slide_def -->
+    
+    <!--Edit trait details-->
+    <div id="editpane" class="hidden">
+        {% crispy trait_form  trait_form.helper %}
+        <br><br>
+    </div><br>
+
+<div id="block-holder" class="block-full"><div id="block-measurements" class="block-half">  
+    <h2><strong>Contrasts</strong> associated with <em class="dictionary">{{ trait.name }}</em> and their <strong>Tasks</strong></h2>
+
+    {% if user.is_authenticated %}
+    <button style="float:right;margin-top:10px" id="add_contrast_button">ADD Contrast</button>		
+
+    <!-- add task box -->
+    <form method="POST" action="{% url 'add_trait_contrast' trait.id %}">
+        <div id="task_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
+            <div id="searchformwrap">
+                <div class="ui-widget">
+                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="taskterm" size="20" name="taskterm" aria-label="search for contrast" title="Search for contrast" placeholder="search for contrasts" />
+                </div>
+            </div>
+            <div>
+                <select name="task_selection" id="task_search_results" style="width:400px" class="hidden"></select>
+            </div>
+            {% csrf_token %}
+            <button id="contrast_cancel_button" type="button" class="btn btn-primary">Cancel</button>
+            <input type="submit" value="submit" class="btn btn-primary"></input>    
+        </form>
+    </div>
+    {% endif %}
+
+
+
+    <div class="panes">
+        <div class="pane">
+            <div class="discdiv">
+                <table width='100%'>
+                    <tr>
+                       <td width='50%' valign='top'><b>Task</b></td>
+                       <td width='50%' valign='top'><b>Contrast Measure</b></td>
+                    </tr>
+                </table>
+                {% for task, contrasts in assertions.items %}
+                <table id="table_{{ task.id }}" cellpadding="0" cellspacing="0" width="100%">
+                    <tr>
+                        <td colspan="3"><div class="dotholder"><hr class="dotty"></div></td>
+                    </tr>
+                    <tr>
+                       <td width='50%' valign='top'><b><a href="{% url 'task' task.id %}" class="task">{{ task.name }}</a></b></td>
+                        {% for contrast in contrasts %}
+                           <td width='50%' valign='top'>{{ contrast.name }}</td>
+                        {% empty %}
+                           <td width='50%' valign='top'></td>
+                        {% endfor %}
+                    </tr>
+                </table>
+                {% endfor %}
+
+</div></div></div></div><!-- #block-measurements.block-half -->
+
+<div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
+    {% if user.is_authenticated %}
+    <button style="float:right;margin-top:10px" id="add-link-button">ADD EXTERNAL LINK</button>
+    {% endif %}
+    <div class="pane">
+        <div class="discdiv"><b>EXTERNAL LINKS</b> for <a href="javascript:void(0)" class="task">{{ trait.name }}</a><br />
+            <form class="hidden" action="{# url 'add_trait_external_link' trait.id 3}" method="post" id='link-form'>
+                {% csrf_token %}
+                {% crispy external_link_form external_link_form.helper %}
+            </form>
+            {% for link in external_links %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{{ link.uri }}">{{ link.uri }}</a>
+                    </div>
+                </div>
+            {% empty %}
+                <span class="noassoc">No implementations have been added.</span><br>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- CITATIONS -->
+<div id="block-biblio" class="block-bits block-back container">
+    <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
+    {% for citation in citations %}
+        <div id="{{ citation.id }}">
+            <span class="citation">
+                <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>
+            </span>
+            <br>
+            <em>{{ citation.citation_authors }}</em>
+            <br>
+            {{ citation.citation_pubname }}
+            <br>
+            {{ citation.citation_pubdate }}
+            <br>
+            <div class="dotholder">
+                <hr class="dotty">
+            </div>
+        </div>
+    {% empty %}
+    {% endfor %}
+    {% if user.is_authenticated %}
+        <button style="margin-top:10px;margin-bottom:10px" id="add-citation-button">ADD CITATION</button>
+        <div class="hidden" id='citation-form'>
+        <form action="{# url 'add_trait_citation' trait.id #}" method="post">
+            {% csrf_token %}
+            {% crispy citation_form citation_form.helper %}
+        </form>
+        </div>
+    {% endif %}
+</div>
+
+
+      <div class="clear_all">
+  </div>
+</div><br> 
+
+
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+$(document).ready(function() {
+    $(function() {
+       $(".tooltip").tipsy({fade:false, gravity:"w", html:true});
+       $("#masker").fadeOut("fast");
+       $("#openpane").click(function(){
+           $("#editpane").removeClass("hidden");
+       })
+
+       $("#closepane").click(function(){
+           $("#editpane").addClass("hidden");
+       })
+       // Show form to add task 
+       $("#add_contrast_button").click(function(){
+           $("#task_search_box").removeClass('hidden');
+       })
+       $("#contrast_cancel_button").click(function(){
+           $("#task_search_box").addClass('hidden');
+       })
+
+       $("#add-disorder-button").click(function(){
+           $("#disorder-form").removeClass('hidden');
+       })
+       $("#reset-id-disorder-disorder-cancel").click(function(){
+           $("#disorder-form").addClass('hidden');
+       })
+
+       $("#add-citation-button").click(function(){
+           $("#citation-form").removeClass('hidden');
+       })
+       $("#reset-id-citation-cancel").click(function(){
+           $("#citation-form").addClass('hidden');
+       })
+
+       $("#add-link-button").click(function(){
+           $("#link-form").removeClass('hidden');
+       })
+       $("#reset-id-link-cancel").click(function(){
+           $("#link-form").addClass('hidden');
+       })
+
+
+    });
+    {% if user.is_authenticated %}
+    // Add concept
+    $(function() {
+
+    $('#taskterm').click(function() {
+        $("#task_search_results").addClass("hidden")
+        $("#task_search_results").html("")
+        $("#task_search_results").attr("size","0")
+    });
+
+    $('#taskterm').keyup(function() {
+
+        $.ajax({
+            type: "POST",
+            url: "{% url 'search_contrast' %}",
+            data: {
+                'relationterm' : $('#taskterm').val(),
+                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
+            },
+            complete: function (data, error){
+                  $("#task_search_results").html("")
+                  var results = JSON.parse(data.responseText);
+                  $.each(results,function(i,e){
+                      $("#task_search_results").append('<option value="' + e.id +'">'+ e.name +'</option>');
+                  });
+
+                  $("#task_search_results").removeClass("hidden")
+                  $("#task_search_results").attr("size","5")
+
+            },
+            dataType: 'html',
+        });
+
+    });
+    });
+    {% endif %}
+
+
+
+});
+</script>
+{% endblock %}

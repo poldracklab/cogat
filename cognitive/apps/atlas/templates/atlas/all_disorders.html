@@ -30,10 +30,14 @@
         </div>
         <div id="contribution_block" class="container hidden">
             <span class="sectionmed">Contribute New Disorder</span><br /><br />
+            {% comment %}
             <form method="post" id="dform" action="{% url 'contribute_disorder'%}">
                 {% csrf_token %}
                 {% crispy disorder_form disorder_form.helper %}
-            </form><br><br><br><br>
+            </form>
+            {% endcomment %}
+            {% crispy phenotype_form phenotype_form.helper %}
+            <br><br><br><br>
         </div>
         {% endif %}
         <div class="container" id="pagecontent">
@@ -42,6 +46,13 @@
         <br>
         <ul id="disorder-list">
             {% include "atlas/_list_disorders.html" %}
+        </ul>
+    
+        <h1 class="CATitle disorder">Browse <strong class="disorder">Traits</strong></h1><br>
+        <ul id="disorder-list">
+        {% for trait in traits %}
+            <li><a href="{% url 'view_trait' trait.id %}">{{ trait.name }}</a></li>
+        {% endfor %}
         </ul>
 	<br><br><br><br><br><br>
 	<p><small>Data on Disorders has been provided by the <a href="http://disease-ontology.org/" target="_blank">Disease Ontology (DO) database</a>,
@@ -70,7 +81,7 @@ $(document).ready(function() {
     $("#add_disorder_button").click(function(){
         $("#contribution_block").removeClass('hidden');
     })
-    $("#reset-id-disorder-cancel").click(function(){
+    $("#reset-id-phenotype-cancel").click(function(){
         $("#contribution_block").addClass('hidden');
     })
 

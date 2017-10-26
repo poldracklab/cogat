@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^search$', views.search_all, name="search"),
     url(r'^concepts/search$', views.search_concept, name="search_concept"),
     url(r'^tasks/search$', views.search_task, name="search_task"),
+    url(r'^contrasts/search$', views.search_contrast, name="search_contrast"),
 
     # View by letter
     url(r'^concepts/(?P<letter>[a-z]|[A-Z]{1})/$', views.concepts_by_letter,
@@ -30,6 +31,7 @@ urlpatterns = [
 
     # Detail View
     url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="disorder"),
+    url(r'^trait/id/(?P<uid>[\w\+%_& ]+)/$', views.view_trait, name="view_trait"),
     url(r'^battery/id/(?P<uid>[\w\+%_& ]+)/$', views.view_battery, name="battery"),
     url(r'^theory/id/(?P<uid>[\w\+%_& ]+)/$', views.view_theory, name="theory"),
     url(r'^concept/id/(?P<uid>[\w\+%_& ]+)/$', views.view_concept, name="concept"),
@@ -41,6 +43,7 @@ urlpatterns = [
     # Modify terms
     url(r'^terms/new/$', views.contribute_term, name="contribute_term"),
     url(r'^disorder/new/$', views.contribute_disorder, name="contribute_disorder"),
+    url(r'^phenotype/new/$', views.add_phenotype, name="add_phenotype"),
     url(r'^theory/new/$', views.add_theory, name="add_theory"),
     url(r'^battery/new/$', views.add_battery, name="add_battery"),
     url(r'^terms/add/$', views.add_term, name="add_term"),
@@ -48,6 +51,7 @@ urlpatterns = [
     url(r'^concept/update/(?P<uid>[\w\+%_& ]+)/$', views.update_concept, name="update_concept"),
     url(r'^task/update/(?P<uid>[\w\+%_& ]+)/$', views.update_task, name="update_task"),
     url(r'^disorder/update/(?P<uid>[\w\+%_& ]+)/$', views.update_disorder, name="update_disorder"),
+    url(r'^trait/update/(?P<uid>[\w\+%_& ]+)/$', views.update_trait, name="update_trait"),
     url(r'^theory/update/(?P<uid>[\w\+%_& ]+)/$', views.update_theory, name="update_theory"),
     url(r'^battery/update/(?P<uid>[\w\+%_& ]+)/$', views.update_battery, name="update_battery"),
     url(r'^concept/assert/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_relation,
@@ -151,10 +155,26 @@ urlpatterns = [
         name="add_battery_task"
     ),
     url(
+        r'^trait/add/contrast/(?P<uid>[\w\+%_& ]+)/$',
+        views.add_trait_contrast,
+        name="add_trait_contrast"
+    ),
+    url(
         r'^disambiguation/add/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
         views.add_disambiguation,
         name="add_disambiguation"
     ),
+    url(
+        r'^disambiguation/link/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
+        views.link_disam,
+        name="link_disam"
+    ),
+    url(
+        r'^disambiguation/unlink/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/(?P<tid>[\w\+%_& ]+)$',
+        views.unlink_disam,
+        name="unlink_disam"
+    ),
+    
     url(r'^reviewed/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
         views.set_reviewed, name="set_reviewed"),
     url(r'^unreviewed/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',

@@ -44,11 +44,8 @@
         <div id="task_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
             <div id="searchformwrap">
                 <div class="ui-widget">
-                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="taskterm" size="20" name="taskterm" aria-label="search for contrast" title="Search for contrast" placeholder="search for contrasts" />
+                <select id="contrast-selection" name="contrast-selection"></select>
                 </div>
-            </div>
-            <div>
-                <select name="task_selection" id="task_search_results" style="width:400px" class="hidden"></select>
             </div>
             {% csrf_token %}
             <button id="contrast_cancel_button" type="button" class="btn btn-primary">Cancel</button>
@@ -158,13 +155,11 @@ $(document).ready(function() {
            $("#editpane").removeClass("hidden");
        })
 
-       $("#closepane").click(function(){
-           $("#editpane").addClass("hidden");
-       })
        // Show form to add task 
        $("#add_contrast_button").click(function(){
            $("#task_search_box").removeClass('hidden');
        })
+
        $("#contrast_cancel_button").click(function(){
            $("#task_search_box").addClass('hidden');
        })
@@ -190,43 +185,43 @@ $(document).ready(function() {
            $("#link-form").addClass('hidden');
        })
 
+        $("#reset-id-trait_cancel_button").click(function(){
+            $("#editpane").addClass('hidden');
+        })
 
     });
     {% if user.is_authenticated %}
     // Add concept
-    $(function() {
 
-    $('#taskterm').click(function() {
-        $("#task_search_results").addClass("hidden")
-        $("#task_search_results").html("")
-        $("#task_search_results").attr("size","0")
-    });
-
-    $('#taskterm').keyup(function() {
-
-        $.ajax({
+    $('#contrast-selection').select2({
+        width: '100%',
+        placeholder: 'Search for contrast',
+        minimumInputLength: 2,
+        tags: [],
+        escapeMarkup: function(x) {return x;},
+        ajax: {
             type: "POST",
             url: "{% url 'search_contrast' %}",
-            data: {
-                'relationterm' : $('#taskterm').val(),
-                'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
+            data: function (params) {
+                console.log(params);
+                var queryParams = {
+                    'relationterm' : params['term'],
+                    'csrfmiddlewaretoken' : '{{ csrf_token }}'
+                }
+                return queryParams;
             },
-            complete: function (data, error){
-                  $("#task_search_results").html("")
-                  var results = JSON.parse(data.responseText);
-                  $.each(results,function(i,e){
-                      $("#task_search_results").append('<option value="' + e.id +'">'+ e.name +'</option>');
-                  });
-
-                  $("#task_search_results").removeClass("hidden")
-                  $("#task_search_results").attr("size","5")
-
-            },
-            dataType: 'html',
-        });
-
+            dataType: 'json',
+            processResults: function (data) {
+                console.log(data);
+                return {
+                    results: $.map(data, function(datum) {
+                        return {id: datum.cid, text: datum.tname + ' - ' + datum.cname};
+                    })
+                }
+            }
+        }
     });
-    });
+
     {% endif %}
 
 

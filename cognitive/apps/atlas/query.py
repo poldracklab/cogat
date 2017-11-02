@@ -853,7 +853,8 @@ def search(searchstring, fields=["name", "id"], node_type=None):
 
     query = '''MATCH (n%s)
                WHERE str(n.name) =~ '(?i).*%s.*'
-               RETURN %s, labels(n);''' %(node_type, searchstring.__repr__()[1:-1], return_fields)
+               RETURN %s, labels(n)
+               ORDER BY n.name;''' %(node_type, searchstring.__repr__()[1:-1], return_fields)
     fields = fields + ["_id", "label"]
     result = do_query(query, fields=fields, drop_duplicates=False, output_format="df")
     result["label"] = [r[0] for r in result['label']]
@@ -866,6 +867,7 @@ def search_contrast(searchstring):
     query = '''match (t:task)-[:HASCONTRAST]->(c:contrast) 
                where str(c.name) =~ '(?i).*{0}.*' or str(t.name) =~ '(?i).*{0}.*'
                return t.id, t.name, c.id, c.name
+               order by t.name
             '''.format(searchstring.__repr__()[1:-1])
 
     result = do_query(query, fields=['tid', 'tname', 'cid', 'cname'], drop_duplicates=True, output_format="df")

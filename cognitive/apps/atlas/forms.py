@@ -302,7 +302,7 @@ class PhenotypeForm(forms.Form):
     name = forms.CharField(required=True, label="Phenotype Name:")
     definition = forms.CharField(required=True, widget=forms.Textarea(),
                                  label="Description:")
-    choices = (("disorder", "Disorder"), ("trait", "Trait"), ("behaviour", "Behaviour"))
+    choices = (("disorder", "Disorder"), ("trait", "Trait"), ("behavior", "Behavior"))
     type = forms.ChoiceField(choices=choices, label="Phenotype classification", required=False)
 
     def __init__(self, *args, **kwargs):
@@ -327,3 +327,19 @@ class TraitForm(forms.Form):
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('trait_cancel_button', 'Cancel'))
         self.helper.form_action = reverse('update_trait', kwargs={'uid': uid})
+
+class BehaviorForm(forms.Form):
+    name = forms.CharField(required=True, label="Phenotype Name:")
+    definition = forms.CharField(required=True, widget=forms.Textarea(),
+                                 label="Description:")
+    def __init__(self, uid, behavior=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if behavior is not None:
+            self.initial = {
+                'name': behavior['name'],
+                'definition': behavior['definition']
+            }
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('behavior_cancel_button', 'Cancel'))
+        self.helper.form_action = reverse('update_behavior', kwargs={'uid': uid})

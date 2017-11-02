@@ -22,45 +22,29 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
 
 import cognitive.apps.atlas.forms as forms
 
-from cognitive.apps.atlas.query import (Assertion, Concept, Task, Disorder,
-                                        Contrast, Battery, Theory, Condition,
-                                        Implementation, Indicator,
-                                        ExternalDataset, Citation, ExternalLink,
-                                        Node, search, ConceptClass)
-
 import cognitive.apps.atlas.query as query
 
 from cognitive.apps.atlas.utils import clean_html, add_update
 from cognitive.settings import DOMAIN, graph
 
-Assertion = Assertion()
-Battery = Battery()
-Citation = Citation()
-Concept = Concept()
-ConceptClass = ConceptClass()
-Condition = Condition()
-Contrast = Contrast()
-Disorder = Disorder()
+Assertion = query.Assertion()
+Battery = query.Battery()
+Behavior = query.Behavior()
+Citation = query.Citation()
+Concept = query.Concept()
+ConceptClass = query.ConceptClass()
+Condition = query.Condition()
+Contrast = query.Contrast()
+Disorder = query.Disorder()
 Disambiguation = query.Disambiguation()
-ExternalDataset = ExternalDataset()
-ExternalLink = ExternalLink()
-Implementation = Implementation()
-Indicator = Indicator()
-Node = Node()
-Task = Task()
-Theory = Theory()
+ExternalDataset = query.ExternalDataset()
+ExternalLink = query.ExternalLink()
+Implementation = query.Implementation()
+Indicator = query.Indicator()
+Node = query.Node()
+Task = query.Task()
+Theory = query.Theory()
 Trait = query.Trait()
-
-# Needed on all pages
-counts = {
-    "disorders": Disorder.count(),
-    "tasks": Task.count(),
-    "contrasts": Contrast.count(),
-    "concepts": Concept.count(),
-    "theories": Theory.count(),
-    "batteries": Battery.count(),
-    "collections": (Battery.count() + Theory.count()),
-}
 
 def rank_check(user):
     ''' function called by function decorators to see if the user has
@@ -156,14 +140,17 @@ def all_disorders(request, return_context=False):
     '''all_disorders returns page with list of all disorders'''
     disorder_form = DisorderForm
 
+    '''
     dis_records = graph.cypher.execute(
         "match (dis:disorder) where not (dis:disorder)-[:ISA]->() return dis order by dis.name"
     )
     top_level_disorders = [x['dis'] for x in dis_records]
     top_level_disorders.sort(key=lambda x: str.lower(x.properties['name']))
     disorders = disorder_populate(top_level_disorders)
+    '''
+    disorders = Disorder.all(order_by="name")
     traits = Trait.all(order_by="name")
-    #behaviours = Behaviour.all(order_by="name")
+    behaviors = Behavior.all(order_by="name")
 
     context = {
         'appname': "The Cognitive Atlas",
@@ -172,7 +159,7 @@ def all_disorders(request, return_context=False):
         'disorders': disorders,
         'phenotype_form': forms.PhenotypeForm(),
         'traits': traits,
-        #'behaviours': behaviours
+        'behaviors': behaviors
     }
 
     if return_context:
@@ -235,29 +222,24 @@ def view_concept(request, uid, return_context=False):
     tasks = Concept.get_reverse_relation(concept["id"], "ASSERTS")
     contrasts = Concept.get_relation(concept["id"], "MEASUREDBY")
 
-    assertions = []
     assertions_no_cont = []
-    for task in tasks:
-        task_contrasts = Task.get_relation(task["id"], "HASCONTRAST")
-        return_contrasts = []
-        for task_contrast in task_contrasts:
-            for contrast in contrasts:
-                if task_contrast["id"] == contrast["id"]:
-                    return_contrasts.append(task_contrast)
-        if return_contrasts:
-            assertions.append((task, return_contrasts))
-        else:
-            assertions_no_cont.append((task, ConceptContrastForm(task["id"],
-                                                                 uid)))
-
     are_kinds_of = Concept.get_reverse_relation(concept["id"], "KINDOF")
     are_parts_of = Concept.get_reverse_relation(concept["id"], "PARTOF")
+
+    tasks = {}
+    for contrast in contrasts:
+        contrast_task = Contrast.get_reverse_relation(contrast["id"], "HASCONTRAST", "task")
+        try:
+            tasks[contrast_task[0]]
+        except KeyError:
+            tasks[contrast_task[0]] = []
+        tasks[contrast_task[0]].append(contrast)
 
     context = {
         "are_kinds_of": are_kinds_of,
         "are_parts_of": are_parts_of,
         "concept": concept,
-        "assertions": assertions,
+        "assertions": tasks,
         "assertions_no_cont": assertions_no_cont,
         "citations": citations,
         "citation_form": CitationForm(),
@@ -297,6 +279,8 @@ def view_task(request, uid, return_context=False):
             concepts[contrast_concept[0]]
         except KeyError:
             concepts[contrast_concept[0]] = []
+        except IndexError:
+            continue
         concepts[contrast_concept[0]].append(contrast)
 
 
@@ -467,6 +451,38 @@ def view_trait(request, uid, return_context=False):
         return context
     return render(request, 'atlas/view_trait.html', context)
 
+def view_behavior(request, uid, return_context=False):
+    try:
+        behavior = Behavior.get(uid)[0]
+    except IndexError:
+        raise Http404("Behavior does not exist")
+    contrasts = Behavior.get_relation(uid, "MEASUREDBY")
+    external_links = Behavior.get_relation(uid, "HASLINK")
+    citations = Behavior.get_relation(uid, "HASCITATION")
+
+    tasks = {}
+    for contrast in contrasts:
+        contrast_task = Contrast.get_reverse_relation(contrast["id"], "HASCONTRAST", "task")
+        try:
+            tasks[contrast_task[0]]
+        except KeyError:
+            tasks[contrast_task[0]] = []
+        tasks[contrast_task[0]].append(contrast)
+
+    context = {
+        "behavior": behavior,
+        "citations": citations,
+        "citation_form": CitationForm(),
+        "assertions": tasks,
+        "behavior_form": forms.BehaviorForm(behavior['id'], behavior=behavior),
+        "external_links": external_links,
+        "external_link_form": ExternalLinkForm(),
+    }
+
+    if return_context:
+        return context
+    return render(request, 'atlas/view_behavior.html', context)
+
 
 # ADD NEW TERMS ###################################################################
 
@@ -483,7 +499,7 @@ def contribute_term(request):
         term_name = request.POST.get('newterm', '')
 
         # Does the term exist in the atlas?
-        results = search(term_name)
+        results = query.search(term_name)
         matches = [x["name"] for x in results if x["name"] == term_name]
         message = "Please further define %s" %(term_name)
 
@@ -500,26 +516,30 @@ def contribute_term(request):
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def add_phenotype(request):
-    ''' contribute_disorder will return the detail page for the new disorder '''
-    if request.method == "POST":
-        form = forms.PhenotypeForm(request.POST)
-        if form.is_valid():
-            cleaned_data = form.cleaned_data
-            properties = {"definition": cleaned_data['definition']}
-            new_pheno = Node.create(cleaned_data["name"], properties,
-                                    request=request, label=cleaned_data['type'])
-            if new_pheno is None:
-                messages.error(request, "Was unable to create {}".format(cleaned_data['type']))
-                return all_disorders(request)
-        else:
-            # if form is not valid, regenerate context and use validated form
-            context = all_disorders(request, return_context=True)
-            context['phenotype_form'] = form
-            return render(request, "atlas/all_disorders.html", context)
-    if label == 'disorder':
-        return view_disorder(request, new_pheno.properties["id"])
-    if label == 'trait':
-        return view_trait(request, new_pheno.properties["id"])
+    '''  '''
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    form = forms.PhenotypeForm(request.POST)
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        properties = {"definition": cleaned_data['definition']}
+        label = cleaned_data['type']
+        new_pheno = Node.create(cleaned_data["name"], properties,
+                                request=request, label=label)
+        if new_pheno is None:
+            messages.error(request, "Was unable to create {}".format(cleaned_data['type']))
+            return all_disorders(request)
+        if label == 'disorder':
+            return view_disorder(request, new_pheno.properties["id"])
+        elif label == 'trait':
+            return view_trait(request, new_pheno.properties["id"])
+        elif label == 'behavior':
+           return view_behavior(request, new_pheno.properties["id"])
+    else:
+        # if form is not valid, regenerate context and use validated form
+        context = all_disorders(request, return_context=True)
+        context['phenotype_form'] = form
+        return render(request, "atlas/all_disorders.html", context)
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -630,12 +650,32 @@ def update_trait(request, uid):
         trait = Trait.get(uid)[0]
     except IndexError:
         raise Http404("Trait does not exist")
-    form = forms.TraitForm(uid, request.POST)
-    if form.is_valid:
+    form = forms.TraitForm(uid, data=request.POST)
+    if form.is_valid():
         cleaned_data = form.cleaned_data
         Trait.update(uid, updates={'name': cleaned_data['name'], 'definition': cleaned_data['definition']})
+        return redirect('view_trait', uid=uid)
     else:
-        return
+        return redirect('view_trait', uid=uid)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def update_behavior(request, uid):
+    if request.method != "POST":
+        return redirect('concept', uid)
+    try:
+        behavior = Behavior.get(uid)[0]
+    except IndexError:
+        raise Http404("Behavior does not exist")
+    form = forms.BehaviorForm(uid, data=request.POST)
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        Behavior.update(uid, updates={'name': cleaned_data['name'], 'definition': cleaned_data['definition']})
+        return redirect('view_behavior', uid=uid)
+    else:
+        return redirect('view_behavior', uid=uid)
+
+
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -816,20 +856,13 @@ def add_disorder_disorder(request, disorder_id):
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
-def add_concept_contrast(request, uid, tid):
-    ''' process form from concept view to add contrast that measures concept '''
+def add_concept_contrast(request, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
-    form = ConceptContrastForm(tid, uid, request.POST)
-    if form.is_valid():
-        cleaned_data = form.cleaned_data
-        contrast_id = cleaned_data['contrasts']
-        rel = Concept.link(uid, contrast_id, "MEASUREDBY", "contrast")
-        concept_task_contrast_assertion(request, uid, tid, contrast_id)
-        return view_concept(request, uid)
-    else:
-        # would have to insert the form into the assertions_no_contrast list.
-        return view_concept(request, uid)
+    relation_type = "MEASUREDBY"
+    contrast_selection = request.POST.get('contrast-selection', '')
+    Concept.link(uid, contrast_selection, relation_type, endnode_type="contrast")
+    return redirect('concept', uid)
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -1153,10 +1186,31 @@ def add_battery_task(request, battery_id):
 def add_trait_contrast(request, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
-    relation_type = "MEASUREDBY" #task --asserts-> disorder
-    contrast_selection = request.POST.get('task_selection', '')
+    relation_type = "MEASUREDBY"
+    contrast_selection = request.POST.get('contrast-selection', '')
     Trait.link(uid, contrast_selection, relation_type, endnode_type="contrast")
     return redirect('view_trait', uid)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def add_behavior_contrast(request, uid):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    relation_type = "MEASUREDBY"
+    contrast_selection = request.POST.get('contrast-selection', '')
+    Behavior.link(uid, contrast_selection, relation_type, endnode_type="contrast")
+    return redirect('view_behavior', uid)
+
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def add_disorder_contrast(request, uid):
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    relation_type = "HASDIFFERENCE"
+    contrast_selection = request.POST.get('contrast-selection', '')
+    Contrast.link(contrast_selection, uid, relation_type, endnode_type="disorder")
+    return redirect('disorder', uid)
+
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -1218,7 +1272,7 @@ def search_all(request):
     search_text = request.POST.get("searchterm", "")
     results = []
     if search_text != '':
-        results = search(search_text)
+        results = query.search(search_text)
         data = json.dumps(results)
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
@@ -1229,7 +1283,7 @@ def search_by_type(request, node_type):
     search_text = request.POST.get("relationterm", "")
     results = []
     if search_text != '':
-        results = search(search_text, node_type=node_type)
+        results = query.search(search_text, node_type=node_type)
         data = json.dumps(results)
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
@@ -1243,5 +1297,13 @@ def search_task(request):
     return search_by_type(request, "task")
 
 def search_contrast(request):
-    ''' Used by ajax in the templates when adding concepts to a task '''
-    return search_by_type(request, "contrast")
+    data = "no results"
+    search_text = request.POST.get("relationterm", "")
+    results = []
+    if search_text != '':
+        results = query.search_contrast(search_text)
+        data = json.dumps(results)
+    mimetype = 'application/json'
+    return HttpResponse(data, mimetype)
+
+

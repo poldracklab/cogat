@@ -43,7 +43,7 @@
             </div>
             {% endif %}-->
             <input type="submit" value="submit" id="submittor" title="submit form" aria-label="submit form"> 
-            <input type="button" value="Cancel" onclick="window.location.reload()" aria-label="cancel update" title="cancel submission" />
+            <input id="update-cancel" value="Cancel" type="reset" aria-label="cancel update" title="cancel submission" />
         </form><br><br>
     </div><br>
     <div class='attribo'>
@@ -55,24 +55,22 @@
     <h2><strong>Tasks</strong> associated with <em class="dictionary">{{ disorder.name }}</em> and their <strong>contrasts</strong></h2>
 
     {% if user.is_authenticated %}
-    <button style="float:right;margin-top:10px" id="add_task_button">ADD TASK</button>		
+    <button style="float:right;margin-top:10px" id="add_contrast_button">ADD Contrast</button>		
 
     <!-- add task box -->
-    <form method="POST" action="{% url 'add_disorder_task' disorder.id %}">
+    <form method="POST" action="{% url 'add_disorder_contrast' disorder.id %}">
         <div id="task_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
             <div id="searchformwrap">
                 <div class="ui-widget">
-                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="taskterm" size="20" name="taskterm" aria-label="search for task" title="Search for task" placeholder="search for task" />
+                <select id="contrast-selection" name="contrast-selection"></select>
                 </div>
             </div>
-            <div>
-                <select name="task_selection" id="task_search_results" style="width:400px" class="hidden"></select>
-            </div>
             {% csrf_token %}
-            <button id="task_cancel_button" type="button" class="btn btn-primary">Cancel</button>
+            <button id="contrast_cancel_button" type="button" class="btn btn-primary">Cancel</button>
             <input type="submit" value="submit" class="btn btn-primary"></input>    
         </form>
     </div>
+
     {% endif %}
 
 
@@ -108,7 +106,7 @@
     <div id="block-implementors" class="block-back ">
         <div class="pane">
             <div class="discdiv"><b>RELATIONSHIPS</b> to other disorders<br>
-                <div>{{ disorder.name }} is derived from the following disorders:<br>
+                <div>{{ disorder.name }} is kind of the following disorders:<br>
                 {% for relation in parent_disorders %}
                     <div class="relation-border pre-top-margin">
                       <a href="{% url 'disorder' relation.id %}" rel="{{ relation.id }}" class="classic">{{ relation.name }}</a>
@@ -119,7 +117,7 @@
                     <div class="diso-relation-buffer"></div>
                 {% endfor %}
                 </div>
-                <div>The following diorders are derived from {{ disorder.name }}:<br>
+                <div>The following diorders are kind of {{ disorder.name }}:<br>
                 {% for relation in child_disorders %}
                     <div class="relation-border pre-top-margin">
                       <a href="{% url 'disorder' relation.id %}" rel="{{ relation.id }}" class="classic">{{ relation.name }}</a>
@@ -214,14 +212,6 @@ $(document).ready(function() {
        $("#closepane").click(function(){
            $("#editpane").addClass("hidden");
        })
-       // Show form to add task 
-       $("#add_task_button").click(function(){
-           $("#task_search_box").removeClass('hidden');
-       })
-       $("#task_cancel_button").click(function(){
-           $("#task_search_box").addClass('hidden');
-       })
-
        $("#add-disorder-button").click(function(){
            $("#disorder-form").removeClass('hidden');
        })
@@ -242,6 +232,18 @@ $(document).ready(function() {
        $("#reset-id-link-cancel").click(function(){
            $("#link-form").addClass('hidden');
        })
+       $("#update-cancel").click(function(){
+           $("#editpane").addClass('hidden');
+       })
+
+       $("#add_contrast_button").click(function(){
+           $("#task_search_box").removeClass('hidden');
+       })
+
+       $("#contrast_cancel_button").click(function(){
+           $("#task_search_box").addClass('hidden');
+       })
+
 
 
     });
@@ -281,6 +283,41 @@ $(document).ready(function() {
     });
     });
     {% endif %}
+
+    {% if user.is_authenticated %}
+    // Add concept
+
+    $('#contrast-selection').select2({
+        width: '100%',
+        placeholder: 'Search for contrast',
+        minimumInputLength: 2,
+        tags: [],
+        escapeMarkup: function(x) {return x;},
+        ajax: {
+            type: "POST",
+            url: "{% url 'search_contrast' %}",
+            data: function (params) {
+                console.log(params);
+                var queryParams = {
+                    'relationterm' : params['term'],
+                    'csrfmiddlewaretoken' : '{{ csrf_token }}'
+                }
+                return queryParams;
+            },
+            dataType: 'json',
+            processResults: function (data) {
+                console.log(data);
+                return {
+                    results: $.map(data, function(datum) {
+                        return {id: datum.cid, text: datum.tname + ' - ' + datum.cname};
+                    })
+                }
+            }
+        }
+    });
+
+    {% endif %}
+
 
 
 

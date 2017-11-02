@@ -15,28 +15,6 @@
     border-bottom: 1px dotted #bebebe;
 }
 
-.reviewbutton {
-    font-weight: 800;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-    padding: 4px 10px;
-    text-transform: uppercase;
-    font-size: 12px;
-    color: #fff;
-    font-style: normal;
-    float: none;
-    display: inline;
-    margin: 0 0 0 5px;
-    position: relative;
-    top: -6px;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-    background: #707070;
-    font-family: 'OpenSans', Helvetica, Arial, sans-serif;
-}
-
-.review-container {
-    float: right;
-}
-
 .name-ext-inputs {
     display: flex;
     flex-direction: row;
@@ -92,7 +70,7 @@
                     {% if task.review_status == "True" %}
                         <a class="reviewbutton" href="{% url 'set_unreviewed' 'task' task.id %}">Set as unreviewed</a>
                     {% else %}
-                        <button class="reviewbutton"><a href="{% url 'set_reviewed' 'task' task.id %}">Set as reviewed</a></button>
+                        <a class="reviewbutton" href="{% url 'set_reviewed' 'task' task.id %}">Set as reviewed</a>
                     {%endif%}
                 {% endif %}
             </div>
@@ -116,7 +94,7 @@
                 <textarea name="definition_text" rows="4" cols="50">{{ task.definition_text }}</textarea>
             </div>
             {% csrf_token %}
-            <button id="cancel_button" type="button" class="btn btn-primary">Cancel</button>
+            <input id="cancel_button" class="btn btn-inverse" value="Cancel" type="reset">
             <input type="submit" value="submit" class="btn btn-primary"></input>
         </form>
     </div>
@@ -558,11 +536,14 @@ $(document).ready(function() {
                 },
                 dataType: 'json',
                 processResults: function (data) {
-                    console.log(data);
-                    return {
-                        results: $.map(data, function(datum) {
-                            return {id: datum.id, text: datum.name};
-                        })
+                    if (data.length > 0) {
+                        return {
+                            results: $.map(data, function(datum) {
+                                return {id: datum.id, text: datum.name};
+                            })
+                        }
+                    } else {
+                        return {results: [{'id': '0', 'text': 'No Results Found'}]}
                     }
                 }
             }

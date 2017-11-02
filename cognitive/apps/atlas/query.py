@@ -94,7 +94,7 @@ class Node(object):
             res[0]['rel'].delete()
         user.link(request.user.id, node_id, "UPDATED", endnode_type=self.name)
 
-    def link(self, uid, endnode_id, relation_type, endnode_type=None, properties=None):
+    def link(self, uid, endnode_id, relation_type, endnode_type=None, properties=None, label=None):
         '''link will create a new link (relation) from a uid to a relation, first confirming
         that the relation is valid for the node
         :param uid: the unique identifier for the source node
@@ -104,9 +104,11 @@ class Node(object):
                same as startnode
         :param properties: properties to add to the relation
         '''
+        if label is None:
+            label = self.name
         if endnode_type is None:
             endnode_type = self.name
-        startnode = self.graph.find_one(self.name, property_key='id', property_value=uid)
+        startnode = self.graph.find_one(label, property_key='id', property_value=uid)
         endnode = self.graph.find_one(endnode_type, property_key='id', property_value=endnode_id)
 
         if startnode != None and endnode != None:
@@ -831,6 +833,8 @@ class Disambiguation(Node):
         self.relations = {
             "DISAMBIGUATES": "concepts",
             "DISAMBIGUATES": "tasks",
+            "DISAMBIGUATES": "behavior",
+            "DISAMBIGUATES": "traits",
         }
 
 # General search function across nodes
@@ -855,6 +859,18 @@ def search(searchstring, fields=["name", "id"], node_type=None):
     result["label"] = [r[0] for r in result['label']]
     result = result.drop_duplicates()
     return result.to_dict(orient="records")
+
+def search_contrast(searchstring):
+    searchstring = re.escape(searchstring)
+
+    query = '''match (t:task)-[:HASCONTRAST]->(c:contrast) 
+               where str(c.name) =~ '(?i).*{0}.*' or str(t.name) =~ '(?i).*{0}.*'
+               return t.id, t.name, c.id, c.name
+            '''.format(searchstring.__repr__()[1:-1])
+
+    result = do_query(query, fields=['tid', 'tname', 'cid', 'cname'], drop_duplicates=True, output_format="df")
+    return result.to_dict(orient="records")
+
 
 # General get function across nodes, get by id
 def get(nodeid, fields=["name", "id"]):

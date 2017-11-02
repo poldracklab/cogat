@@ -1,17 +1,20 @@
-from cognitive.apps.atlas.query import Concept, Task, Disorder, Theory, Battery
+from cognitive.apps.atlas import query
 
-Concept = Concept()
-Task = Task()
-Disorder = Disorder()
-Theory = Theory()
-Battery = Battery()
+Concept = query.Concept()
+Task = query.Task()
+Disorder = query.Disorder()
+Theory = query.Theory()
+Battery = query.Battery()
+Behavior = query.Behavior()
+Trait = query.Trait()
 
 # Needed on all pages
 counts = {
     "disorders": Disorder.count(),
     "tasks": Task.count(),
     "concepts": Concept.count(),
-    "collections": Battery.count() + Theory.count()
+    "collections": Battery.count() + Theory.count(),
+    "phenotypes": (Disorder.count() + Trait.count() + Behavior.count()),
 }
 
 def counts_processor(request):

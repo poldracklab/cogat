@@ -7,6 +7,11 @@
 .asholder {position:relative;}
 .dis-elem {padding-left: 20px;}
 .dis-list-toggle {cursor: pointer;}
+.phenotype-list {
+    -moz-column-count: 3;
+    -webkit-column-count: 3;
+    column-count: 3;
+}
 </style>
 {% endblock %}
 
@@ -44,16 +49,27 @@
         <!-- Only rendered based on highest category -->
         <h1 class="CATitle disorder">Browse <strong class="disorder">Disorders</strong></h1><br>
         <br>
-        <ul id="disorder-list">
-            {% include "atlas/_list_disorders.html" %}
+        <ul class="phenotype-list">
+            {% for disorder in disorders %}
+                <li>
+                <a href="{% url 'disorder' disorder.id %}" class="tooltip" title="<big><b>{{ disorder.name }}:</b></big><br/>{{ disorder.definition }}<br/><br/>">{{ disorder.name }}</a>
+                </li>
+            {% endfor %}
         </ul>
     
-        <h1 class="CATitle disorder">Browse <strong class="disorder">Traits</strong></h1><br>
-        <ul id="disorder-list">
+        <h1 class="CATitle disorder">Browse <strong class="disorder">Personality Traits</strong></h1><br>
+        <ul id="phenotype-list">
         {% for trait in traits %}
-            <li><a href="{% url 'view_trait' trait.id %}">{{ trait.name }}</a></li>
+            <li><a href="{% url 'view_trait' trait.id %}" class="tooltip" title="<big><b>{{ trait.name }}:</b></big><br/>{{ trait.definition }}<br/><br/>">{{ trait.name }}</a></li>
         {% endfor %}
         </ul>
+        <h1 class="CATitle disorder">Browse <strong class="disorder">Behaviors</strong></h1><br>
+        <ul id="phenotype-list">
+        {% for behavior in behaviors %}
+            <li><a href="{% url 'view_behavior' behavior.id %}" class="tooltip" title="<big><b>{{ behavior.name }}:</b></big><br/>{{ behavior.definition }}<br/><br/>">{{ behavior.name }}</a></li>
+        {% endfor %}
+        </ul>
+
 	<br><br><br><br><br><br>
 	<p><small>Data on Disorders has been provided by the <a href="http://disease-ontology.org/" target="_blank">Disease Ontology (DO) database</a>,
 read more at <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3245088/" target="_blank">NAR</a>, reference: Schriml LM, Arze C, Nadendla S, Chang YW,

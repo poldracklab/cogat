@@ -51,7 +51,7 @@
             <label class="collabel">Theory Description:</label><br />
             <textarea name="collection_description" id="collection_description" class="required" rows="8" cols="80" title="theory description" aria-label="theory description" >{{ theory.collection_description }}</textarea><br /><br />
                 <label class="collabel"></label>
-                <input type="button" value="cancel" onclick="window.location.reload()" title="cancel submission" aria-label="cancel submission"  />
+                <input type="reset" id="update-cancel" value="cancel" title="cancel submission" aria-label="cancel submission"  />
             <input type="submit" value="submit" title="submit form" aria-label="submit form" />
          </fieldset>
     </form>
@@ -122,6 +122,10 @@ $(document).ready(function() {
     $("#update_theory").click(function(){
         $("#edit_theory").removeClass("hidden")
     })
+    $("#update-cancel").click(function(){
+       $("#edit_theory").addClass('hidden');
+    })
+
 
     // Show input to add citation
     $("#add_theory_assertion_button").click(function(){

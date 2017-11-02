@@ -34,6 +34,21 @@
                 <em>{{ concept.name }}</em>
             </a>
             <span class="typebutton concept_type"><a href="{% url 'all_concepts' %}">CONCEPT</a></span>
+            <div class="review-container">
+                {% if concept.review_status == "True" %}
+                    <span class="reviewed-span">Reviewed</span>
+                {% else %}
+                    <span class="unreviewed-span">Unreviewed</span>
+                {% endif %} 
+                {% if user.is_authenticated %}
+                    {% if concept.review_status == "True" %}
+                        <a class="reviewbutton" href="{% url 'set_unreviewed' 'concept' concept.id %}">Set as unreviewed</a>
+                    {% else %}
+                        <a class="reviewbutton" href="{% url 'set_reviewed' 'concept' concept.id %}">Set as reviewed</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+
         </h1>
     </div><!-- .CATerm.concept -->
 
@@ -203,9 +218,9 @@
     <button style="float:right;margin-top:10px" id="add_task_button">ADD TASK</button>		
 
     <!-- add task box -->
-    <form method="POST" action="{% url 'add_concept_task' concept.id %}">
+    <form method="POST" action="{% url 'add_concept_contrast' concept.id %}">
         <div id="task_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
-            <select name="task_selection" id="task_selection">
+            <select id="contrast-selection" name="contrast-selection"></select>
             {% csrf_token %}
             <button id="task_cancel_button" type="button" class="btn btn-primary">Cancel</button>
             <input type="submit" value="submit" class="btn btn-primary"></input>    
@@ -224,22 +239,18 @@
                        <td width='50%' valign='top'><b>Contrast Measure</b></td>
                     </tr>
                 </table>
-                {% for assertion in assertions %}
-                <table id="table_{{ assertion.0.id }}" cellpadding="0" cellspacing="0" width="100%">
+                {% for task, contrasts in assertions.items %}
+                <table id="table_{{ task.id }}" cellpadding="0" cellspacing="0" width="100%">
                     <tr>
                         <td colspan="3"><div class="dotholder"><hr class="dotty"></div></td>
                     </tr>
                     <tr>
-                       <td width='50%' valign='top'>
-                         <b><a href="{% url 'task' assertion.0.id %}" class="task">{{ assertion.0.name }}</a></b>
-                        </td>
-                       <td width='50%' valign='top'>
-                        <ul>
-                        {% for contrast in assertion.1 %}
-                            <li>{{ contrast.name }}</li>
+                       <td width='50%' valign='top'><b><a href="{% url 'task' task.id %}" class="task">{{ task.name }}</a></b></td>
+                        {% for contrast in contrasts %}
+                           <td width='50%' valign='top'>{{ contrast.name }}</td>
+                        {% empty %}
+                           <td width='50%' valign='top'></td>
                         {% endfor %}
-                        </ul>
-                        </td>
                     </tr>
                 </table>
                 {% endfor %}
@@ -373,36 +384,42 @@ $(document).ready(function() {
     });
 
     {% if user.is_authenticated %}
-    // Add concept
-    $(function() {
-        $('#task_selection').select2({
-            width: '100%',
-            placeholder: 'Search for task',
-            minimumInputLength: 2,
-            tags: [],
-            ajax: {
-                type: "POST",
-                url: "{% url 'search_task' %}",
-                data: function (params) {
-                    console.log(params);
-                    var queryParams = {
-                        'relationterm' : params['term'],
-                        'csrfmiddlewaretoken' : '{{ csrf_token }}'
-                    }
-                    return queryParams;
-                },
-                dataType: 'json',
-                processResults: function (data) {
-                    console.log(data);
+    $('#contrast-selection').select2({
+        language: {
+            noResults: function(params) {return "No Results";}
+        },
+        width: '100%',
+        placeholder: 'Search for contrast',
+        minimumInputLength: 2,
+        tags: [],
+        escapeMarkup: function(x) {return x;},
+        ajax: {
+            type: "POST",
+            url: "{% url 'search_contrast' %}",
+            data: function (params) {
+                console.log(params);
+                var queryParams = {
+                    'relationterm' : params['term'],
+                    'csrfmiddlewaretoken' : '{{ csrf_token }}'
+                }
+                return queryParams;
+            },
+            dataType: 'json',
+            processResults: function (data) {
+                if (data.length > 0) {
                     return {
                         results: $.map(data, function(datum) {
-                            return {id: datum.id, text: datum.name};
+                            return {'id': datum.cid, 'text': datum.tname + ' - ' + datum.cname}
                         })
                     }
+                } else {
+                    return {results: [{'id': '0', 'text': 'No Results Found'}]}
                 }
             }
-        });
+        }
     });
+
+
     {% endif %}
 
 

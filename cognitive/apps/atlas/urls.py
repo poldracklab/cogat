@@ -32,6 +32,7 @@ urlpatterns = [
     # Detail View
     url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="disorder"),
     url(r'^trait/id/(?P<uid>[\w\+%_& ]+)/$', views.view_trait, name="view_trait"),
+    url(r'^behavior/id/(?P<uid>[\w\+%_& ]+)/$', views.view_behavior, name="view_behavior"),
     url(r'^battery/id/(?P<uid>[\w\+%_& ]+)/$', views.view_battery, name="battery"),
     url(r'^theory/id/(?P<uid>[\w\+%_& ]+)/$', views.view_theory, name="theory"),
     url(r'^concept/id/(?P<uid>[\w\+%_& ]+)/$', views.view_concept, name="concept"),
@@ -52,14 +53,13 @@ urlpatterns = [
     url(r'^task/update/(?P<uid>[\w\+%_& ]+)/$', views.update_task, name="update_task"),
     url(r'^disorder/update/(?P<uid>[\w\+%_& ]+)/$', views.update_disorder, name="update_disorder"),
     url(r'^trait/update/(?P<uid>[\w\+%_& ]+)/$', views.update_trait, name="update_trait"),
+    url(r'^behavior/update/(?P<uid>[\w\+%_& ]+)/$', views.update_behavior, name="update_behavior"),
     url(r'^theory/update/(?P<uid>[\w\+%_& ]+)/$', views.update_theory, name="update_theory"),
     url(r'^battery/update/(?P<uid>[\w\+%_& ]+)/$', views.update_battery, name="update_battery"),
     url(r'^concept/assert/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_relation,
         name="add_concept_relation"),
     url(r'^task/add/concept/(?P<uid>[\w\+%_& ]+)/$', views.add_task_concept,
         name="add_task_concept"),
-    url(r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_concept_contrast_task,
-        name="add_concept_contrast_task"),
     url(r'^task/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_task_contrast,
         name="add_task_contrast"),
     url(r'^contrast/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_contrast, name="add_contrast"),
@@ -125,7 +125,7 @@ urlpatterns = [
         name="add_battery_citation"
     ),
     url(
-        r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/(?P<tid>[\w\+%_& ]+)/$',
+        r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$',
         views.add_concept_contrast,
         name="add_concept_contrast"
     ),
@@ -158,6 +158,16 @@ urlpatterns = [
         r'^trait/add/contrast/(?P<uid>[\w\+%_& ]+)/$',
         views.add_trait_contrast,
         name="add_trait_contrast"
+    ),
+    url(
+        r'^disorder/add/contrast/(?P<uid>[\w\+%_& ]+)/$',
+        views.add_disorder_contrast,
+        name="add_disorder_contrast"
+    ),
+    url(
+        r'^behavior/add/contrast/(?P<uid>[\w\+%_& ]+)/$',
+        views.add_behavior_contrast,
+        name="add_behavior_contrast"
     ),
     url(
         r'^disambiguation/add/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',

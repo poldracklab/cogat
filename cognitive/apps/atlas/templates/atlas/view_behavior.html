@@ -19,6 +19,7 @@
 {% block content %}
     <h1 rel='{{ behavior.id }}'>{{ behavior.name }}<span class="typebutton disorder_type"><a href="{% url 'all_disorders' %}">BEHAVIOR</a></span></h1>
     <div class='defn'>{{ behavior.definition }}</div>
+    {% if user.is_authenticated %}
     <div id="unterbutton_slide_def">
         <div class="defn">  
             <div class="unterbutton_left" id="ub_left">    
@@ -32,6 +33,7 @@
         {% crispy behavior_form  behavior_form.helper %}
         <br><br>
     </div><br>
+    {% endif %}
 
 <div id="block-holder" class="block-full"><div id="block-measurements" class="block-half">  
     <h2><strong>Contrasts</strong> associated with <em class="dictionary">{{ behavior.name }}</em> and their <strong>Tasks</strong></h2>
@@ -83,7 +85,7 @@
 
 </div></div></div></div><!-- #block-measurements.block-half -->
 
-<div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
+<div id="block-implementors" class="block-full block-back">
     {% if user.is_authenticated %}
     <button style="float:right;margin-top:10px" id="add-link-button">ADD EXTERNAL LINK</button>
     {% endif %}
@@ -107,7 +109,7 @@
 </div>
 
 <!-- CITATIONS -->
-<div id="block-biblio" class="block-bits block-back container">
+<div id="block-biblio" class="block-full block-back">
     <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
     {% for citation in citations %}
         <div id="{{ citation.id }}">

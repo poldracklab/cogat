@@ -64,7 +64,6 @@ def all_nodes(request, nodes, node_type, node_type_plural):
         'term_type': node_type,
         'term_type_plural': node_type_plural,
         'nodes': nodes,
-        'filtered_nodes_count': counts[node_type_plural],
     }
 
     return render(request, "atlas/all_terms.html", context)

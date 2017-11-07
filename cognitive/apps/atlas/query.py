@@ -640,7 +640,6 @@ class Behavior(Node):
             "MEASUREDBY": "contrasts"
         }
 
-
 class Condition(Node):
 
     def __init__(self):

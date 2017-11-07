@@ -47,6 +47,7 @@ def generate_uid(node_type):
         result = do_query(query, fields=["n.id"])
     return uid
 
+
 def get_relation_nodetype(relation):
     '''get_relation_nodetype will return the node type for a particular relation
     (eg --RELATION-->[NODE]
@@ -200,6 +201,10 @@ def get_transactions(query, tx=None, params=None):
         tx.append(query)
     return tx
 
+class InvalidDoiException(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
 def get_paper_properties(doi):
     xmlurl = 'http://doi.crossref.org/servlet/query'
     xmlpath = xmlurl + '?pid=k.j.gorgolewski@sms.ed.ac.uk&format=unixref&id=' + quote(doi)
@@ -207,7 +212,7 @@ def get_paper_properties(doi):
     xml_str = urlopen(xmlpath).read()
     doc = etree.fromstring(xml_str)
     if len(doc.getchildren()) == 0 or len(doc.findall('.//crossref/error')) > 0:
-        raise Exception("DOI %s was not found" % doi)
+        raise InvalidDoiException("DOI %s was not found" % doi)
     journal_name = doc.findall(".//journal/journal_metadata/full_title")[0].text
     title = doc.findall('.//title')[0].text
     authors = [author.findall('given_name')[0].text + " " + author.findall('surname')[0].text

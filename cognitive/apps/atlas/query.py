@@ -506,10 +506,10 @@ class Task(Node):
                      "(c:concept)-[:MEASUREDBY]->(con:contrast) "
                      "WHERE c.id = '{}' AND t.id = '{}' "
                      "RETURN con").format(concept['concept_id'], task_id)
-            contrast = do_query(query, "null", "list")
-            if contrast:
-                concept['contrasts'] = [(x[0].properties['id'], x[0].properties['name'])
-                                        for x in contrast]
+            contrasts = do_query(query, "null", "list")
+            if contrasts:
+                for contrast in contrasts:
+                    concept['contrasts'] = (contrast[0].properties['id'], contrast[0].properties['name'])
         return concepts
 
     def api_get_contrasts(self, task_id):

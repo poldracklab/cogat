@@ -90,6 +90,7 @@ class CitationForm(forms.Form):
     citation_pubdate = forms.CharField(required=False)
     citation_pmid = forms.CharField(required=False)
     citation_source = forms.CharField(required=False)
+    doi = forms.CharField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(CitationForm, self).__init__(*args, **kwargs)
@@ -343,3 +344,15 @@ class BehaviorForm(forms.Form):
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('behavior_cancel_button', 'Cancel'))
         self.helper.form_action = reverse('update_behavior', kwargs={'uid': uid})
+
+class DoiForm(forms.Form):
+    doi = forms.CharField(required=True, label="DOI:")
+    def __init__(self, uid, label, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('doi-cancel-button', 'Cancel'))
+        self.helper.form_action = reverse('add_citation_doi',
+                                          kwargs={'label': label, 'uid': uid})
+
+

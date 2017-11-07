@@ -410,7 +410,7 @@ def view_disorder(request, uid, return_context=False):
         "citations": citations,
         "citation_form": CitationForm(),
         "assertions": tasks,
-        "disorder_form": DisorderDisorderForm(),
+        "disorder_form": DisorderDisorderForm(name=disorder['name']),
         "parent_disorders": parent_disorders,
         "child_disorders": child_disorders,
         "external_links": external_links,
@@ -838,7 +838,7 @@ def add_disorder_disorder(request, disorder_id):
     ''' process form from disorder view that relates disorders to disorders '''
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
-    form = DisorderDisorderForm(request.POST)
+    form = DisorderDisorderForm(data=request.POST)
     if form.is_valid():
         cleaned_data = form.cleaned_data
         rel_dis_id = cleaned_data['disorders']

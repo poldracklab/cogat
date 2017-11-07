@@ -222,11 +222,17 @@ class ConceptContrastForm(forms.Form):
 class DisorderDisorderForm(forms.Form):
     ''' form for relating disorders to themselves '''
     type = forms.ChoiceField(choices=[('parent', 'Parent'), ('child', 'Child')])
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name=None, *args, **kwargs):
         super(DisorderDisorderForm, self).__init__(*args, **kwargs)
+        name = (name if name is not None else '')
         disorders = Disorder()
-        choices = [(x['id'], x['name']) for x in disorders.all()]
-        self.fields['disorders'] = forms.ChoiceField(choices=choices)
+        type_choices = [
+            ('parent', '{} is a kind of <selected disorder>'.format(name)),
+            ('child', '<selected disorder> is a kind of {}'.format(name))
+        ]
+        dis_choices = [(x['id'], x['name']) for x in disorders.all()]
+        self.fields['type'] = forms.ChoiceField(choices=type_choices)
+        self.fields['disorders'] = forms.ChoiceField(choices=dis_choices)
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.add_input(Submit('submit', 'Submit'))

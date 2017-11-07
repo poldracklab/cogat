@@ -417,10 +417,9 @@
     {% endfor %}
     {% if user.is_authenticated %}
         <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
-        <form class="hidden" action="{% url 'add_task_citation' task.id %}" method="post" id='id-citationform'>
-            {% csrf_token %}
-            {% crispy citation_form citation_form.helper %}
-        </form>
+        <div id="id-citationform" class="hidden">
+            {% crispy doi_form doi_form.helper %}
+        </div>
     {% endif %}
 </div>
 
@@ -504,7 +503,7 @@ $(document).ready(function() {
     $("#add_citation_button").click(function(){
         $("#id-citationform").removeClass('hidden');
     })
-    $("#reset-id-citation-cancel").click(function(){
+    $("#reset-id-doi-cancel-button").click(function(){
         $("#id-citationform").addClass('hidden');
     })
  

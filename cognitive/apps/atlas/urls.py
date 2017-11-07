@@ -31,13 +31,19 @@ urlpatterns = [
 
     # Detail View
     url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="disorder"),
+    url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="view_disorder"),
     url(r'^trait/id/(?P<uid>[\w\+%_& ]+)/$', views.view_trait, name="view_trait"),
     url(r'^behavior/id/(?P<uid>[\w\+%_& ]+)/$', views.view_behavior, name="view_behavior"),
     url(r'^battery/id/(?P<uid>[\w\+%_& ]+)/$', views.view_battery, name="battery"),
+    url(r'^battery/id/(?P<uid>[\w\+%_& ]+)/$', views.view_battery, name="view_battery"),
     url(r'^theory/id/(?P<uid>[\w\+%_& ]+)/$', views.view_theory, name="theory"),
+    url(r'^theory/id/(?P<uid>[\w\+%_& ]+)/$', views.view_theory, name="view_theory"),
     url(r'^concept/id/(?P<uid>[\w\+%_& ]+)/$', views.view_concept, name="concept"),
+    url(r'^concept/id/(?P<uid>[\w\+%_& ]+)/$', views.view_concept, name="view_concept"),
     url(r'^task/id/(?P<uid>[\w\+%_& ]+)/$', views.view_task, name="task"),
+    url(r'^task/id/(?P<uid>[\w\+%_& ]+)/$', views.view_task, name="view_task"),
     url(r'^contrast/id/(?P<uid>[\w\+%_& ]+)/$', graph.contrast_gist, name="contrast"),
+    url(r'^contrast/id/(?P<uid>[\w\+%_& ]+)/$', graph.contrast_gist, name="view_contrast"),
     url(r'^disambiguation/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disambiguation,
         name="view_disambiguation"),
 
@@ -173,6 +179,11 @@ urlpatterns = [
         r'^disambiguation/add/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
         views.add_disambiguation,
         name="add_disambiguation"
+    ),
+    url(
+        r'^(?P<label>[\w]+)/add/doi/(?P<uid>[\w\+%_& ]+)/$',
+        views.add_citation_doi,
+        name="add_citation_doi"
     ),
     url(
         r'^disambiguation/link/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',

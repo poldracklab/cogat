@@ -24,7 +24,8 @@ import cognitive.apps.atlas.forms as forms
 
 import cognitive.apps.atlas.query as query
 
-from cognitive.apps.atlas.utils import clean_html, add_update
+from cognitive.apps.atlas.utils import (clean_html, add_update,
+                                        get_paper_properties, InvalidDoiException)
 from cognitive.settings import DOMAIN, graph
 
 Assertion = query.Assertion()
@@ -54,7 +55,7 @@ def rank_check(user):
     except ValueError:
         return False
 
-# VIEWS FOR ALL NODES #############################################################
+# VIEWS FOR ALL NODES #########################################################
 
 def all_nodes(request, nodes, node_type, node_type_plural):
     '''all_nodes returns view with all nodes for node_type'''
@@ -242,6 +243,7 @@ def view_concept(request, uid, return_context=False):
         "assertions_no_cont": assertions_no_cont,
         "citations": citations,
         "citation_form": CitationForm(),
+        "doi_form": forms.DoiForm(uid, 'concept'),
         "concept_task_form": ConceptTaskForm(),
         "concept_form": ConceptForm(concept["id"], concept)
     }
@@ -297,6 +299,7 @@ def view_task(request, uid, return_context=False):
         "indicators": indicators,
         "citations": citations,
         "citation_form": CitationForm(),
+        "doi_form": forms.DoiForm(uid, 'task'),
         "disorders": disorders,
         "task_disorder_form": TaskDisorderForm(uid),
         "disambiguation_form": forms.DisambiguationForm("task", uid, task),
@@ -533,7 +536,7 @@ def add_phenotype(request):
         elif label == 'trait':
             return view_trait(request, new_pheno.properties["id"])
         elif label == 'behavior':
-           return view_behavior(request, new_pheno.properties["id"])
+            return view_behavior(request, new_pheno.properties["id"])
     else:
         # if form is not valid, regenerate context and use validated form
         context = all_disorders(request, return_context=True)
@@ -1089,6 +1092,7 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
         messages.error(request, error_msg)
     return view(request, src_id)
 
+
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def add_task_implementation(request, task_id):
@@ -1263,6 +1267,52 @@ def add_battery(request):
         context['battery_form'] = battery_form
         return render(request, 'atlas/all_collections.html', context)
 
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def add_citation_doi(request, label, uid):
+    view = "view_{}".format(label)
+
+    form = forms.DoiForm(label, uid, request.POST)
+    if form.is_valid() is False:
+        messages.error(request, "The doi provided is invalid.")
+        return redirect(view, uid)
+    
+    doi = form.cleaned_data['doi']
+
+    properties = ()
+    try:
+        properties = get_paper_properties(doi)
+    except InvalidDoiException:
+        messages.error(request, "Unable to find DOI {}".format(doi))
+        return redirect(view, uid)
+    try:
+        form_props = {
+            'citation_desc': properties[0],
+            'citation_authors': properties[1],
+            'citation_url': properties[2],
+            'citation_pubdate': properties[3],
+            'citation_pubname': properties[4], 
+        }
+    except IndexError:
+        messages.error(request, "Unable to retrieve all necessary information from DOI {}".format(doi))
+        return redirect(view, uid)
+
+    post = request.POST.copy()
+    post.update(form_props)
+    request.POST = post
+    node_class = node_class_lookup(label)
+    if node_class is None:
+        messages.error(request, "Operation could not be performed on node label {}".format(label))
+        return #500 error?
+    view_func = node_view_lookup(label)
+    if view_func is None:
+        messages.error(request, "Detail view for {} could not be found".format(label))
+        return #500 error?
+    return make_link(request, uid, node_class, Citation, CitationForm,
+                     'citation_desc', view_func, "HASCITATION")
+
+
+
 # SEARCH TERMS ####################################################################
 
 def search_all(request):
@@ -1305,4 +1355,36 @@ def search_contrast(request):
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
 
+def node_class_lookup(label):
+    ''' Some functions have access to a string representation of a label, this
+        function converts that string to a an instance of a Node class '''
+    lookup_table = {
+        'task': Task,
+        'concept': Concept,
+        'disorder': Disorder,
+        'behavior': Behavior,
+        'trait': Trait,
+        'theory': Theory,
+        'battery': Battery,
+    }
+    try:
+        return lookup_table[label]
+    except KeyError:
+        return None
 
+def node_view_lookup(label):
+    ''' take a string representation of a view function and return ref to that
+        function'''
+    lookup_table = {
+        'task': view_task,
+        'concept': view_concept,
+        'disorder': view_disorder,
+        'behavior': view_behavior,
+        'trait': view_trait,
+        'theory': view_theory,
+        'battery': view_battery,
+    }
+    try:
+        return lookup_table[label]
+    except KeyError:
+        return None

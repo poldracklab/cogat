@@ -233,6 +233,8 @@ def view_concept(request, uid, return_context=False):
             tasks[contrast_task[0]]
         except KeyError:
             tasks[contrast_task[0]] = []
+        except IndexError:
+            continue
         tasks[contrast_task[0]].append(contrast)
 
     context = {

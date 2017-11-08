@@ -171,7 +171,7 @@ def import_assertions():
             contrastnode = find_node("contrast", property_value=id_predicate_def)
 
             # Contrast is measured by contrast
-            if contrastnode is not None and conceptnode is not None:
+            if contrastnode is not None and conceptnode is not None and tasknode is not None:
                 relation = make_relation(
                     conceptnode, "MEASUREDBY", contrastnode)
 

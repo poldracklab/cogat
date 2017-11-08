@@ -88,24 +88,9 @@ urlpatterns = [
         name="add_task_indicator"
     ),
     url(
-        r'^task/add/citation/(?P<task_id>[\w\+%_& ]+)/$',
-        views.add_task_citation,
-        name="add_task_citation"
-    ),
-    url(
         r'^task/add/disorder/(?P<task_id>[\w\+%_& ]+)/$',
         views.add_task_disorder,
         name="add_task_disorder"
-    ),
-    url(
-        r'^concept/add/citation/(?P<concept_id>[\w\+%_& ]+)/$',
-        views.add_concept_citation,
-        name="add_concept_citation"
-    ),
-    url(
-        r'^disorder/add/citation/(?P<disorder_id>[\w\+%_& ]+)/$',
-        views.add_disorder_citation,
-        name="add_disorder_citation"
     ),
     url(
         r'^concept/add/task/(?P<concept_id>[\w\+%_& ]+)/$',
@@ -121,16 +106,6 @@ urlpatterns = [
         r'^theory/add/assertion/(?P<theory_id>[\w\+%_& ]+)/$',
         views.add_theory_assertion,
         name="add_theory_assertion"
-    ),
-    url(
-        r'^theory/add/citation/(?P<theory_id>[\w\+%_& ]+)/$',
-        views.add_theory_citation,
-        name="add_theory_citation"
-    ),
-    url(
-        r'^battery/add/citation/(?P<battery_id>[\w\+%_& ]+)/$',
-        views.add_battery_citation,
-        name="add_battery_citation"
     ),
     url(
         r'^concept/add/contrast/(?P<uid>[\w\+%_& ]+)/$',
@@ -210,14 +185,6 @@ urlpatterns = [
         {'label': 'task'}, name="task_graph"),
     url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)', graph.graph_view,
         {'label': 'concept'}, name="concept_graph"),
-    # url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),
-    # url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)/$', graph.concept_graph, name="concept_graph"),
-    # url(r'^graph/$', graph.explore_graph, name="explore_graph"),
-    # url(r'^graph/$', TemplateView.as_view(template_name='graph/graph.html'),
-    #    name="explore_graph"),
-    # url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/gist$', graph.task_gist, name="task_gist"),
-    # url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/gist/download$', graph.download_task_gist,
-    #    name="download_task_gist"),
 ]
 
 api_urls = [

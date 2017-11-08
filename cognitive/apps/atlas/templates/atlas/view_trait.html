@@ -130,12 +130,9 @@
     {% empty %}
     {% endfor %}
     {% if user.is_authenticated %}
-        <button style="margin-top:10px;margin-bottom:10px" id="add-citation-button">ADD CITATION</button>
-        <div class="hidden" id='citation-form'>
-        <form action="{# url 'add_trait_citation' trait.id #}" method="post">
-            {% csrf_token %}
-            {% crispy citation_form citation_form.helper %}
-        </form>
+        <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
+        <div id="id-citationform" class="hidden">
+            {% crispy doi_form doi_form.helper %}
         </div>
     {% endif %}
 </div>
@@ -173,11 +170,11 @@ $(document).ready(function() {
            $("#disorder-form").addClass('hidden');
        })
 
-       $("#add-citation-button").click(function(){
-           $("#citation-form").removeClass('hidden');
+       $("#add_citation_button").click(function(){
+           $("#id-citationform").removeClass('hidden');
        })
-       $("#reset-id-citation-cancel").click(function(){
-           $("#citation-form").addClass('hidden');
+       $("#reset-id-doi-cancel-button").click(function(){
+           $("#id-citationform").addClass('hidden');
        })
 
        $("#add-link-button").click(function(){

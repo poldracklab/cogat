@@ -244,7 +244,6 @@ def view_concept(request, uid, return_context=False):
         "assertions": tasks,
         "assertions_no_cont": assertions_no_cont,
         "citations": citations,
-        "citation_form": CitationForm(),
         "doi_form": forms.DoiForm(uid, 'concept'),
         "concept_task_form": ConceptTaskForm(),
         "concept_form": ConceptForm(concept["id"], concept)
@@ -300,7 +299,6 @@ def view_task(request, uid, return_context=False):
         "indicator_form": IndicatorForm(),
         "indicators": indicators,
         "citations": citations,
-        "citation_form": CitationForm(),
         "doi_form": forms.DoiForm(uid, 'task'),
         "disorders": disorders,
         "task_disorder_form": TaskDisorderForm(uid),
@@ -329,7 +327,7 @@ def view_battery(request, uid, return_context=False):
     context = {
         "battery": battery,
         "citations": citations,
-        "citation_form": CitationForm(),
+        "doi_form": forms.DoiForm(uid, 'battery'),
         "indicators": indicators,
         "indicator_form": IndicatorForm(),
         "progenitors": progenitors,
@@ -379,7 +377,7 @@ def view_theory(request, uid, return_context=False):
         "assertions": assertions,
         "theory_assertions_form": theory_assertions_form,
         "referenced_terms": referenced_terms,
-        "citation_form": CitationForm(),
+        "doi_form": forms.DoiForm(uid, 'theory'),
         "citations": citations,
     }
     if return_context is True:
@@ -410,7 +408,7 @@ def view_disorder(request, uid, return_context=False):
     context = {
         "disorder":disorder,
         "citations": citations,
-        "citation_form": CitationForm(),
+        "doi_form": forms.DoiForm(uid, 'disorder'),
         "assertions": tasks,
         "disorder_form": DisorderDisorderForm(name=disorder['name']),
         "parent_disorders": parent_disorders,
@@ -444,7 +442,7 @@ def view_trait(request, uid, return_context=False):
     context = {
         "trait": trait,
         "citations": citations,
-        "citation_form": CitationForm(),
+        "doi_form": forms.DoiForm(uid, 'trait'),
         "assertions": tasks,
         "trait_form": forms.TraitForm(trait['id'], trait=trait),
         "external_links": external_links,
@@ -476,7 +474,7 @@ def view_behavior(request, uid, return_context=False):
     context = {
         "behavior": behavior,
         "citations": citations,
-        "citation_form": CitationForm(),
+        "doi_form": forms.DoiForm(uid, 'behavior'),
         "assertions": tasks,
         "behavior_form": forms.BehaviorForm(behavior['id'], behavior=behavior),
         "external_links": external_links,
@@ -1121,30 +1119,6 @@ def add_task_indicator(request, task_id):
     return make_link(request, task_id, Task, Indicator, IndicatorForm,
                      'type', view_task, "HASINDICATOR")
 
-@login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_task_citation(request, task_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    return make_link(request, task_id, Task, Citation, CitationForm,
-                     'citation_desc', view_task, "HASCITATION")
-
-@login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_concept_citation(request, concept_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    return make_link(request, concept_id, Concept, Citation, CitationForm,
-                     'citation_desc', view_concept, "HASCITATION")
-
-@login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_disorder_citation(request, disorder_id):
-    ''' From the task view we can create a link to citation that is associated
-        with a given task.'''
-    return make_link(request, disorder_id, Disorder, Citation, CitationForm,
-                     'citation_desc', view_disorder, "HASCITATION")
-
 # need to add ExternalLink to query and make form
 @login_required
 @user_passes_test(rank_check, login_url='/403')
@@ -1153,18 +1127,6 @@ def add_disorder_external_link(request, disorder_id):
         with a given task.'''
     return make_link(request, disorder_id, Disorder, ExternalLink,
                      ExternalLinkForm, 'uri', view_disorder, "HASLINK")
-
-@login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_theory_citation(request, theory_id):
-    return make_link(request, theory_id, Theory, Citation, CitationForm,
-                     'citation_desc', view_theory, "HASCITATION")
-
-@login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_battery_citation(request, battery_id):
-    return make_link(request, battery_id, Battery, Citation, CitationForm,
-                     'citation_desc', view_battery, "HASCITATION")
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')

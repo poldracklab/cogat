@@ -84,6 +84,7 @@
         <a id="disambiguate_button"><button>disambiguate term</button></a>
         {% endif %}
         <a target="_blank" href="{% url 'task_graph' task.id %}"><button>graph</button></a>
+        <a target="_blank" href="http://neurovault.org/tasks/{{ task.id }}"><button>neurovault</button></a>
         </div><!-- .defn -->
 
     {% if user.is_authenticated %}
@@ -426,7 +427,6 @@
 <br clear="all"><div class="clear_all"></div>
 
 <a target="_blank" href="{% url 'task_json' task.id %}"><button>json</button></a>
-<a target="_blank" href="http://neurovault.org/tasks/{{ task.id }}"><button>neurovault</button></a>
 
 </div><!-- #unterbutton_slide_XXX -->					
 </div><!-- .discdiv -->

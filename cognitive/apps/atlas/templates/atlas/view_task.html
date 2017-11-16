@@ -115,75 +115,48 @@
 <div id="block-measurements" class="block-halfwide block-back">
     <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em> has been asserted to measure the following <strong>CONCEPTS</strong>
   
-    {% if user.is_authenticated %}
-    <button style="float:right;margin-top:10px" id="add_concept_button">ADD CONCEPT</button>		
-
-    <!-- add concept box -->
-    <form method="POST" action="{% url 'add_task_concept' task.id %}">
-        <div id="concept_search_box" style="padding-bottom:20px;padding-top:20px" class="hidden">
-            <div id="searchformwrap">
-                <div class="ui-widget">
-                <input tabindex="1" autocomplete="off" type="text" class="fwidgettxt front searchterm" id="conceptterm" size="20" name="conceptterm" aria-label="search for concept" title="Search for concept" placeholder="search for concept" />
-                <!--
-                <select id="concept_selection" class="fwidgettxt front searchterm">
-                -->
-                </div>
-            </div>
-            <div>
-                <select name="concept_selection" id="concept_search_results" style="width:400px" class="hidden"></select>
-            </div>
-            {% csrf_token %}
-            <button id="concept_cancel_button" type="button" class="btn btn-primary">Cancel</button>
-            <input type="submit" value="submit" class="btn btn-primary"></input>    
-        </form>
-    </div>
-    {% endif %}
 
     <div class="panes">
         <div class="pane">
             <div class="discdiv">
-                {% if "ASSERTS" in task.relations %}
-                    {% for relation in task.relations.ASSERTS %}
-                    <div id="table_{{ relation.id }}" class="nullspace">
+                    {% for concept, concept_contrasts in concepts.items %}
+                    <div id="table_{{ concept.id }}" class="nullspace">
                         <div>
                             <div style='width:100%;height:1em'>
-                                <a href="{% url 'concept' relation.id %}" class="concept">{{ relation.name }}</a>
+                                <a href="{% url 'concept' concept.id %}" class="concept">{{ concept.name }}</a>
                             </div>
                             <div style='width:40%;float:left'>
                                 <div style="padding-left:10px;padding-top:5px;"><small>as measured by the contrast:</small></div>
                             </div>
                             <div style='width:60%;float:left;text-align:left;'>
                                 <ul style="margin-left:30px;margin-top:8px;list-style-image:url('/static/img/contrast-icon.jpg');">
-                                {% for concept, assertions in concepts.items %}
-                                    {% for assertion in assertions %}
-                                    <li class="contrastli">
-                                        <a href="#" class="task">{{ assertion.name }}</a>
-                                    </li>
-                                    {% endfor %}
+                                {% for contrast in concept_contrasts %}
+                                <li class="contrastli">
+                                    <a href="#" class="task">{{ contrast.name }}</a>
+                                </li>
                                 {% endfor %}
                                 </ul>
-
                                 <!-- Add contrast association -->
                                 {% if user.is_authenticated %}
-                                <button style="border-radius:15px;float:right" id="add_contrast_button_{{ relation.id }}">+</button>		
-                                <div id="contrast_search_box_{{ relation.id }}" style="padding-left:13px;padding-bottom:20px" class="hidden">
+                                <button style="border-radius:15px;float:right" id="add_contrast_button_{{ concept.id }}">+</button>		
+                                <div id="contrast_search_box_{{ concept.id }}" style="padding-left:13px;padding-bottom:20px" class="hidden">
                                     <div>
                                     {% if contrasts|length > 0 %}
                                     <form style="padding-top:20px" method="post" action="{% url 'add_concept_contrast_task' task.id %}">
-                                        <select name="contrast_selection" id="add_contrast_{{ relation.id }}" style="width:220px" size="3" style="padding-left:10px;">
+                                        <select name="contrast_selection" id="add_contrast_{{ concept.id }}" style="width:220px" size="3" style="padding-left:10px;">
                                         {% for contrast in contrasts %}
                                         <option value="{{ contrast.id }}">{{ contrast.name }}</option>
                                         {% endfor %}
                                         </select>
-                                        <input type="hidden" name="concept_id" value="{{ relation.id }}" />
+                                        <input type="hidden" name="concept_id" value="{{ concept.id }}" />
                                         {% csrf_token %}
-                                        <button id="cancel_button_{{ relation.id }}" type="button" class="btn btn-primary">Cancel</button>
+                                        <button id="cancel_button_{{ concept.id }}" type="button" class="btn btn-primary">Cancel</button>
                                         <input type="submit" value="submit" class="btn btn-primary"></input>    
 
                                     </form> 
                                     {% else %}
                                     <p style="padding-top:20px">No contrasts defined for task.
-                                    <button id="close_button_{{ relation.id }}" style="border-radius:15px" type="button" class="btn">x</button>
+                                    <button id="close_button_{{ concept.id }}" style="border-radius:15px" type="button" class="btn">x</button>
                                     </p>
                                     {% endif %}
                                 </div>
@@ -194,10 +167,16 @@
                     </div>
                     <br clear='all'></div>
                     <br clear="all"><br clear="all">
-                    <div id="target_{{ relation.id }}" style="display:none;padding-left:10px;"></div>
+                    <div id="target_{{ concept.id }}" style="display:none;padding-left:10px;"></div>
                     <div class="dotholder"><hr class="dotty"></div>
+                    {% empty %}
+                        <span class="noassoc">No concepts assertions have been added.</span><br><br>
                     {% endfor %}
-                {% endif %}
+
+                    {% if user.is_authenticated %}
+                    <button style="float:right;margin-top:10px" id="add_concept_button">ADD CONCEPT</button>		
+                    {% crispy task_concept_form task_concept_form.helper %}
+                    {% endif %}
             </div>
         </div>
     </div>
@@ -461,10 +440,10 @@ $(document).ready(function() {
 
     // Show form to add concept
     $("#add_concept_button").click(function(){
-        $("#concept_search_box").removeClass('hidden');
+        $("#concept-form").removeClass('hidden');
     })
-    $("#concept_cancel_button").click(function(){
-        $("#concept_search_box").addClass('hidden');
+    $("#reset-id-task-concept-cancel").click(function(){
+        $("#concept-form").addClass('hidden');
     })
 
     // Show input to add condition
@@ -517,38 +496,12 @@ $(document).ready(function() {
 
     {% if user.is_authenticated %}
     $(function() {
-        $('#concept_selection').select2({
-            width: '100%',
-            placeholder: 'Search for concept',
-            minimumInputLength: 2,
-            tags: [],
-            ajax: {
-                type: "POST",
-                url: "{% url 'search_concept' %}",
-                data: function (params) {
-                    console.log(params);
-                    var queryParams = {
-                        'relationterm' : params['term'],
-                        'csrfmiddlewaretoken' : '{{ csrf_token }}'
-                    }
-                    return queryParams;
-                },
-                dataType: 'json',
-                processResults: function (data) {
-                    if (data.length > 0) {
-                        return {
-                            results: $.map(data, function(datum) {
-                                return {id: datum.id, text: datum.name};
-                            })
-                        }
-                    } else {
-                        return {results: [{'id': '0', 'text': 'No Results Found'}]}
-                    }
-                }
-            }
-        });
+        $('#id_concept-contrasts').select2({ width: '100%'});
+        $('#id_contrasts').select2({ width: '100%'});
+        $('#id_concept').select2({width: '100%'});
+        $('#id_disorders').select2({width: '100%'});
     });
-
+    
     $(function() {
 
     $('#conceptterm').click(function() {
@@ -584,26 +537,23 @@ $(document).ready(function() {
     });
 
     // Button functionality for concept contrast selection
-    {% if "ASSERTS" in task.relations %}
     (function() {
-       {% for relation in task.relations.ASSERTS %}
+       {% for concept, contrasts in concepts.items %}
 
-        $("#add_contrast_button_{{ relation.id }}").click(function(){
-            $("#contrast_search_box_{{ relation.id }}").removeClass("hidden")
+        $("#add_contrast_button_{{ concept.id }}").click(function(){
+            $("#contrast_search_box_{{ concept.id }}").removeClass("hidden")
         }); 
 
-        $("#cancel_button_{{ relation.id }}").click(function(){
-            $("#contrast_search_box_{{ relation.id }}").addClass("hidden")
+        $("#cancel_button_{{ concept.id }}").click(function(){
+            $("#contrast_search_box_{{ concept.id }}").addClass("hidden")
         });
 
-        $("#close_button_{{ relation.id }}").click(function(){
-            $("#contrast_search_box_{{ relation.id }}").addClass("hidden")
+        $("#close_button_{{ concept.id }}").click(function(){
+            $("#contrast_search_box_{{ concept.id }}").addClass("hidden")
         });
 
         {% endfor %}
     })();
-    {% endif %}
-
 
     {% endif %}
 

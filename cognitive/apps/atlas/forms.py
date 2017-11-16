@@ -139,6 +139,28 @@ class TaskDisorderForm(forms.Form):
         self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('task-disorder-cancel', 'Cancel'))
 
+class TaskConceptForm(forms.Form):
+    def __init__(self, task_id, *args, **kwargs):
+        super(TaskConceptForm, self).__init__(*args, **kwargs)
+        concept = Concept()
+        tasks = Task()
+        contrasts = tasks.get_relation(task_id, "HASCONTRAST")
+
+        cont_choices = [(x['id'], x['name']) for x in contrasts]
+        self.fields['concept-contrasts'] = forms.ChoiceField(choices=cont_choices)
+
+        concept_choices = [(x['id'], x['name']) for x in concept.all()]
+        self.fields['concept'] = forms.ChoiceField(choices=concept_choices)
+
+        self.helper = FormHelper()
+        self.helper.attrs = {'id': 'concept-form'}
+        self.helper.form_class = "hidden"
+        self.helper.form_action = reverse('add_task_concept',
+                                          kwargs={'uid': task_id})
+        self.helper.add_input(Submit('submit', 'Submit'))
+        self.helper.add_input(Reset('task-concept-cancel', 'Cancel'))
+
+
 class TheoryForm(forms.Form):
     label = "Enter the name of the theory collection you wish to add: "
     name = forms.CharField(required=True, label=label)

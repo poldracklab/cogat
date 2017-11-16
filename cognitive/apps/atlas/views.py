@@ -302,6 +302,7 @@ def view_task(request, uid, return_context=False):
         "doi_form": forms.DoiForm(uid, 'task'),
         "disorders": disorders,
         "task_disorder_form": TaskDisorderForm(uid),
+        "task_concept_form": forms.TaskConceptForm(uid),
         "disambiguation_form": forms.DisambiguationForm("task", uid, task),
     }
 
@@ -759,11 +760,21 @@ def add_task_concept(request, uid):
        with the task.
     :param uid: the unique id of the task, for returning to the task page when finished
     '''
-    if request.method == "POST":
-        relation_type = "ASSERTS" #task --asserts-> concept
-        concept_selection = request.POST.get('concept_selection', '')
-        Task.link(uid, concept_selection, relation_type, endnode_type="concept")
-    return view_task(request, uid)
+    if request.method != "POST":
+        return HttpResponseNotAllowed(['POST'])
+    form = forms.TaskConceptForm(uid, request.POST)
+    if form.is_valid():
+        cleaned_data = form.cleaned_data
+        concept_id = cleaned_data['concept']
+        cont_id = cleaned_data['concept-contrasts']
+        Concept.link(concept_id, cont_id, "MEASUREDBY", endnode_type="contrast")
+        return redirect('view_task', uid=uid)
+    else:
+        context = view_task(request, uid, return_context=True)
+        context['task_concept_form'] = form 
+        return render(request, 'atlas/view_task.html', context)
+
+
 
 @login_required
 @user_passes_test(rank_check, login_url='/403')

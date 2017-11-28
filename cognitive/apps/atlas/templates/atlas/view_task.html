@@ -303,7 +303,7 @@
         {% for contrast in contrasts %}
         <div id="contrast_container_{{ contrast.id }}">
             <div class="conblock-inner-wide">
-                <a name="{{ contrast.name }}" class="task" href="#">{{ contrast.name }}</a><br/>
+                <a name="{{ contrast.name }}" class="task" href="#">{{ contrast.name }}</a>(<a href="{% url 'update_contrast' contrast.id %}">edit</a>)<br/>
                 {% if contrast.conditions %}
                 <table class=condition-table>
                 <thead><tr>

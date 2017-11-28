@@ -1,10 +1,22 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, HTML, Layout, Field, Reset, Submit, Button
 
 from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass, Concept
+
+def set_field_html_name(cls, new_name):
+    """
+    This creates wrapper around the normal widget rendering,
+    allowing for a custom field name (new_name).
+    """
+    old_render = cls.widget.render
+    def _widget_render_wrapper(name, value, attrs=None):
+        return old_render(new_name, value, attrs)
+
+    cls.widget.render = _widget_render_wrapper
 
 class TaskForm(forms.Form):
     term_name = forms.CharField(required=True)
@@ -42,10 +54,28 @@ class ConceptForm(forms.Form):
 
 class ContrastForm(forms.Form):
     name = forms.CharField(required=True)
+    description = forms.CharField(required=True)
 
 class ConditionForm(forms.Form):
     condition_text = forms.CharField(required=True)
     condition_description = forms.CharField(required=True)
+
+class WeightForm(forms.Form):
+    weight = forms.FloatField()
+
+    def __init__(self, cond_id, label, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.weight_name = cond_id
+        self.fields['weight'].label = label
+        set_field_html_name(self.fields['weight'], self.weight_name)
+
+    def clean_weight(self):
+        data = self.data['weight']
+        if not data:
+            raise ValidationError('Missing input')
+        return data
 
 class ImplementationForm(forms.Form):
     implementation_uri = forms.URLField(required=True)

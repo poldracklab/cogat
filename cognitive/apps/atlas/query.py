@@ -158,6 +158,20 @@ class Node(object):
                 node[field] = update
             node.push()
 
+    def update_link_properties(self, uid, endnode_id, relation_type,
+                               endnode_type, properties, label=None):
+        if label is None:
+            label = self.name
+        if endnode_type is None:
+            endnode_type = self.name
+        start_node = self.graph.find_one(label, property_key='id', property_value=uid)
+        end_node = self.graph.find_one(endnode_type, property_key='id', property_value=endnode_id)
+
+        relation = self.graph.match_one(start_node, relation_type, end_node)
+        if properties != None:
+            for property_name in properties.keys():
+                relation.properties[property_name] = properties[property_name]
+            relation.push()
 
     def cypher(self, uid, lookup=None, return_lookup=False):
         ''' cypher returns a data structure with nodes and relations for an
@@ -665,12 +679,12 @@ class Contrast(Node):
 
         if fields is None:
             fields = ["condition.creation_time", "condition.id",
-                      "condition.last_updated", "condition.name", "ID(condition)"]
+                      "condition.last_updated", "condition.name",
+                      "r.weight", "ID(condition)"]
 
         return_fields = ",".join(fields)
-        query = '''MATCH (cond:condition)-[:HASCONTRAST]->(c:contrast)
+        query = '''MATCH (condition:condition)-[r:HASCONTRAST]->(c:contrast)
                    WHERE c.id='{}'
-                   WITH cond as condition
                    RETURN {}'''.format(contrast_id, return_fields)
 
         fields = [x.replace(".", "_") for x in fields]

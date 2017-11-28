@@ -246,11 +246,13 @@
                     </tr>
                     <tr>
                        <td width='50%' valign='top'><b><a href="{% url 'task' task.id %}" class="task">{{ task.name }}</a></b></td>
+                        <td width='50%' valign='top'>
+                        <ul>
                         {% for contrast in contrasts %}
-                           <td width='50%' valign='top'>{{ contrast.name }}</td>
-                        {% empty %}
-                           <td width='50%' valign='top'></td>
+                           <li>{{ contrast.name }}</li>
                         {% endfor %}
+                        </ul>
+                        </td>
                     </tr>
                 </table>
                 {% endfor %}

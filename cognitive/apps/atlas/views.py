@@ -25,7 +25,7 @@ import cognitive.apps.atlas.forms as forms
 import cognitive.apps.atlas.query as query
 
 from cognitive.apps.atlas.utils import (clean_html, add_update,
-                                        get_paper_properties, InvalidDoiException)
+                                         get_paper_properties, InvalidDoiException)
 from cognitive.settings import DOMAIN, graph
 
 Assertion = query.Assertion()
@@ -1277,18 +1277,57 @@ def add_citation_doi(request, label, uid):
     request.POST = post
     node_class = node_class_lookup(label)
     if node_class is None:
-        messages.error(request, "Operation could not be performed on node label {}".format(label))
-        return #500 error?
+        messages.error(
+            request,
+            "Operation could not be performed on node label {}".format(label)
+        )
+        return redirect(view, uid)
     view_func = node_view_lookup(label)
     if view_func is None:
-        messages.error(request, "Detail view for {} could not be found".format(label))
-        return #500 error?
+        messages.error(request,
+                       "Detail view for {} could not be found".format(label))
+        return redirect(view, uid)
     return make_link(request, uid, node_class, Citation, CitationForm,
                      'citation_desc', view_func, "HASCITATION")
 
 
+@login_required
+@user_passes_test(rank_check, login_url='/403')
+def update_contrast(request, uid):
+    try:
+        contrast = Contrast.get(uid)[0]
+    except IndexError:
+        raise Http404("Contrast does not exist")
 
-# SEARCH TERMS ####################################################################
+    conditions = Contrast.get_conditions(uid)
+    task = Contrast.get_tasks(uid)[0]
+    if request.method == 'GET':
+        condition_forms = []
+        for condition in conditions:
+            form = forms.WeightForm(
+                condition['condition_id'],
+                label=condition['condition_name'],
+                data={'weight': condition['r_weight']}
+            )
+            condition_forms.append(form)
+        context = {
+            'condition_forms': condition_forms,
+            'contrast': contrast,
+            'task': task
+        }
+        return render(request, "atlas/update_contrast.html", context)
+    elif request.method == "POST":
+        for condition in conditions:
+            cond_id = condition['condition_id']
+            if request.POST.get(cond_id, None):
+                weight = request.POST[cond_id]
+                Condition.update_link_properties(cond_id, uid, "HASCONTRAST", "contrast",
+                                                 {'weight': weight})
+        return redirect(view_task, task['task_id'])
+    else:
+        return HttpResponseNotAllowed(['GET', 'POST'])
+
+# SEARCH TERMS ################################################################
 
 def search_all(request):
     ''' used by templates via ajax when searching for terms '''

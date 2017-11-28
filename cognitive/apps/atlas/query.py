@@ -866,15 +866,13 @@ def search(searchstring, fields=["name", "id"], node_type=None):
 
     query = '''MATCH (n%s)
                WHERE str(n.name) =~ '(?i).*%s.*'
-               AND NOT n:assertion
-               AND NOT n:condition
-               AND NOT n:contrast
-               AND NOT n:citation
-               AND NOT n:external_dataset
-               AND NOT n:external_link
-               AND NOT n:implementation
-               AND NOT n:indicator
-               AND NOT n:user
+               AND (n:concept
+               OR n:task
+               OR n:theory
+               OR n:battery
+               OR n:disorder
+               OR n:trait
+               OR n:behavior)
                RETURN %s, labels(n)
                ORDER BY n.name;''' %(node_type, searchstring.__repr__()[1:-1], return_fields)
     fields = fields + ["_id", "label"]

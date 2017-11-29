@@ -1291,6 +1291,12 @@ def add_citation_doi(request, label, uid):
                      'citation_desc', view_func, "HASCITATION")
 
 
+def view_contrast(request, uid):
+    task = Contrast.get_tasks(uid)[0]
+    if not task:
+        raise Http404("Contrast has no parent task")
+    return redirect(view_task, task['task_id'])
+
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def update_contrast(request, uid):

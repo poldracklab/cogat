@@ -872,7 +872,8 @@ def search(searchstring, fields=["name", "id"], node_type=None):
                OR n:battery
                OR n:disorder
                OR n:trait
-               OR n:behavior)
+               OR n:behavior
+               OR n:contrast)
                RETURN %s, labels(n)
                ORDER BY n.name;''' %(node_type, searchstring.__repr__()[1:-1], return_fields)
     fields = fields + ["_id", "label"]

@@ -30,6 +30,7 @@ urlpatterns = [
         name="tasks_by_letter"),
 
     # Detail View
+    url(r'^contrast/id/(?P<uid>[\w\+%_& ]+)/$', views.view_contrast, name="view_contrast"),
     url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="disorder"),
     url(r'^disorder/id/(?P<uid>[\w\+%_& ]+)/$', views.view_disorder, name="view_disorder"),
     url(r'^trait/id/(?P<uid>[\w\+%_& ]+)/$', views.view_trait, name="view_trait"),

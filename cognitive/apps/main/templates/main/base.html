@@ -168,7 +168,8 @@ $(document).ready(function() {
                     console.log(data);
                     return {
                         results: $.map(data, function(datum) {
-                            return {id: datum.id, text: datum.name, label: datum.label};
+                            display_name = datum.name + " (" + datum.label + ")"
+                            return {id: datum.id, text: display_name, label: datum.label};
                         })
                     }
                 }

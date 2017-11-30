@@ -19,13 +19,11 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         DisorderDisorderForm, ExternalLinkForm,
                                         BatteryBatteryForm, BatteryTaskForm,
                                         ConceptForm)
-
 import cognitive.apps.atlas.forms as forms
-
 import cognitive.apps.atlas.query as query
-
 from cognitive.apps.atlas.utils import (clean_html, add_update,
                                          get_paper_properties, InvalidDoiException)
+from cognitive.apps.users.models import User
 from cognitive.settings import DOMAIN, graph
 
 Assertion = query.Assertion()
@@ -54,6 +52,23 @@ def rank_check(user):
         return int(user.rank) > 2
     except ValueError:
         return False
+
+def get_display_name(uid):
+    user = User.objects.values_list('first_name', 'last_name', 'obfuscate').get(id=uid)
+    if not user[2]:
+        return "Anonymous"
+    return "{}{}".format(user[0][0], user[1])
+
+def get_creator(uid, label):
+    node_class = node_class_lookup(label)
+    try:
+        creator_node = node_class.get_reverse_relation(uid, "CREATED", label="user")[0]
+        creator = get_display_name(creator_node["id"])
+    except IndexError:
+        creator = None
+    return creator
+
+
 
 # VIEWS FOR ALL NODES #########################################################
 
@@ -191,13 +206,13 @@ def nodes_by_letter(request, letter, nodes, nodes_count, node_type):
 
 def concepts_by_letter(request, letter):
     '''concepts_by_letter returns concept view for a certain letter'''
-    concepts = Concept.filter(filters=[("name", "starts_with", letter)])
+    concepts = Concept.filter(filters=[("name", "starts_with", letter)], order_by="name")
     concepts_count = len(concepts)
     return nodes_by_letter(request, letter, concepts, concepts_count, "concepts")
 
 def tasks_by_letter(request, letter):
     '''tasks_by_letter returns task view for a certain letter'''
-    tasks = Task.filter(filters=[("name", "starts_with", letter)])
+    tasks = Task.filter(filters=[("name", "starts_with", letter)], order_by="name")
     tasks_count = len(tasks)
     return nodes_by_letter(request, letter, tasks, tasks_count, "tasks")
 
@@ -238,6 +253,7 @@ def view_concept(request, uid, return_context=False):
         tasks[contrast_task[0]].append(contrast)
 
     context = {
+        "creator": get_creator(uid, "concept"),
         "are_kinds_of": are_kinds_of,
         "are_parts_of": are_parts_of,
         "concept": concept,
@@ -293,6 +309,7 @@ def view_task(request, uid, return_context=False):
 
     context = {
         "task": task,
+        "creator": get_creator(uid, "task"),
         "concepts": concepts,
         "contrasts": contrasts,
         "conditions": conditions,
@@ -334,6 +351,7 @@ def view_battery(request, uid, return_context=False):
 
     context = {
         "battery": battery,
+        "creator": get_creator(uid, "battery"),
         "citations": citations,
         "doi_form": forms.DoiForm(uid, 'battery'),
         "indicators": indicators,
@@ -382,6 +400,7 @@ def view_theory(request, uid, return_context=False):
 
     context = {
         "theory": theory,
+        "creator": get_creator(uid, "theory"),
         "assertions": assertions,
         "theory_assertions_form": theory_assertions_form,
         "referenced_terms": referenced_terms,
@@ -415,6 +434,7 @@ def view_disorder(request, uid, return_context=False):
     citations = Disorder.get_relation(disorder["id"], "HASCITATION")
     context = {
         "disorder":disorder,
+        "creator": get_creator(uid, "disorder"),
         "citations": citations,
         "doi_form": forms.DoiForm(uid, 'disorder'),
         "assertions": tasks,
@@ -449,6 +469,7 @@ def view_trait(request, uid, return_context=False):
 
     context = {
         "trait": trait,
+        "creator": get_creator(uid, "trait"),
         "citations": citations,
         "doi_form": forms.DoiForm(uid, 'trait'),
         "assertions": tasks,
@@ -481,6 +502,7 @@ def view_behavior(request, uid, return_context=False):
 
     context = {
         "behavior": behavior,
+        "creator": get_creator(uid, "behavior"),
         "citations": citations,
         "doi_form": forms.DoiForm(uid, 'behavior'),
         "assertions": tasks,

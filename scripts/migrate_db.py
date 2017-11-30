@@ -88,7 +88,7 @@ def get_def(uid):
         return ""
 
 def import_tasks():
-    sql = "select id, term_text from table_term, where term_type='task'"
+    sql = "select id, term_text from table_term where term_type='task'"
     cursor.execute(sql)
     tasks = cursor.fetchall()
     for task in tasks:

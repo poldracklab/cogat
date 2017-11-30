@@ -283,6 +283,18 @@ def get_measured_by(contrasts, label):
         ret[label_node[0]].append(contrast)
     return ret
 
+def get_hasdifference(contrasts):
+    ret = {}
+    for contrast in contrasts:
+        label_node = Contrast.get_relation(contrast["id"], "HASDIFFERENCE", "disorder")
+        try:
+            ret[label_node[0]]
+        except KeyError:
+            ret[label_node[0]] = []
+        except IndexError:
+            continue
+        ret[label_node[0]].append(contrast)
+    return ret
 
 def view_task(request, uid, return_context=False):
     ''' Detail view for a given task '''
@@ -301,7 +313,7 @@ def view_task(request, uid, return_context=False):
     datasets = Task.get_relation(task["id"], "HASEXTERNALDATASET")
     indicators = Task.get_relation(task["id"], "HASINDICATOR")
     citations = Task.get_relation(task["id"], "HASCITATION")
-    disorders = Task.api_get_disorders(task["id"])
+    disorders = get_hasdifference(contrasts)
 
     concepts = get_measured_by(contrasts, "concept")
     behaviors = get_measured_by(contrasts, "behavior")
@@ -990,7 +1002,7 @@ def add_task_disorder(request, task_id):
             node_type = 'trait'
 
         if node_type == 'disorder':
-            Contrast.link(cont_id, phenotype_id, "HASDIFFERENCE", endnode_type=endnode_type)
+            Contrast.link(cont_id, phenotype_id, "HASDIFFERENCE", endnode_type=node_type)
         else:
             node_class_lookup(node_type).link(phenotype_id, cont_id,
                                               "MEASUREDBY", endnode_type='contrast')

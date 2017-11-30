@@ -1055,7 +1055,8 @@ def add_disambiguation(request, label, uid):
         cleaned_data['term2_name_ext']
     )
     new_node = Node.create(new_node_name,
-                           {"definition_text": cleaned_data['term2_definition']}, label=label)
+                           {"definition_text": cleaned_data['term2_definition']},
+                           label=label, request=request)
     new_id = new_node.properties['id']
 
     # update orig term name
@@ -1070,7 +1071,7 @@ def add_disambiguation(request, label, uid):
         label=label
     )
     # new disambiguation node
-    disam = Disambiguation.create(cleaned_data['term1_name'])
+    disam = Disambiguation.create(cleaned_data['term1_name'], request=request)
     disam_id = disam.properties['id']
 
     # link terms to disambig

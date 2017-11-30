@@ -291,7 +291,10 @@ class Node(object):
                 query = "{} WHERE n.{} =~ '(?i){}.*'".format(query, filter_field, filter_value)
         query = "{} RETURN {}".format(query, return_fields)
         if order_by != None:
-            query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
+            if order_by == 'name':
+                query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
+            else:
+                query = "{} ORDER BY n.{}".format(query, order_by)
             if desc is True:
                 query = "{} desc".format(query)
         fields = fields + ["_id"]
@@ -318,7 +321,10 @@ class Node(object):
         query = "MATCH (n:{}) RETURN {}".format(self.name, return_fields)
 
         if order_by != None:
-            query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
+            if order_by == 'name':
+                query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
+            else:
+                query = "{} ORDER BY n.{}".format(query, order_by)
             if desc is True:
                 query = "{} desc".format(query)
 

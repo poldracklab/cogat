@@ -185,15 +185,50 @@
 <!-- DISORDERS -->
 <div id="bloastsk-implementors" class="block-halfwide-rfloat block-back block-margin">
     <div class="pane">
-        <div class="discdiv"><b>DISORDERS</b> associated with <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
-            {% for disorder in disorders %}
-                <a href={% url "disorder" disorder.id %}>{{ disorder.name }}</a><br>
+        <div class="discdiv"><b>Phenotypes</b> associated with <em><a href="javascript:void(0)" class="task">{{ task.name }}</a></em><br>
+            <h2>Disorders</h2>
+            {% for disorder, disorder_contrasts in disorders.items %}
+                <a href={% url "view_disorder" disorder.id %}>{{ disorder.name }}</a><br>
+                <ul style="margin-left:30px;margin-top:8px;list-style-image:url('/static/img/contrast-icon.jpg');">
+                    {% for contrast in disorder_contrasts %}
+                    <li class="contrastli">
+                        <a href="#" class="task">{{ contrast.name }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% empty %}
+                <span class="noassoc">No associations have been added.</span><br><br>
+            {% endfor %}
+            <h2>Traits</h2>
+            {% for trait, trait_contrasts in traits.items %}
+                <a href={% url "view_trait" trait.id %}>{{ trait.name }}</a><br>
+                <ul style="margin-left:30px;margin-top:8px;list-style-image:url('/static/img/contrast-icon.jpg');">
+                    {% for contrast in trait_contrasts %}
+                    <li class="contrastli">
+                        <a href="#" class="task">{{ contrast.name }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+            {% empty %}
+                <span class="noassoc">No associations have been added.</span><br><br>
+            {% endfor %}
+            <h2>Behaviors</h2>
+            {% for behavior, behavior_contrasts in behaviors.items %}
+                <a href={% url "view_behavior" behavior.id %}>{{ behavior.name }}</a><br>
+                <ul style="margin-left:30px;margin-top:8px;list-style-image:url('/static/img/contrast-icon.jpg');">
+                    {% for contrast in behavior_contrasts %}
+                    <li class="contrastli">
+                        <a href="#" class="task">{{ contrast.name }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
             {% empty %}
                 <span class="noassoc">No associations have been added.</span><br><br>
             {% endfor %}
         </div>
     {% if user.is_authenticated %}
-        <button style="float:right;margin-top:10px" id="add_disorder_button">ADD DISORDER</button>		
+        <button style="float:right;margin-top:10px" id="add_disorder_button">ADD PHENOTYPE</button>		
         <form class="hidden" action="{% url 'add_task_disorder' task.id %}" method="post" id="id-disorderform">
             {% csrf_token %}
             {% crispy task_disorder_form task_disorder_form.helper %}

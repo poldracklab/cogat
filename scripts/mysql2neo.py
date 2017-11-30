@@ -52,7 +52,7 @@ for definition in definitions:
     gtask.properties['def_event_stamp'] = definition[4]
     gtask.properties['id_concept_class'] = definition[5]
     gtask.push()
-    
+
 
 # import indicators
 print("indicators...")
@@ -65,7 +65,7 @@ for indicator in indicators:
         continue
     gret = graph.create(Node("indicator", type=indicator[0]))
     #print(str.encode(str(gret), 'utf-8'))
-    
+
 
 print("indicator relationships...")
 sql = "select * from type_indicator"
@@ -206,7 +206,7 @@ for disorder in disorders:
         )
         #print(str.encode(str(gret), 'utf-8'))
 
-# import is_a relationships 
+# import is_a relationships
 for disorder in disorders:
     start_node = graph.find_one("disorder", property_key="id",
                                 property_value=disorder[2])
@@ -284,15 +284,6 @@ for altid in altids:
         else:
             disorder.properties['alt_id'] = new_altid
 '''
-
-# import concept class
-print("concept class types...")
-sql = "select * from type_concept"
-cursor.execute(sql)
-types = cursor.fetchall()
-for type in types:
-    pass
-
 
 cursor.close()
 conn.close()

@@ -1,13 +1,26 @@
 import html
+import os
 import re
+
+
 
 from py2neo import Graph, Node, Relationship
 import pymysql
+import psycopg2
 
 conn = pymysql.connect(host='localhost', user='root', db='cogat')
 cursor = conn.cursor()
 
 graph = Graph("http://graphdb:7474/db/data/")
+
+post_conn = psycopg2.connect(
+    dbname=os.environ.get('POSTGRES_NAME'),
+    user=os.environ.get('POSTGRES_USER'),
+    password=os.environ.get('POSTGRES_PASSWORD'),
+    host=os.environ.get('POSTGRES_HOST')
+)
+post_cur = post_conn.cursor()
+
 
 def make_node(nodetype, uid, name, properties=None, property_key="id"):
     node = None
@@ -59,7 +72,7 @@ def find_node(nodetype, property_value, property_key='id'):
             nodetype,
             property_key=property_key,
             property_value=property_value)
-    except BaseException:
+    except BaseException as e:
         node = None
     return node
 
@@ -75,7 +88,7 @@ def get_def(uid):
         return ""
 
 def import_tasks():
-    sql = "select id, term_text from table_term where term_type='task'"
+    sql = "select id, term_text from table_term, where term_type='task'"
     cursor.execute(sql)
     tasks = cursor.fetchall()
     for task in tasks:
@@ -84,6 +97,28 @@ def import_tasks():
         name = task[1]
         props['definition_text'] = get_def(uid)
         make_node("task", uid, name, props)
+
+def import_disorders():
+    sql = "select * from disorder_import"
+    cursor.execute(sql)
+    disorders = cursor.fetchall()
+
+    for disorder in disorders:
+        found = graph.find_one("disorder", property_key="id",
+                               property_value=disorder[2])
+
+        if found:
+            continue
+        # skip over legacy test disorders.
+        if disorder[4] == "Flapjacks" or disorder[4] == "Wingnut":
+            continue
+        gret = graph.create(
+            Node("disorder", id=disorder[2], id_protocol=disorder[3],
+                 name=disorder[4], definition=disorder[5],
+                 id_user=disorder[9], event_stamp=disorder[10],
+                 flag_for_curator=disorder[11])
+        )
+        #print(str.encode(str(gret), 'utf-8'))
 
 def import_conditions():
     sql = "select id, id_user, id_term, condition_text, condition_description, event_stamp from type_condition"
@@ -347,7 +382,52 @@ def import_forks():
         print(disam)
 
         make_relation(disam, "DISAMBIGUATES", term)
-        
+
+def find_old_user(old_id):
+    select_query = "select id, username from users_user where old_id='{}'".format(old_id)
+    post_cur.execute(select_query)
+    try:
+        user = post_cur.fetchone()
+        return user[0], user[1]
+    except:
+        return None, None
+
+def link_users(query, label):
+    cursor.execute(query)
+    old_entries = cursor.fetchall()
+    for entry in old_entries:
+        user_id, username = find_old_user(entry[1])
+        user = find_node("user", str(user_id))
+        if user_id is None:
+            print("user not found in lookup {}".format(entry))
+            continue
+        if not user:
+            make_node("user", user_id, username, {})
+        node = find_node(label, entry[0])
+        if user and node:
+            make_relation(user, "CREATED", node)
+
+def import_task_users():
+    sql = "select id, id_user from table_term where term_type='task'"
+    link_users(sql, "task")
+
+def import_concept_users():
+    sql = "select id, id_user from table_term where term_type='concept'"
+    link_users(sql, "concept")
+
+def import_disorder_users():
+    sql = "select id, id_user from disorder_import"
+    link_users(sql, "disorder")
+
+def import_theory_users():
+    sql = "select id, id_user from table_theory_collection"
+    link_users(sql, "theory")
+
+def import_battery_users():
+    sql = "select id, id_user from table_task_collection"
+    link_users(sql, "battery")
+    
+
 if __name__ == '__main__':
     graph = Graph("http://graphdb:7474/db/data/")
     graph.delete_all()
@@ -364,5 +444,11 @@ if __name__ == '__main__':
     import_concept_class()
     import_concept_class_relations()
     import_forks()
+    import_disorders()
+    import_task_users()
+    import_concept_users()
+    import_disorder_users()
+    import_theory_users()
+    import_battery_users()
     cursor.close()
     conn.close()

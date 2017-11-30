@@ -254,6 +254,19 @@ def view_concept(request, uid, return_context=False):
 
     return render(request, 'atlas/view_concept.html', context)
 
+def get_measured_by(contrasts, label):
+    ret = {}
+    for contrast in contrasts:
+        label_node = Contrast.get_reverse_relation(contrast["id"], "MEASUREDBY", label)
+        try:
+            ret[label_node[0]]
+        except KeyError:
+            ret[label_node[0]] = []
+        except IndexError:
+            continue
+        ret[label_node[0]].append(contrast)
+    return ret
+
 
 def view_task(request, uid, return_context=False):
     ''' Detail view for a given task '''
@@ -274,17 +287,9 @@ def view_task(request, uid, return_context=False):
     citations = Task.get_relation(task["id"], "HASCITATION")
     disorders = Task.api_get_disorders(task["id"])
 
-    concepts = {}
-    for contrast in contrasts:
-        contrast_concept = Contrast.get_reverse_relation(contrast["id"], "MEASUREDBY", "concept")
-        try:
-            concepts[contrast_concept[0]]
-        except KeyError:
-            concepts[contrast_concept[0]] = []
-        except IndexError:
-            continue
-        concepts[contrast_concept[0]].append(contrast)
-
+    concepts = get_measured_by(contrasts, "concept")
+    behaviors = get_measured_by(contrasts, "behavior")
+    traits = get_measured_by(contrasts, "trait")
 
     context = {
         "task": task,
@@ -301,6 +306,8 @@ def view_task(request, uid, return_context=False):
         "citations": citations,
         "doi_form": forms.DoiForm(uid, 'task'),
         "disorders": disorders,
+        "traits": traits,
+        "behaviors": behaviors,
         "task_disorder_form": TaskDisorderForm(uid),
         "task_concept_form": forms.TaskConceptForm(uid),
         "disambiguation_form": forms.DisambiguationForm("task", uid, task),
@@ -771,7 +778,7 @@ def add_task_concept(request, uid):
         return redirect('view_task', uid=uid)
     else:
         context = view_task(request, uid, return_context=True)
-        context['task_concept_form'] = form 
+        context['task_concept_form'] = form
         return render(request, 'atlas/view_task.html', context)
 
 
@@ -793,7 +800,7 @@ def add_concept_task(request, concept_id):
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def link_disam(request, label, uid):
-    ''' link_disam_task will create a link between an existing disambiguation 
+    ''' link_disam_task will create a link between an existing disambiguation
         page and an existing task.
     :param uid: the unique id of the disambiguation
     '''
@@ -807,7 +814,7 @@ def link_disam(request, label, uid):
 @login_required
 @user_passes_test(rank_check, login_url='/403')
 def unlink_disam(request, label, uid, tid):
-    ''' link_disam_task will create a link between an existing disambiguation 
+    ''' link_disam_task will create a link between an existing disambiguation
         page and an existing task.
     :param uid: the unique id of the disambiguation
     '''
@@ -949,10 +956,23 @@ def add_task_disorder(request, task_id):
     task_disorder_form = TaskDisorderForm(task_id, request.POST)
     if task_disorder_form.is_valid():
         cleaned_data = task_disorder_form.cleaned_data
-        disorder_id = cleaned_data['disorders']
+        phenotype_id = cleaned_data['disorders']
         cont_id = cleaned_data['contrasts']
-        Contrast.link(cont_id, disorder_id, "HASDIFFERENCE", endnode_type="disorder")
-        return view_task(request, task_id)
+        if phenotype_id[:3] == 'dso':
+            node_type = 'disorder'
+        elif phenotype_id[:3] == 'bvr':
+            node_type = 'behavior'
+        elif phenotype_id[:3] == 'trt':
+            node_type = 'trait'
+        else:
+            node_type = 'trait'
+
+        if node_type == 'disorder':
+            Contrast.link(cont_id, phenotype_id, "HASDIFFERENCE", endnode_type=endnode_type)
+        else:
+            node_class_lookup(node_type).link(phenotype_id, cont_id,
+                                              "MEASUREDBY", endnode_type='contrast')
+        return redirect(view_task, task_id)
     else:
         context = view_task(request, task_id, return_context=True)
         context['task_disorder_form'] = task_disorder_form
@@ -1251,7 +1271,7 @@ def add_citation_doi(request, label, uid):
     if form.is_valid() is False:
         messages.error(request, "The doi provided is invalid.")
         return redirect(view, uid)
-    
+
     doi = form.cleaned_data['doi']
 
     properties = ()
@@ -1266,7 +1286,7 @@ def add_citation_doi(request, label, uid):
             'citation_authors': properties[1],
             'citation_url': properties[2],
             'citation_pubdate': properties[3],
-            'citation_pubname': properties[4], 
+            'citation_pubname': properties[4],
         }
     except IndexError:
         messages.error(request, "Unable to retrieve all necessary information from DOI {}".format(doi))

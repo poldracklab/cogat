@@ -562,6 +562,39 @@ class Task(Node):
             })
         return ret_disorders
 
+    def _api_get_phenotypes(self, task_id, label):
+        query = '''
+            MATCH (t:task)-[:HASCONTRAST]->(c:contrast)<-[rel:MEASUREDBY]-(node:{})
+            WHERE t.id='{}' RETURN rel, node, c'''.format(label, task_id)
+        nodes = do_query(query, ["null", "null2", "null3"], "list")
+        ret_nodes = []
+        pheno_key = ''.join(['id_', label])
+        for node in nodes:
+            pheno = node[0]
+            rel = node[1]
+            contrast = node[2]
+            print(pheno)
+            print(rel)
+            print(contrast)
+            ret_nodes.append({
+                'id': rel.properties['id'],
+                'name': rel.properties['name'],
+                'id_user': pheno.properties['id_user'],
+                pheno_key: pheno['properties.id'],
+                'id_task': task_id,
+                'id_contrast': contrast.properties['id'],
+                'contrast_name': contrast.properties['name'],
+                'event_stamp': rel.properties['event_stamp']
+            })
+        return ret_nodes
+
+    def api_get_traits(self, task_id):
+        return self._api_get_phenotypes(task_id, 'trait')
+
+    def api_get_behaviors(self, task_id):
+        return self._api_get_phenotypes(task_id, 'behavior')
+
+
     # the relationship itself contains data that should be presented in api
     # no functions right now for getting end node and relation properties
     def api_get_indicators(self, task_id):
@@ -861,7 +894,7 @@ def search(searchstring, fields=["name", "id"], node_type=None):
         node_type = ""
     else:
         node_type = ":{}".format(node_type.lower())
-    
+
     searchstring = re.escape(searchstring)
 
     query = '''MATCH (n%s)
@@ -885,7 +918,7 @@ def search(searchstring, fields=["name", "id"], node_type=None):
 def search_contrast(searchstring):
     searchstring = re.escape(searchstring)
 
-    query = '''match (t:task)-[:HASCONTRAST]->(c:contrast) 
+    query = '''match (t:task)-[:HASCONTRAST]->(c:contrast)
                where str(c.name) =~ '(?i).*{0}.*' or str(t.name) =~ '(?i).*{0}.*'
                return t.id, t.name, c.id, c.name
                order by t.name

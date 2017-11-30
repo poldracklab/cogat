@@ -6,6 +6,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, HTML, Layout, Field, Reset, Submit, Button
 
 from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass, Concept
+import cognitive.apps.atlas.query as query
 
 def set_field_html_name(cls, new_name):
     """
@@ -155,14 +156,19 @@ class TaskDisorderForm(forms.Form):
     def __init__(self, task_id, *args, **kwargs):
         super(TaskDisorderForm, self).__init__(*args, **kwargs)
         disorders = Disorder()
+        behaviors = query.Behavior()
+        traits = query.Trait()
         tasks = Task()
         contrasts = tasks.get_relation(task_id, "HASCONTRAST")
 
         cont_choices = [(x['id'], x['name']) for x in contrasts]
         self.fields['contrasts'] = forms.ChoiceField(choices=cont_choices)
 
-        dis_choices = [(x['id'], x['name']) for x in disorders.all()]
-        self.fields['disorders'] = forms.ChoiceField(choices=dis_choices)
+        pheno_choices = []
+        pheno_choices.extend([(x['id'], ''.join([x['name'], " (Disorder)"])) for x in disorders.all()])
+        pheno_choices.extend([(x['id'], ''.join([x['name'], " (Behavior)"])) for x in behaviors.all()])
+        pheno_choices.extend([(x['id'], ''.join([x['name'], " (Trait)"])) for x in traits.all()])
+        self.fields['disorders'] = forms.ChoiceField(choices=pheno_choices)
 
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -315,11 +321,11 @@ class DisambiguationForm(forms.Form):
     term1_name = forms.CharField(label="")
     term1_name_ext = forms.CharField(label="")
     term1_definition = forms.CharField(required=True, widget=forms.Textarea(),
-                                      label="Original Term Description")
+                                       label="Original Term Description")
     term2_name = forms.CharField(label="")
     term2_name_ext = forms.CharField(label="")
     term2_definition = forms.CharField(required=True, widget=forms.Textarea(),
-                                      label="New Term Description")
+                                       label="New Term Description")
 
     def __init__(self, label, uid, term=None, *args, **kwargs):
         super(DisambiguationForm, self).__init__(*args, **kwargs)

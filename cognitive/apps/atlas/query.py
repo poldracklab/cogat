@@ -272,7 +272,7 @@ class Node(object):
         return result
 
 
-    def filter(self, filters, format="dict", fields=None):
+    def filter(self, filters, format="dict", fields=None, order_by=None, desc=None):
         '''filter will filter a node based on some set of filters
         :param filters: a list of tuples with [(field,filter,value)],
                         eg [("name","starts_with","a")].
@@ -290,6 +290,10 @@ class Node(object):
             if filter_name == "starts_with":
                 query = "{} WHERE n.{} =~ '(?i){}.*'".format(query, filter_field, filter_value)
         query = "{} RETURN {}".format(query, return_fields)
+        if order_by != None:
+            query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
+            if desc is True:
+                query = "{} desc".format(query)
         fields = fields + ["_id"]
         return do_query(query, output_format=format, fields=fields)
 
@@ -314,7 +318,7 @@ class Node(object):
         query = "MATCH (n:{}) RETURN {}".format(self.name, return_fields)
 
         if order_by != None:
-            query = "{} ORDER BY n.{}".format(query, order_by)
+            query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
             if desc is True:
                 query = "{} desc".format(query)
 

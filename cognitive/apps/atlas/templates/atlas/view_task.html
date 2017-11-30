@@ -79,6 +79,9 @@
 
         <div class="defn">
             {{ task.definition_text | safe }}<br><br>
+            {% if creator %}
+                Definition contributed by {{ creator }}<br>
+            {% endif %}
         {% if user.is_authenticated %}
         <a id="update_definition_button"><button>update definition</button></a>
         <a id="disambiguate_button"><button>disambiguate term</button></a>

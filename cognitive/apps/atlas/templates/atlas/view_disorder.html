@@ -18,7 +18,12 @@
 
 {% block content %}
     <h1 rel='{{ disorder.id }}'>{{ disorder.name }}<span class="typebutton disorder_type"><a href="{% url 'all_disorders' %}">DISORDER</a></span></h1>
-    <div class='defn'>{{ disorder.definition }}</div>
+    <div class='defn'>
+        {{ disorder.definition }}<br>
+        {% if creator %}
+            Definition contributed by {{ creator }}<br>
+        {% endif %}
+    </div>
     <div id="unterbutton_slide_def">
         <div class="defn">  
             <div class="unterbutton_left" id="ub_left">    

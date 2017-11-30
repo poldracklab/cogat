@@ -52,7 +52,13 @@
         </h1>
     </div><!-- .CATerm.concept -->
 
-    <div class="defn">{{ concept.definition_text|safe }}</div><br>
+    <div class="defn">
+        {{ concept.definition_text|safe }}<br><br>
+        {% if creator %}
+            Definition contributed by {{ creator }}
+        {% endif %}
+    </div>
+
 
     {% if user.is_authenticated %}
     <!-- Update definition -->

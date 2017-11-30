@@ -27,7 +27,10 @@
   </h1>
 </div><!-- .CATerm.collection -->
 
-<div class="defncol">{{ theory.collection_description | safe }}
+<div class="defncol">{{ theory.collection_description | safe }}<br><br>
+{% if creator %}
+    Definition contributed by {{ creator }}<br>
+{% endif %}
 <div class="attribo">
     <div class="classification">
     </div>

@@ -124,7 +124,9 @@ class Node(object):
                         relation.properties[property_name] = properties[property_name]
                     relation.push()
                 return relation
-        return None
+            else:
+                return True
+        return False
 
     def unlink(self, uid, endnode_id, relation_type, endnode_type=None):
         ''' attempt to unlink the two nodes specified by the relation specified. '''
@@ -776,9 +778,7 @@ class Contrast(Node):
         # condition -> [hascontrast] -> contrast
 
         return_fields = ",".join(fields)
-        query = '''MATCH (c:concept)-[:MEASUREDBY]->(co:contrast)
-                   WHERE co.id='{}' WITH co as contrast
-                   MATCH (c:condition)-[:HASCONTRAST]->(contrast) WITH c as condition
+        query = '''MATCH (c:condition)-[:HASCONTRAST]->(cont:contrast) WHERE cont.id = '{}' WITH c as condition
                    MATCH (t:task)-[:HASCONDITION]->(condition)
                    WITH DISTINCT t as task
                    RETURN {}'''.format(contrast_id, return_fields)

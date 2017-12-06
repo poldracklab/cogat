@@ -1308,6 +1308,8 @@ def add_citation_doi(request, label, uid):
         return redirect(view, uid)
 
     doi = form.cleaned_data['doi']
+    if doi[:3] == 'doi:':
+        doi = doi[4:]
 
     properties = ()
     try:

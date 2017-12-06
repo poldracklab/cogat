@@ -69,7 +69,7 @@ class NodeAPI(APIView):
             link_made = dest_label.link(dest_id, src_id,
                                         rel, endnode_type=src_label.name)
 
-        if link_made is None:
+        if link_made is False:
             return Response({'Unable to associate nodes': ''},
                             status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 

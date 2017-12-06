@@ -1151,7 +1151,7 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
         link_made = dest_label.link(dest_node.properties['id'], src_id,
                                     rel, endnode_type=src_label.name)
 
-    if link_made is None:
+    if link_made is False:
         graph.delete(dest_node)
         error_msg = "Was unable to associate {} and {}".format(
             src_label.name, dest_label.name)
@@ -1308,8 +1308,10 @@ def add_citation_doi(request, label, uid):
         return redirect(view, uid)
 
     doi = form.cleaned_data['doi']
-    if doi[:3] == 'doi:':
+    if doi[:4] == 'doi:':
         doi = doi[4:]
+    doi = doi.strip()
+    print("'{}'".format(doi))
 
     properties = ()
     try:
@@ -1362,15 +1364,25 @@ def update_contrast(request, uid):
     except IndexError:
         raise Http404("Contrast does not exist")
 
-    conditions = Contrast.get_conditions(uid)
+    cont_conditions = Contrast.get_conditions(uid)
     task = Contrast.get_tasks(uid)[0]
+    conditions = Task.get_conditions(task['task_id'])
     if request.method == 'GET':
         condition_forms = []
-        for condition in conditions:
+        for condition in cont_conditions:
             form = forms.WeightForm(
                 condition['condition_id'],
                 label=condition['condition_name'],
                 data={'weight': condition['r_weight']}
+            )
+            condition_forms.append(form)
+        for condition in conditions:
+            if any(elem['condition_id'] == condition['condition_id'] for elem in cont_conditions):
+                continue
+            form = forms.WeightForm(
+                condition['condition_id'],
+                label=condition['condition_name'],
+                data={'weight': 0}
             )
             condition_forms.append(form)
         context = {
@@ -1382,8 +1394,22 @@ def update_contrast(request, uid):
     elif request.method == "POST":
         for condition in conditions:
             cond_id = condition['condition_id']
-            if request.POST.get(cond_id, None):
-                weight = request.POST[cond_id]
+            weight = request.POST.get(cond_id, None)
+            if weight is None:
+                continue
+            try:
+                float(weight)
+            except ValueError:
+                # return
+            if float(weight) == 0.0:
+                print("hit unlink condition")
+                Condition.unlink(cond_id, uid, "HASCONTRAST", "contrast")
+            else:
+                link_made = Condition.link(cond_id, uid, "HASCONTRAST", "contrast")
+                if link_made is False:
+                    error_msg = "Link could not be made between condition {} and contrast {}"
+                    messages.error(request, error_msg.format(cond_id, uid))
+                    return redirect(edit_contrast, uid)
                 Condition.update_link_properties(cond_id, uid, "HASCONTRAST", "contrast",
                                                  {'weight': weight})
         return redirect(view_task, task['task_id'])

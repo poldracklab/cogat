@@ -402,7 +402,7 @@ def link_users(query, label):
             print("user not found in lookup {}".format(entry))
             continue
         if not user:
-            make_node("user", user_id, username, {})
+            user = make_node("user", user_id, username, {})
         node = find_node(label, entry[0])
         if user and node:
             make_relation(user, "CREATED", node)
@@ -450,5 +450,6 @@ if __name__ == '__main__':
     import_disorder_users()
     import_theory_users()
     import_battery_users()
+    import_task_users()
     cursor.close()
     conn.close()

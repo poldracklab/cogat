@@ -31,5 +31,5 @@ def new_user_notify(user):
     <p>Last Name: {}</p>
     <p>Interests: {}</p>
     '''.format(user.email, user.first_name, user.last_name, user.interest_tags)
-    send_mail(subject, "", "newuser@openfmri.org",
+    send_mail(subject, "", "newuser@cognitiveatlas.org",
               settings.NOTIFY_EMAILS, html_message=body)

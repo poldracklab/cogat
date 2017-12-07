@@ -116,9 +116,8 @@ def edit_user(request):
         if edit_form.is_valid():
             edit_form.save()
             return HttpResponseRedirect(reverse("my_profile"))
-    return render_to_response("registration/edit_user.html",
-                              {'form': edit_form},
-                              context_instance=RequestContext(request))
+    return render(request, "registration/edit_user.html", {'form': edit_form})
+
 
 
 def login(request):

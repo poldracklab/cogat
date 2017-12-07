@@ -19,6 +19,8 @@
         <form action="{% url 'update_contrast' contrast.id %}" method="post" id='id-condition-forms'>
         {% for form in condition_forms %}
             {% crispy form form.helper %}
+        {% empty %}
+            <br>Conditions need to be added to the task before the contrast can be updated<br><br>
         {% endfor %}
         <input type="submit" value="submit" class="btn btn-primary"></input>
         </form><br>

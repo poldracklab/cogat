@@ -778,8 +778,7 @@ class Contrast(Node):
         # condition -> [hascontrast] -> contrast
 
         return_fields = ",".join(fields)
-        query = '''MATCH (c:condition)-[:HASCONTRAST]->(cont:contrast) WHERE cont.id = '{}' WITH c as condition
-                   MATCH (t:task)-[:HASCONDITION]->(condition)
+        query = '''MATCH (t:task)-[r:HASCONTRAST]->(c:contrast) WHERE c.id = '{}'
                    WITH DISTINCT t as task
                    RETURN {}'''.format(contrast_id, return_fields)
 

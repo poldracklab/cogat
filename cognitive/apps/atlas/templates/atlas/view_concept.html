@@ -419,7 +419,7 @@ $(document).ready(function() {
                 if (data.length > 0) {
                     return {
                         results: $.map(data, function(datum) {
-                            return {'id': datum.cid, 'text': datum.tname + ' - ' + datum.cname}
+                            return {'id': datum.cid, 'text': datum.tname + ' (task) - ' + datum.cname + ' (contrast)'}
                         })
                     }
                 } else {

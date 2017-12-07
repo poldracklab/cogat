@@ -79,7 +79,7 @@ def user_imports():
         post_cur.execute(old_user_lookup.format(old_user[0]))
         if not post_cur.fetchone():
             print(old_user)
-            obfuscate = True if old_user[7] == 'show' else False
+            obfuscate = False if old_user[7] == 'show' else True
             is_active = True if old_user[6] == 'on' else False
             password = "sha1$${}".format(old_user[4])
             new_user = insert_query.format(

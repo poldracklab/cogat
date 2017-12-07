@@ -55,7 +55,7 @@ def rank_check(user):
 
 def get_display_name(uid):
     user = User.objects.values_list('first_name', 'last_name', 'obfuscate').get(id=uid)
-    if not user[2]:
+    if user[2]:
         return "Anonymous"
     return "{}{}".format(user[0][0], user[1])
 
@@ -1397,10 +1397,6 @@ def update_contrast(request, uid):
             weight = request.POST.get(cond_id, None)
             if weight is None:
                 continue
-            try:
-                float(weight)
-            except ValueError:
-                # return
             if float(weight) == 0.0:
                 print("hit unlink condition")
                 Condition.unlink(cond_id, uid, "HASCONTRAST", "contrast")

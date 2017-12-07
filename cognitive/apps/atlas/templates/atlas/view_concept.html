@@ -88,6 +88,9 @@
         <div class="unterbutton_left">
             <a target="_blank" href="{% url 'concept_json' concept.id %}">json</a>
         </div>
+        <div class="unterbutton_left">
+            <a target="_blank" href="http://www.neurosynth.org/analyses/terms/{{ concept.name|lower|urlencode }}/">Search on Neruosynth</a>
+        </div>
     </div><!-- .defn -->
 </div>
 

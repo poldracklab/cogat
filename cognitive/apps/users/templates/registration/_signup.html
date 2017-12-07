@@ -3,7 +3,8 @@
 <div class="auth-wrapper signup-wrapper">
     <form role="form" method="post" action="{% url 'create_user' %}">
         {% csrf_token %}
-        <h2>Sign Up</h2>
+        <h2>Request Contributor Account</h2>
+        Sign up not necessary to view site.
 
         {{form | crispy }}
 

@@ -223,3 +223,11 @@ REST_FRAMEWORK = {
 
 USE_RECAPTCHA = strtobool(os.environ.get('USE_RECAPTCHA', 'False'))
 GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')
+
+NOTIFY_EMAILS = [i for i in os.environ.get("NOTIFY_EMAILS", "").split(" ")] 
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", '')
+EMAIL_PORT = os.environ.get("EMAIL_PORT", '')
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", '')
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", '')
+EMAIL_USE_TSL = True

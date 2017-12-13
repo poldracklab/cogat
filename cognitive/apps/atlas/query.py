@@ -377,6 +377,13 @@ class Node(object):
 
         return nodes
 
+    def get_label(self, uid):
+        query = "MATCH (x) where x.id = '{}' return x".format(uid)
+        res = self.graph.cypher.execute(query)
+        try:
+            return list(res[0].x.labels)[0]
+        except (KeyError, AttributeError):
+            return None
 
     def search_all_fields(self, params):
         if isinstance(params, str):

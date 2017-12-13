@@ -219,6 +219,14 @@ def tasks_by_letter(request, letter):
 
 # VIEWS FOR SINGLE NODES ##########################################################
 
+def view_term(request, uid):
+    label = Node.get_label(uid)
+    view_func = node_view_lookup(label)
+    if view_func:
+        return view_func(request, uid)
+    else:
+        raise Http404("Term does not exist")
+
 def view_concept(request, uid, return_context=False):
     ''' detail view for a give concept '''
     try:

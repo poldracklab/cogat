@@ -336,8 +336,8 @@ class DisambiguationForm(forms.Form):
                 'term1_definition': term['definition_text']
             }
         self.helper = FormHelper()
-        self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.add_input(Reset('disambiguate_cancel_button', 'Cancel'))
+        self.helper.add_input(Submit('submit', 'Submit'))
         self.helper.form_action = reverse('add_disambiguation',
                                           kwargs={'label': label, 'uid': uid})
         self.helper.layout = Layout(

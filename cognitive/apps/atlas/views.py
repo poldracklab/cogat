@@ -82,6 +82,8 @@ def own_or_admin(func):
 
 ''' Test meant for use inside views instead of as function decorator '''
 def owner_or_admin(user, term_id, label=None):
+    if not user.is_authenticated:
+        return False
     if not label:
        label = Node.get_label(term_id)
     if is_admin(user):

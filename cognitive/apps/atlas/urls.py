@@ -73,15 +73,15 @@ urlpatterns = [
         name="add_concept_contrast_task"),
     url(r'^task/add/contrast/(?P<uid>[\w\+%_& ]+)/$', views.add_task_contrast,
         name="add_task_contrast"),
-    url(r'^contrast/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_contrast, name="add_contrast"),
-    url(r'^condition/add/(?P<task_id>[\w\+%_& ]+)/$', views.add_condition, name="add_condition"),
+    url(r'^contrast/add/(?P<uid>[\w\+%_& ]+)/$', views.add_contrast, name="add_contrast"),
+    url(r'^condition/add/(?P<uid>[\w\+%_& ]+)/$', views.add_condition, name="add_condition"),
     url(
-        r'^task/add/implementation/(?P<task_id>[\w\+%_& ]+)/$',
+        r'^task/add/implementation/(?P<uid>[\w\+%_& ]+)/$',
         views.add_task_implementation,
         name="add_task_implementation"
     ),
     url(
-        r'^task/add/dataset/(?P<task_id>[\w\+%_& ]+)/$',
+        r'^task/add/dataset/(?P<uid>[\w\+%_& ]+)/$',
         views.add_task_dataset,
         name="add_task_dataset"
     ),
@@ -101,7 +101,7 @@ urlpatterns = [
         name="add_concept_task"
     ),
     url(
-        r'^disorder/add/task/(?P<disorder_id>[\w\+%_& ]+)/$',
+        r'^disorder/add/task/(?P<uid>[\w\+%_& ]+)/$',
         views.add_disorder_task,
         name="add_disorder_task"
     ),
@@ -121,7 +121,7 @@ urlpatterns = [
         name="add_disorder_disorder"
     ),
     url(
-        r'^disorder/add/link/(?P<disorder_id>[\w\+%_& ]+)/$',
+        r'^disorder/add/link/(?P<uid>[\w\+%_& ]+)/$',
         views.add_disorder_external_link,
         name="add_disorder_external_link"
     ),
@@ -131,12 +131,12 @@ urlpatterns = [
         name="add_battery_indicator"
     ),
     url(
-        r'^battery/add/battery/(?P<battery_id>[\w\+%_& ]+)/$',
+        r'^battery/add/battery/(?P<uid>[\w\+%_& ]+)/$',
         views.add_battery_battery,
         name="add_battery_battery"
     ),
     url(
-        r'^battery/add/task/(?P<battery_id>[\w\+%_& ]+)/$',
+        r'^battery/add/task/(?P<uid>[\w\+%_& ]+)/$',
         views.add_battery_task,
         name="add_battery_task"
     ),

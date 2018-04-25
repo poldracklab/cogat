@@ -34,12 +34,12 @@
         {% if creator %}
             Definition contributed by {{ creator }}<br>
         {% endif %}
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     <a id="update-definition-button"><button>update description</button></a>
     {% endif %}
     </div><!-- .defn -->
 
-{% if user.is_authenticated %}
+{% if owner_or_admin %}
 <!-- Update description -->
 <div id="id-updateform" class="hidden">
     <form method="POST" action="{% url 'update_battery' battery.id %}">
@@ -73,7 +73,7 @@
     {% empty %}
         No batteries have been added.<br>
     {% endfor %}
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
         <button id="add-constituent" style="position:relative;border-radius:15px;float:right;top:-20px">+</button>
         <div id="constituent-forms" class="hidden">
             <form method="POST" action="{% url 'add_battery_battery' battery.id %}">
@@ -106,7 +106,7 @@
     {% empty %}
         <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
     {% endfor %}
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
         <button style="margin-top:10px;margin-bottom:10px" id="add-indicator-button">ADD INDICATOR</button>
         <form class="hidden" action="{% url 'add_battery_indicator' battery.id %}" method="post" id='id-indicatorform'>
             {% csrf_token %}
@@ -139,7 +139,7 @@
         </div>
     {% empty %}
     {% endfor %}
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
         <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
         <div id="id-citationform" class="hidden">
             {% crispy doi_form doi_form.helper %}

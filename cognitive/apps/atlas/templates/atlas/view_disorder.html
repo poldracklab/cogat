@@ -26,7 +26,7 @@
     </div>
     <div id="unterbutton_slide_def">
         <div class="defn">  
-            {% if user.is_authenticated %}
+            {% if owner_or_admin %}
             <div class="unterbutton_left" id="ub_left">    
                 <a href="#" class="slide_def" id="openpane">+ Edit Disorder Details</a>  
             </div>
@@ -64,7 +64,7 @@
 <div id="block-holder" class="block-full"><div id="block-measurements" class="block-half">  
     <h2><strong>Tasks</strong> associated with <em class="dictionary">{{ disorder.name }}</em> and their <strong>contrasts</strong></h2>
 
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     <button style="float:right;margin-top:10px" id="add_contrast_button">ADD Contrast</button>		
 
     <!-- add task box -->
@@ -148,7 +148,7 @@
 </div>
 
 <div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     <button style="float:right;margin-top:10px" id="add-link-button">ADD EXTERNAL LINK</button>
     {% endif %}
     <div class="pane">
@@ -191,7 +191,7 @@
         </div>
     {% empty %}
     {% endfor %}
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
         <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
         <div id="id-citationform" class="hidden">
             {% crispy doi_form doi_form.helper %}
@@ -255,7 +255,7 @@ $(document).ready(function() {
 
 
     });
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     // Add concept
     $(function() {
 
@@ -292,7 +292,7 @@ $(document).ready(function() {
     });
     {% endif %}
 
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     // Add concept
 
     $('#contrast-selection').select2({

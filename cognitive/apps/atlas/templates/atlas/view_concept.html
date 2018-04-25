@@ -40,7 +40,7 @@
                 {% else %}
                     <span class="unreviewed-span">Unreviewed</span>
                 {% endif %} 
-                {% if user.is_authenticated %}
+                {% if owner_or_admin %}
                     {% if concept.review_status == "True" %}
                         <a class="reviewbutton" href="{% url 'set_unreviewed' 'concept' concept.id %}">Set as unreviewed</a>
                     {% else %}
@@ -60,7 +60,7 @@
     </div>
 
 
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     <!-- Update definition -->
     <div id="update_definition" class="hidden">
         <div id="block-atlas" class="block-full">
@@ -77,7 +77,7 @@
 
 <div id='unterbutton_slide_def'>
     <div class="defn">
-        {% if user.is_authenticated %}
+        {% if owner_or_admin %}
         <div class="unterbutton_left">
             <a href="#" data-toggle="modal" id="update_definition_button" class="slide_def ">Update definition</a> 
         </div>  
@@ -104,7 +104,7 @@
     </ul>-->
     <h2>Asserted <strong>relationships</strong> to other concepts</h2>
 
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     <div id="relation_box" style="padding-top:20px;border-radius: 4px;padding: 10px;">
     <button id="add_relation_button" style="float:right">add relation</button>
 
@@ -223,7 +223,7 @@
 <div id="block-holder" class="block-full"><div id="block-measurements" class="block-half">  
     <h2><strong>Tasks</strong> that are asserted to measure <em class="dictionary">{{ concept.name }}</em></h2>
 
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     <button style="float:right;margin-top:10px" id="add_task_button">ADD TASK</button>		
 
     <!-- add task box -->
@@ -306,7 +306,7 @@
         </div>
     {% empty %}
     {% endfor %}
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
         <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
         <div id="id-citationform" class="hidden">
             {% crispy doi_form doi_form.helper %}
@@ -393,7 +393,7 @@ $(document).ready(function() {
 
     });
 
-    {% if user.is_authenticated %}
+    {% if owner_or_admin %}
     $('#contrast-selection').select2({
         language: {
             noResults: function(params) {return "No Results";}

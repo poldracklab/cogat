@@ -66,7 +66,7 @@
                 {% else %}
                     <span class="unreviewed-span">Unreviewed</span>
                 {%endif%} 
-                {% if user.is_authenticated %}
+                {% if owner_or_admin %}
                     {% if task.review_status == "True" %}
                         <a class="reviewbutton" href="{% url 'set_unreviewed' 'task' task.id %}">Set as unreviewed</a>
                     {% else %}
@@ -82,7 +82,7 @@
             {% if creator %}
                 Definition contributed by {{ creator }}<br>
             {% endif %}
-        {% if user.is_authenticated %}
+        {% if owner_or_admin %}
         <a id="update_definition_button"><button>update definition</button></a>
         <a id="disambiguate_button"><button>disambiguate term</button></a>
         {% endif %}
@@ -90,7 +90,7 @@
         <a target="_blank" href="http://neurovault.org/tasks/{{ task.id }}"><button>neurovault</button></a>
         </div><!-- .defn -->
 
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
     <!-- Update definition -->
     <div id="update_definition" class="hidden">
         <form method="POST" action="{% url 'update_task' task.id %}">
@@ -140,7 +140,7 @@
                                 {% endfor %}
                                 </ul>
                                 <!-- Add contrast association -->
-                                {% if user.is_authenticated %}
+                                {% if user.owner_or_admin %}
                                 <button style="border-radius:15px;float:right" id="add_contrast_button_{{ concept.id }}">+</button>		
                                 <div id="contrast_search_box_{{ concept.id }}" style="padding-left:13px;padding-bottom:20px" class="hidden">
                                     <div>
@@ -176,7 +176,7 @@
                         <span class="noassoc">No concepts assertions have been added.</span><br><br>
                     {% endfor %}
 
-                    {% if user.is_authenticated %}
+                    {% if user.owner_or_admin %}
                     <button style="float:right;margin-top:10px" id="add_concept_button">ADD CONCEPT</button>		
                     {% crispy task_concept_form task_concept_form.helper %}
                     {% endif %}
@@ -230,7 +230,7 @@
                 <span class="noassoc">No associations have been added.</span><br><br>
             {% endfor %}
         </div>
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
         <button style="float:right;margin-top:10px" id="add_disorder_button">ADD PHENOTYPE</button>		
         <form class="hidden" action="{% url 'add_task_disorder' task.id %}" method="post" id="id-disorderform">
             {% csrf_token %}
@@ -243,7 +243,7 @@
 <!-- IMPLEMENTATIONS -->
 <div id="block-implementors" class="block-halfwide block-back ">
 
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
     <button style="float:right;margin-top:10px" id="add_implementation_button">ADD IMPLEMENTATION</button>		
     {% endif %}
     <div class="pane">
@@ -273,7 +273,7 @@
 
 <!-- EXTERNAL DATASETS -->
 <div id="block-implementors" class="block-halfwide-rfloat block-back block-margin">
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
     <button style="float:right;margin-top:10px" id="add_dataset_button">ADD EXTERNAL DATASET</button>
     {% endif %}
     <div class="pane">
@@ -301,7 +301,7 @@
 
 <!-- CONDITIONS -->
 <div style="width: 960px;"><div class="block-thirdwide block-back"><strong> CONDITIONS</strong><br>
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
        <button id="add_condition" style="position:relative;border-radius:15px;float:right;top:-20px">+</button>
         <form action="{% url 'add_condition' task.id %}" method="POST">
             {% csrf_token %}
@@ -331,7 +331,7 @@
     <strong>CONTRASTS</strong>
     <div class="conblock2" id="contrasts-block">
         {% if conditions|length > 0 %}
-            {% if user.is_authenticated %}
+            {% if user.owner_or_admin %}
                 <a href="{% url 'add_task_contrast' task.id %}"><button style="position:relative;border-radius:15px;float:right;top:-20px">+</button></a>
             {% endif %}
         {% else %}
@@ -401,7 +401,7 @@
     {% empty %}
         <p class="subinfo" style="color:#d89013;padding-top:20px">No indicators have yet been associated.</p>
     {% endfor %}
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
         <button style="margin-top:10px;margin-bottom:10px" id="add_indicator_button">ADD INDICATOR</button>
         <form class="hidden" action="{% url 'add_task_indicator' task.id %}" method="post" id='id-indicatorform'>
             {% csrf_token %}
@@ -433,7 +433,7 @@
         </div>
     {% empty %}
     {% endfor %}
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
         <button style="margin-top:10px;margin-bottom:10px" id="add_citation_button">ADD CITATION</button>
         <div id="id-citationform" class="hidden">
             {% crispy doi_form doi_form.helper %}
@@ -532,7 +532,7 @@ $(document).ready(function() {
     })
  
 
-    {% if user.is_authenticated %}
+    {% if user.owner_or_admin %}
     $(function() {
         $('#id_concept-contrasts').select2({ width: '100%'});
         $('#id_contrasts').select2({ width: '100%'});

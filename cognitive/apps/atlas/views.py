@@ -5,6 +5,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.http import (Http404, HttpResponse, HttpResponseNotFound,
                          HttpResponseNotAllowed, HttpResponseRedirect)
@@ -45,13 +46,51 @@ Task = query.Task()
 Theory = query.Theory()
 Trait = query.Trait()
 
-def rank_check(user):
+
+def rank_check(user, rank):
     ''' function called by function decorators to see if the user has
         permissions to make changes. '''
     try:
-        return int(user.rank) > 2
+        return int(user.rank) > rank
     except ValueError:
         return False
+
+def is_admin(user):
+    return rank_check(user, 5)
+
+def is_contrib(user):
+    return rank_check(user, 2)
+
+def owns(func):
+    def check_ownership(request, *args, **kwargs):
+        print("check ownership")
+        user = request.user
+        label = Node.get_label(kwargs['uid'])
+        owner_id = get_creator(kwargs['uid'], label, by_uid=True)
+        if owner_id == user.id:
+            return func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied("Only the creator of this object is allowed to perform this operation")
+    return check_ownership
+
+def own_or_admin(func):
+    def check_own_or_admin(request, *args, **kwargs):
+        if is_admin(request.user):
+            return func(request, *args, **kwargs)
+        return owns(func)(request, *args, **kwargs)
+    return check_own_or_admin
+
+''' Test meant for use inside views instead of as function decorator '''
+def owner_or_admin(user, term_id, label=None):
+    if not label:
+       label = Node.get_label(term_id)
+    if is_admin(user):
+        return True
+    owner_id = get_creator(term_id, label, by_uid=True)
+    if owner_id == user.id:
+        return True
+    return False
+    
 
 def get_display_name(uid):
     user = User.objects.values_list('first_name', 'last_name', 'obfuscate').get(id=uid)
@@ -59,10 +98,12 @@ def get_display_name(uid):
         return "Anonymous"
     return "{}{}".format(user[0][0], user[1])
 
-def get_creator(uid, label):
+def get_creator(uid, label, by_uid=False):
     node_class = node_class_lookup(label)
     try:
         creator_node = node_class.get_reverse_relation(uid, "CREATED", label="user")[0]
+        if by_uid:
+            return creator_node["id"]
         creator = get_display_name(creator_node["id"])
     except IndexError:
         creator = None
@@ -101,7 +142,6 @@ def all_batteries(request):
 
     batteries = Battery.all(order_by="name")
     return all_nodes(request, batteries, "battery", "batteries")
-
 
 def all_theories(request):
     '''all_theories returns page with list of all theories'''
@@ -270,7 +310,8 @@ def view_concept(request, uid, return_context=False):
         "citations": citations,
         "doi_form": forms.DoiForm(uid, 'concept'),
         "concept_task_form": ConceptTaskForm(),
-        "concept_form": ConceptForm(concept["id"], concept)
+        "concept_form": ConceptForm(concept["id"], concept),
+        "owner_or_admin": owner_or_admin(request.user, uid),
     }
 
     if return_context is True:
@@ -348,6 +389,7 @@ def view_task(request, uid, return_context=False):
         "task_disorder_form": TaskDisorderForm(uid),
         "task_concept_form": forms.TaskConceptForm(uid),
         "disambiguation_form": forms.DisambiguationForm("task", uid, task),
+        "owner_or_admin": owner_or_admin(request.user, uid),
     }
 
     if return_context is True:
@@ -381,7 +423,8 @@ def view_battery(request, uid, return_context=False):
         "constituent_tasks": constituent_tasks,
         "constituent_batteries": constituent_batteries,
         "task_form": BatteryTaskForm(),
-        "battery_form": BatteryBatteryForm()
+        "battery_form": BatteryBatteryForm(),
+        "owner_or_admin": owner_or_admin(request.user, uid),
     }
     if return_context:
         return context
@@ -426,6 +469,7 @@ def view_theory(request, uid, return_context=False):
         "referenced_terms": referenced_terms,
         "doi_form": forms.DoiForm(uid, 'theory'),
         "citations": citations,
+        "owner_or_admin": owner_or_admin(request.user, uid),
     }
     if return_context is True:
         return context
@@ -463,6 +507,7 @@ def view_disorder(request, uid, return_context=False):
         "child_disorders": child_disorders,
         "external_links": external_links,
         "external_link_form": ExternalLinkForm(),
+        "owner_or_admin": owner_or_admin(request.user, uid),
     }
 
     if return_context:
@@ -496,6 +541,7 @@ def view_trait(request, uid, return_context=False):
         "trait_form": forms.TraitForm(trait['id'], trait=trait),
         "external_links": external_links,
         "external_link_form": ExternalLinkForm(),
+        "owner_or_admin": owner_or_admin(request.user, uid),
     }
 
     if return_context:
@@ -529,6 +575,7 @@ def view_behavior(request, uid, return_context=False):
         "behavior_form": forms.BehaviorForm(behavior['id'], behavior=behavior),
         "external_links": external_links,
         "external_link_form": ExternalLinkForm(),
+        "owner_or_admin": owner_or_admin(request.user, uid),
     }
 
     if return_context:
@@ -539,7 +586,7 @@ def view_behavior(request, uid, return_context=False):
 # ADD NEW TERMS ###################################################################
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def contribute_term(request):
     '''contribute_term will return the contribution detail page for a term that is
     posted, or visiting the page without a POST will return the original form
@@ -566,7 +613,7 @@ def contribute_term(request):
     return render(request, 'atlas/contribute_term.html', context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_phenotype(request):
     '''  '''
     if request.method != "POST":
@@ -594,7 +641,7 @@ def add_phenotype(request):
         return render(request, "atlas/all_disorders.html", context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def contribute_disorder(request):
     ''' contribute_disorder will return the detail page for the new disorder '''
     if request.method == "POST":
@@ -615,7 +662,7 @@ def contribute_disorder(request):
     return view_disorder(request, new_dis.properties["id"])
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_term(request):
     '''add_term will add a new term to the atlas
     '''
@@ -637,12 +684,14 @@ def add_term(request):
             node = Task.create(name=term_name, properties=properties, request=request)
             return redirect('task', node["id"])
 
+#@user_passes_test(own_or_admin, login_url='/403')
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_condition(request, task_id):
+@own_or_admin
+def add_condition(request, uid):
     '''add_condition will associate a condition with the given task
     :param task_id: the uid of the task, to return to the correct page after creation
     '''
+    task_id = uid
     if request.method == "POST":
         relation_type = "HASCONDITION" #task --HASCONDITION-> condition
         condition_name = request.POST.get('condition_name', '')
@@ -656,7 +705,7 @@ def add_condition(request, task_id):
 # UPDATE TERMS ####################################################################
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_admin, login_url='/403')
 def set_reviewed(request, uid, label):
     ''' Concepts and tasks can be marked as reviewed by users to show they have
         been vetted '''
@@ -664,14 +713,14 @@ def set_reviewed(request, uid, label):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_admin, login_url='/403')
 def set_unreviewed(request, uid, label):
     ''' revoke reviewed status of concept or task. '''
     Node.update(uid, {'review_status': 'False'}, label=label)
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_concept(request, uid):
     ''' Take concept form, check for making new concept class relation, pass
         rest of form fields to query update function. '''
@@ -694,7 +743,7 @@ def update_concept(request, uid):
         return render(request, 'atlas/view_concept.html', context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_trait(request, uid):
     if request.method != "POST":
         return redirect('concept', uid)
@@ -711,7 +760,7 @@ def update_trait(request, uid):
         return redirect('view_trait', uid=uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_behavior(request, uid):
     if request.method != "POST":
         return redirect('concept', uid)
@@ -730,7 +779,7 @@ def update_behavior(request, uid):
 
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_task(request, uid):
     if request.method == "POST":
         definition = request.POST.get('definition_text', '')
@@ -739,7 +788,7 @@ def update_task(request, uid):
     return view_task(request, uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_theory(request, uid):
     if request.method == "POST":
         collection_description = request.POST.get('collection_description', '')
@@ -751,7 +800,7 @@ def update_theory(request, uid):
     return view_theory(request, uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_battery(request, uid):
     if request.method == "POST":
         description = request.POST.get('description', '')
@@ -761,7 +810,7 @@ def update_battery(request, uid):
 
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_disorder(request, uid):
     if request.method == "POST":
         definition = request.POST.get('disorder_definition', '')
@@ -774,7 +823,7 @@ def update_disorder(request, uid):
 # ADD RELATIONS ###################################################################
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_concept_relation(request, uid):
     '''add_concept_relation will add a relation from a concept to another concept (PARTOF or KINDOF)
     :param uid: the uid of the concept page, for returning to the page after creation
@@ -789,7 +838,7 @@ def add_concept_relation(request, uid):
     return view_concept(request, uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def add_task_contrast(request, uid):
     ''' add_task_contrast will display the view to add a contrast to a
         task, meaning a set of conditions and an operator over the
@@ -802,7 +851,7 @@ def add_task_contrast(request, uid):
 
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_task_concept(request, uid):
     '''add_task_concept will add a cognitive concept to the list on a
        task page, making the assertion that the concept is associated
@@ -826,7 +875,7 @@ def add_task_concept(request, uid):
 
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_concept_task(request, concept_id):
     '''add_concept_task will add a cognitive task to the list on a
        concept page, making the assertion that the task is associated
@@ -840,7 +889,7 @@ def add_concept_task(request, concept_id):
     return view_concept(request, concept_id)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def link_disam(request, label, uid):
     ''' link_disam_task will create a link between an existing disambiguation
         page and an existing task.
@@ -854,7 +903,7 @@ def link_disam(request, label, uid):
     return redirect('view_disambiguation', uid=uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def unlink_disam(request, label, uid, tid):
     ''' link_disam_task will create a link between an existing disambiguation
         page and an existing task.
@@ -867,13 +916,14 @@ def unlink_disam(request, label, uid, tid):
     return redirect('view_disambiguation', uid=uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_disorder_task(request, disorder_id):
+@own_or_admin
+def add_disorder_task(request, uid):
     '''add_disorder_task will add a cognitive task to the list on a
        disorder page, making the assertion that the task is associated
        with the disorder.
     :param disorder_id: the unique id of the task, for returning to the task page when finished
     '''
+    disorder_id = uid
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
     relation_type = "ASSERTS" #task --asserts-> disorder
@@ -893,7 +943,7 @@ def add_disorder_task(request, disorder_id):
     return redirect('disorder', disorder_id)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_disorder_disorder(request, disorder_id):
     ''' process form from disorder view that relates disorders to disorders '''
     if request.method != "POST":
@@ -917,7 +967,7 @@ def add_disorder_disorder(request, disorder_id):
     return redirect('disorder', disorder_id)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def add_concept_contrast(request, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
@@ -927,7 +977,7 @@ def add_concept_contrast(request, uid):
     return redirect('concept', uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def add_concept_contrast_task(request, uid):
     '''add_concept_contrast will add a contrast associated with conditions--> task via the task view
     :param uid: the uid of the task, to return to the correct page after creation
@@ -943,7 +993,7 @@ def add_concept_contrast_task(request, uid):
     return view_task(request, uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def concept_task_contrast_assertion(request, concept_id, task_id, contrast_id):
     ''' function to generate assertion node along with all three relations
         assocaited with it. Link function will not create duplicate links if
@@ -954,12 +1004,13 @@ def concept_task_contrast_assertion(request, concept_id, task_id, contrast_id):
     Assertion.link(asrt.properties['id'], contrast_id, "PREDICATE_DEF", endnode_type='contrast')
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_contrast(request, task_id):
+@own_or_admin
+def add_contrast(request, uid):
     '''add_contrast is the function called when the user submits a set
        of conditions and an operator to specify a new contrast.
     :param task_id: the id of the task, to return to the correct page after submission
     '''
+    task_id = uid
     if request.method == "POST":
         relation_type = "HASCONTRAST" #condition --HASCONTRAST-> contrast
 
@@ -989,7 +1040,7 @@ def add_contrast(request, task_id):
     return view_task(request, task_id)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_task_disorder(request, task_id):
     ''' From the task we can create a link between the task we are viewing and
         a disorder.'''
@@ -1021,7 +1072,7 @@ def add_task_disorder(request, task_id):
         return render(request, 'atlas/view_task.html', context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_concept_class(request):
     ''' Concept classes from the old database have name and description fields
         they always match. We will continue to store the name as a description
@@ -1042,7 +1093,7 @@ def add_concept_class(request):
         return render(request, 'atlas/concept_class.html', context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_disambiguation(request, label, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
@@ -1064,7 +1115,6 @@ def add_disambiguation(request, label, uid):
     cleaned_data = form.cleaned_data
     terms = Node.get(uid, label=label)
     if len(terms) < 1:
-        raise Exception("to short")
         return HttpResponseNotFound('Uid {} with label {} not found'.format(uid, label))
     else:
         orig_node = terms[0]
@@ -1128,7 +1178,7 @@ def view_disambiguation(request, uid):
 
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def make_link(request, src_id, src_label, dest_label, form_class, name_field,
               view, rel, reverse=False, create=True):
     ''' make link processes forms in a request and attempts to create links
@@ -1168,62 +1218,62 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
 
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_task_implementation(request, task_id):
+@own_or_admin
+def add_task_implementation(request, uid):
     ''' From the task view we can create an implementation that is associated
         with a given task'''
-    return make_link(request, task_id, Task, Implementation,
+    return make_link(request, uid, Task, Implementation,
                      ImplementationForm, 'implementation_name', view_task,
                      "HASIMPLEMENTATION")
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_task_dataset(request, task_id):
+@own_or_admin
+def add_task_dataset(request, uid):
     ''' From the task view we can create a link to dataset that is associated
         with a given task'''
-    return make_link(request, task_id, Task, ExternalDataset,
+    return make_link(request, uid, Task, ExternalDataset,
                      ExternalDatasetForm, 'dataset_name', view_task,
                      "HASEXTERNALDATASET")
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_task_indicator(request, task_id):
+@own_or_admin
+def add_task_indicator(request, uid):
     ''' From the task view we can create a link to indicator that is associated
         with a given task.'''
-    return make_link(request, task_id, Task, Indicator, IndicatorForm,
+    return make_link(request, uid, Task, Indicator, IndicatorForm,
                      'type', view_task, "HASINDICATOR")
 
 # need to add ExternalLink to query and make form
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_disorder_external_link(request, disorder_id):
+@own_or_admin
+def add_disorder_external_link(request, uid):
     ''' From the task view we can create a link to citation that is associated
         with a given task.'''
-    return make_link(request, disorder_id, Disorder, ExternalLink,
+    return make_link(request, uid, Disorder, ExternalLink,
                      ExternalLinkForm, 'uri', view_disorder, "HASLINK")
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_battery_indicator(request, battery_id):
     return make_link(request, battery_id, Battery, Indicator, IndicatorForm,
                      'type', view_battery, "HASINDICATOR")
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_battery_battery(request, battery_id):
-    return make_link(request, battery_id, Battery, Battery, BatteryBatteryForm,
+@own_or_admin
+def add_battery_battery(request, uid):
+    return make_link(request, uid, Battery, Battery, BatteryBatteryForm,
                      'batteries', view_battery, "INBATTERY", reverse=True,
                      create=False)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_battery_task(request, battery_id):
-    return make_link(request, battery_id, Battery, Task, BatteryTaskForm,
+@own_or_admin
+def add_battery_task(request, uid):
+    return make_link(request, uid, Battery, Task, BatteryTaskForm,
                      'tasks', view_battery, "INBATTERY", reverse=True,
                      create=False)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def add_trait_contrast(request, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
@@ -1233,7 +1283,7 @@ def add_trait_contrast(request, uid):
     return redirect('view_trait', uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def add_behavior_contrast(request, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
@@ -1243,7 +1293,7 @@ def add_behavior_contrast(request, uid):
     return redirect('view_behavior', uid)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def add_disorder_contrast(request, uid):
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
@@ -1254,10 +1304,11 @@ def add_disorder_contrast(request, uid):
 
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
-def add_theory_assertion(request, theory_id):
+@own_or_admin
+def add_theory_assertion(request, uid):
     ''' from theory detail view we can add assertions to the theory that we
         are looking at. '''
+    theory_id = uid
     if request.method != "POST":
         return HttpResponseNotAllowed(['POST'])
     theory_assertion_form = TheoryAssertionForm(request.POST)
@@ -1272,7 +1323,7 @@ def add_theory_assertion(request, theory_id):
         return render(request, 'atlas/view_theory.html', context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_theory(request):
     ''' from all collections we can add new theories, this view handles that '''
     if request.method != "POST":
@@ -1289,7 +1340,7 @@ def add_theory(request):
         return render(request, 'atlas/all_collections.html', context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@user_passes_test(is_contrib, login_url='/403')
 def add_battery(request):
     ''' from all collections we can add new theories, this view handles that '''
     if request.method != "POST":
@@ -1306,7 +1357,7 @@ def add_battery(request):
         return render(request, 'atlas/all_collections.html', context)
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def add_citation_doi(request, label, uid):
     view = "view_{}".format(label)
 
@@ -1365,7 +1416,7 @@ def view_contrast(request, uid):
     return redirect(view_task, task['task_id'])
 
 @login_required
-@user_passes_test(rank_check, login_url='/403')
+@own_or_admin
 def update_contrast(request, uid):
     try:
         contrast = Contrast.get(uid)[0]

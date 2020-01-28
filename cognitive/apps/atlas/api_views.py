@@ -226,7 +226,8 @@ class TaskConceptAPI(NodeAPI):
 
     def post(self, request, uid):
         concept_id = request.POST.get('concept_id', '')
-        return self.make_link(request, uid, self.node_class, concept_id, Concept, 'ASSERTS')
+        return self.make_link(request, uid, self.node_class,
+                              concept_id, Concept, 'ASSERTS')
 
 # def add_disorder_task(request, uid):
 
@@ -236,7 +237,8 @@ class DisorderTask(NodeAPI):
 
     def post(self, request, uid):
         disorder_id = request.POST.get('disorder_id', '')
-        return self.make_link(request, uid, self.node_class, disorder_id, Disorder, 'ASSERTS')
+        return self.make_link(request, uid, self.node_class,
+                              disorder_id, Disorder, 'ASSERTS')
 
 
 # def add_task_disorder(request, task_id):
@@ -266,7 +268,8 @@ class DisorderDisorderAPI(NodeAPI):
 
     def post(self, request, uid):
         disorder_id = request.POST.get('disorder_id', '')
-        return self.make_link(request, uid, self.node_class, disorder_id, Disorder, 'ISA')
+        return self.make_link(request, uid, self.node_class,
+                              disorder_id, Disorder, 'ISA')
 
 # def add_concept_contrast(request, uid, tid):
 

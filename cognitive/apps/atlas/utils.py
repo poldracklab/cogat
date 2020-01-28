@@ -71,7 +71,7 @@ def add_update(field, value, updates=None):
     :param value: the value to update with
     :param updates: the dictionary to update (optional)
     '''
-    if updates == None:
+    if updates is None:
         updates = dict()
     if value not in ["", None]:
         updates[field] = value
@@ -85,7 +85,7 @@ def clean_html(html, replacements=None):
     '''
     replace_sets = [["\n", "<br>"], ["\r", ""]]
 
-    if replacements != None:
+    if replacements is not None:
         replace_sets = replace_sets + replacements
 
     for replace_set in replace_sets:
@@ -179,7 +179,7 @@ def do_transaction(tx=None, query=None, params=None):
     if tx is None and query is None:
         print("Please define either transaction or query.")
         return None
-    if query != None:
+    if query is not None:
         tx = get_transactions(query, tx=tx, params=params)
     # Return as pandas data frame
     results = tx.commit()
@@ -222,7 +222,8 @@ def get_paper_properties(doi):
     print(xmlpath)
     xml_str = urlopen(xmlpath).read()
     doc = etree.fromstring(xml_str)
-    if len(doc.getchildren()) == 0 or len(doc.findall('.//crossref/error')) > 0:
+    if len(doc.getchildren()) == 0 or len(
+            doc.findall('.//crossref/error')) > 0:
         raise InvalidDoiException("DOI %s was not found" % doi)
     journal_name = doc.findall(
         ".//journal/journal_metadata/full_title")[0].text

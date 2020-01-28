@@ -110,7 +110,7 @@ def task_gist(request, uid, query=None, return_gist=False):
 
 
 def download_task_gist(request, uid, query=None):
-    '''download_task_gist generates the equivalent task gist, but instead downloads 
+    '''download_task_gist generates the equivalent task gist, but instead downloads
     it as a .gist file for the user to save locally
     :param uid: the uid for the task
     :param query: a custom query. If not defined, will show a table of concepts asserted.

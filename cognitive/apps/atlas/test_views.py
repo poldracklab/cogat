@@ -243,7 +243,8 @@ class AtlasViewTestCase(TestCase):
         thry = theory.create('test_update_theory', {'prop': 'prop'})
         response = self.client.post(
             reverse('update_theory', kwargs={'uid': thry.properties['id']}),
-            {'theory_name': 'theory_name', 'theory_description': 'theory_description'}
+            {'theory_name': 'theory_name',
+             'theory_description': 'theory_description'}
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual('theory_name', response.context['theory']['name'])
@@ -315,7 +316,7 @@ class AtlasViewTestCase(TestCase):
         cond1.delete()
         cond2.delete()
 
-    ''' This view sets up a task -ASSERTS-> concept link and returns task_view 
+    ''' This view sets up a task -ASSERTS-> concept link and returns task_view
         task view uses get_contrasts to populate the concepts context variable
         The only way a contrast is found to be associated with a task is by way
         of a condition.

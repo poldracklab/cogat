@@ -35,7 +35,8 @@ class Node(object):
         query = "MATCH (n:{}) RETURN count(*)".format(self.name)
         return self.graph.cypher.execute(query).one
 
-    def create(self, name, properties=None, property_key="id", request=None, unique_name=False, label=None):
+    def create(self, name, properties=None, property_key="id",
+               request=None, unique_name=False, label=None):
         '''create will create a new node of nodetype with unique id uid, and properties
         :param uid: the unique identifier
         :param name: the name of the node
@@ -46,12 +47,13 @@ class Node(object):
         node = None
         # creation also checks for existence of uid
         uid = generate_uid(label)
-        if self.graph.find_one(label, property_key=property_key, property_value=uid) is None:
+        if self.graph.find_one(
+                label, property_key=property_key, property_value=uid) is None:
             timestamp = self.graph.cypher.execute("RETURN timestamp()").one
             node = NeoNode(label, name=name, id=uid, creation_time=timestamp,
                            last_updated=timestamp)
             create_ret = self.graph.create(node)
-            if properties != None:
+            if properties is not None:
                 for property_name in properties.keys():
                     node.properties[property_name] = properties[property_name]
                 node.push()
@@ -95,7 +97,8 @@ class Node(object):
             res[0]['rel'].delete()
         user.link(request.user.id, node_id, "UPDATED", endnode_type=self.name)
 
-    def link(self, uid, endnode_id, relation_type, endnode_type=None, properties=None, label=None):
+    def link(self, uid, endnode_id, relation_type,
+             endnode_type=None, properties=None, label=None):
         '''link will create a new link (relation) from a uid to a relation, first confirming
         that the relation is valid for the node
         :param uid: the unique identifier for the source node
@@ -114,7 +117,7 @@ class Node(object):
         endnode = self.graph.find_one(
             endnode_type, property_key='id', property_value=endnode_id)
 
-        if startnode != None and endnode != None:
+        if startnode is not None and endnode is not None:
             # If the relation_type is allowed for the node type
             if relation_type not in self.relations:
                 raise InvalidNodeOperation(
@@ -123,7 +126,7 @@ class Node(object):
                                     rel_type=relation_type, end_node=endnode) is None:
                 relation = Relationship(startnode, relation_type, endnode)
                 self.graph.create(relation)
-                if properties != None:
+                if properties is not None:
                     for property_name in properties.keys():
                         relation.properties[property_name] = properties[property_name]
                     relation.push()
@@ -158,7 +161,7 @@ class Node(object):
         if label is None:
             label = self.name
         node = self.graph.find_one(label, 'id', uid)
-        if node != None:
+        if node is not None:
             for field, update in updates.items():
                 node[field] = update
             node.push()
@@ -175,7 +178,7 @@ class Node(object):
             endnode_type, property_key='id', property_value=endnode_id)
 
         relation = self.graph.match_one(start_node, relation_type, end_node)
-        if properties != None:
+        if properties is not None:
             for property_name in properties.keys():
                 relation.properties[property_name] = properties[property_name]
             relation.push()
@@ -283,7 +286,8 @@ class Node(object):
         }
         return result
 
-    def filter(self, filters, format="dict", fields=None, order_by=None, desc=None):
+    def filter(self, filters, format="dict",
+               fields=None, order_by=None, desc=None):
         '''filter will filter a node based on some set of filters
         :param filters: a list of tuples with [(field,filter,value)],
                         eg [("name","starts_with","a")].
@@ -302,7 +306,7 @@ class Node(object):
                 query = "{} WHERE n.{} =~ '(?i){}.*'".format(query,
                                                              filter_field, filter_value)
         query = "{} RETURN {}".format(query, return_fields)
-        if order_by != None:
+        if order_by is not None:
             if order_by == 'name':
                 query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
             else:
@@ -318,7 +322,8 @@ class Node(object):
         results = [x['n'].properties for x in nodes]
         return results
 
-    def all(self, fields=None, limit=None, format="dict", order_by=None, desc=False):
+    def all(self, fields=None, limit=None,
+            format="dict", order_by=None, desc=False):
         '''all returns all concepts, or up to a limit
         :param fields: select a subset of fields to return, default None returns all fields
         :param limit: return N=limit concepts only (default None)
@@ -333,7 +338,7 @@ class Node(object):
                                   for x in fields] + ["ID(n)"])
         query = "MATCH (n:{}) RETURN {}".format(self.name, return_fields)
 
-        if order_by != None:
+        if order_by is not None:
             if order_by == 'name':
                 query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
             else:
@@ -341,13 +346,14 @@ class Node(object):
             if desc is True:
                 query = "{} desc".format(query)
 
-        if limit != None:
+        if limit is not None:
             query = "{} LIMIT {}".format(query, limit)
 
         fields = fields + ["_id"]
         return do_query(query, fields=fields, output_format=format)
 
-    def get(self, uid, field="id", get_relations=True, relations=None, label=None):
+    def get(self, uid, field="id", get_relations=True,
+            relations=None, label=None):
         ''' get returns one or more nodes based on a field of interest. If
             get_relations is true, will also return the default relations for
             the node, or those defined in the relations variable
@@ -381,7 +387,7 @@ class Node(object):
                         relation_nodes[new_relation.type] = [new_relation_node]
 
                 # Does the user want a filtered set?
-                if relations != None:
+                if relations is not None:
                     relation_nodes = {
                         k: v for k, v in relation_nodes.items() if k in relations}
                 new_node["relations"] = relation_nodes
@@ -997,7 +1003,8 @@ def cypher_node(uid, node_type, name, count):
     :param name: the name of the node
     :param count: the node id (count) used to define relations and reference the node
     '''
-    return 'create (_%s:`%s` {`id`:"%s", `name`:"%s"})' % (count, node_type, uid, name)
+    return 'create (_%s:`%s` {`id`:"%s", `name`:"%s"})' % (
+        count, node_type, uid, name)
 
 
 def cypher_relation(relation_name, count1, count2):

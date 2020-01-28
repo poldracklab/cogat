@@ -48,7 +48,7 @@ def api(request):
     return render(request, 'main/api.html', context)
 
 
-# Error Pages ##################################################################
+# Error Pages ############################################################
 
 def handler404(request):
     response = render_to_response('main/404.html', {},

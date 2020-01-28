@@ -268,7 +268,8 @@ def concepts_by_letter(request, letter):
     concepts = Concept.filter(
         filters=[("name", "starts_with", letter)], order_by="name")
     concepts_count = len(concepts)
-    return nodes_by_letter(request, letter, concepts, concepts_count, "concepts")
+    return nodes_by_letter(request, letter, concepts,
+                           concepts_count, "concepts")
 
 
 def tasks_by_letter(request, letter):
@@ -279,7 +280,7 @@ def tasks_by_letter(request, letter):
     return nodes_by_letter(request, letter, tasks, tasks_count, "tasks")
 
 
-# VIEWS FOR SINGLE NODES ##########################################################
+# VIEWS FOR SINGLE NODES #################################################
 
 def view_term(request, uid):
     label = Node.get_label(uid)
@@ -621,7 +622,7 @@ def view_behavior(request, uid, return_context=False):
     return render(request, 'atlas/view_behavior.html', context)
 
 
-# ADD NEW TERMS ###################################################################
+# ADD NEW TERMS ##########################################################
 
 @login_required
 @user_passes_test(is_contrib, login_url='/403')
@@ -749,7 +750,7 @@ def add_condition(request, uid):
     return view_task(request, task_id)
 
 
-# UPDATE TERMS ####################################################################
+# UPDATE TERMS ###########################################################
 
 @login_required
 @user_passes_test(is_admin, login_url='/403')
@@ -781,7 +782,8 @@ def update_concept(request, uid):
     if concept_form.is_valid():
         cleaned_data = concept_form.cleaned_data
         con_class_id = cleaned_data.pop('concept_class')
-        for rel in Concept.get_relation(uid, "CLASSIFIEDUNDER", label="concept_class"):
+        for rel in Concept.get_relation(
+                uid, "CLASSIFIEDUNDER", label="concept_class"):
             Concept.unlink(uid, rel['id'], "CLASSIFIEDUNDER", "concept_class")
         Concept.link(uid, con_class_id, "CLASSIFIEDUNDER", "concept_class")
         Concept.update(uid, cleaned_data)
@@ -874,7 +876,7 @@ def update_disorder(request, uid):
         Disorder.update(uid, updates=updates)
     return view_disorder(request, uid)
 
-# ADD RELATIONS ###################################################################
+# ADD RELATIONS ##########################################################
 
 
 @login_required
@@ -1106,7 +1108,8 @@ def add_contrast(request, uid):
             Task.link(task_id, node.properties["id"],
                       relation_type, endnode_type="contrast")
 
-            # Make a link between contrast and conditions, specify side as property of relation
+            # Make a link between contrast and conditions, specify side as
+            # property of relation
             for condition_id, weight in conditions.items():
                 properties = {"weight": weight}
                 Condition.link(condition_id, node["id"], relation_type,
@@ -1189,12 +1192,14 @@ def add_disambiguation(request, label, uid):
             context['disambiguation_form'] = form
             return render(request, 'atlas/view_concept.html', context)
         else:
-            return HttpResponseNotFound(content='label in request has no disambiguation response')
+            return HttpResponseNotFound(
+                content='label in request has no disambiguation response')
 
     cleaned_data = form.cleaned_data
     terms = Node.get(uid, label=label)
     if len(terms) < 1:
-        return HttpResponseNotFound('Uid {} with label {} not found'.format(uid, label))
+        return HttpResponseNotFound(
+            'Uid {} with label {} not found'.format(uid, label))
     else:
         orig_node = terms[0]
         orig_id = orig_node['id']
@@ -1256,7 +1261,8 @@ def view_disambiguation(request, uid):
     if len(rel_node) > 0:
         return render(request, 'atlas/view_task_disambiguation.html', context)
     else:
-        return render(request, 'atlas/view_concept_disambiguation.html', context)
+        return render(
+            request, 'atlas/view_concept_disambiguation.html', context)
 
 
 @login_required
@@ -1536,7 +1542,8 @@ def update_contrast(request, uid):
             )
             condition_forms.append(form)
         for condition in conditions:
-            if any(elem['condition_id'] == condition['condition_id'] for elem in cont_conditions):
+            if any(elem['condition_id'] == condition['condition_id']
+                   for elem in cont_conditions):
                 continue
             form = forms.WeightForm(
                 condition['condition_id'],

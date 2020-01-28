@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, HTML, Layout, Field, Reset, Submit, Button
+from crispy_forms.layout import Div, Field, HTML, Layout, Reset, Submit
 
 from cognitive.apps.atlas.query import Assertion, Disorder, Task, Battery, ConceptClass, Concept
 import cognitive.apps.atlas.query as query

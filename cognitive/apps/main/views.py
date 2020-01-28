@@ -1,5 +1,5 @@
 from django.shortcuts import render, render_to_response
-from django.template import loader, RequestContext
+from django.template import RequestContext
 
 from cognitive.apps.atlas.query import Concept, Task, Disorder, Theory, Battery
 from cognitive.settings import DOMAIN

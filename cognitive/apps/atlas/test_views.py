@@ -3,7 +3,6 @@ import string
 from django.urls import reverse
 from django.test import TestCase
 
-from cognitive.apps.atlas import views
 from cognitive.apps.atlas.query import (Assertion, Battery, Concept, Condition,
                                         Contrast, Disorder, ExternalDataset,
                                         Implementation, Task, Theory, Indicator)

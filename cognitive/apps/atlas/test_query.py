@@ -6,7 +6,6 @@ from cognitive.apps.atlas.query import (
     Node, Task, Condition, Concept, Contrast, search, get, cypher_node,
     cypher_relation
 )
-from cognitive.settings import graph
 
 
 class NodeTest(TestCase):

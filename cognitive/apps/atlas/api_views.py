@@ -1,10 +1,8 @@
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 
-from cognitive.settings import graph
 import cognitive.apps.atlas.query as query
 from .forms import (TaskForm, ConceptForm, ContrastForm, ConditionForm,
                     DisorderForm, TaskDisorderForm)

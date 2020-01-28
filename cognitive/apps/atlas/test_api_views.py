@@ -1,12 +1,9 @@
 import json
-import string
 
 from django.urls import reverse
 from django.test import TestCase
 
-from rest_framework.test import RequestsClient
 
-from cognitive.apps.atlas import views
 from cognitive.apps.atlas.query import (Battery, Concept, Condition, Contrast,
                                         Disorder, Task, Theory)
 

@@ -1,9 +1,8 @@
-from datetime import datetime, date
+from datetime import date
 from urllib.parse import quote
 from urllib.request import urlopen
 
 from lxml import etree
-from py2neo import Path, Node, Relationship
 import pandas
 
 from django.utils.crypto import get_random_string

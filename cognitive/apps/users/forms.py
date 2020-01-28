@@ -1,9 +1,9 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, PasswordChangeForm
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from cognitive.apps.users.models import User
 
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, TabHolder, Tab, StrictButton
-from crispy_forms.layout import Layout, HTML, Button, Row, Field, Hidden
+from crispy_forms.bootstrap import TabHolder
+from crispy_forms.layout import Layout
 from crispy_forms.helper import FormHelper
 
 

@@ -2,7 +2,7 @@
     graph.'''
 import re
 
-from py2neo import Path, Node as NeoNode, Relationship
+from py2neo import Node as NeoNode, Relationship
 import pandas
 
 from cognitive.apps.atlas.utils import (color_by_relation, generate_uid,

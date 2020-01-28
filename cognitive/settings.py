@@ -16,12 +16,11 @@ from distutils.util import strtobool
 from os.path import join, abspath, dirname
 
 from py2neo import Graph
-from py2neo.neo4j import authenticate
 
 # Just for local development - will read this from secrets
 graph = Graph("http://graphdb:7474/db/data/")
-#authenticate("127.0.0.1:7474", "neo4j", "neo4j")
-#graph = Graph()
+# authenticate("127.0.0.1:7474", "neo4j", "neo4j")
+# graph = Graph()
 
 DOMAIN = "http://www.cognitiveatlas.org"
 

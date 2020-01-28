@@ -1,0 +1,9 @@
+requests
+django
+django-crispy-forms
+py2neo<3
+djangorestframework
+lxml
+pandas
+psycopg2
+pymysql

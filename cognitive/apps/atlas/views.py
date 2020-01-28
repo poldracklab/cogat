@@ -800,7 +800,7 @@ def update_trait(request, uid):
     if request.method != "POST":
         return redirect('concept', uid)
     try:
-        trait = Trait.get(uid)[0]
+        Trait.get(uid)[0]
     except IndexError:
         raise Http404("Trait does not exist")
     form = forms.TraitForm(uid, data=request.POST)
@@ -819,7 +819,7 @@ def update_behavior(request, uid):
     if request.method != "POST":
         return redirect('concept', uid)
     try:
-        behavior = Behavior.get(uid)[0]
+        Behavior.get(uid)[0]
     except IndexError:
         raise Http404("Behavior does not exist")
     form = forms.BehaviorForm(uid, data=request.POST)
@@ -1248,7 +1248,7 @@ def view_disambiguation(request, uid):
 
     try:
         rel_id = disam['relations']['DISAMBIGUATES'][0]['id']
-    except (KeyError, IndexError) as e:
+    except (KeyError, IndexError):
         # disambiguation isn't disambiguating anything.
         pass
 

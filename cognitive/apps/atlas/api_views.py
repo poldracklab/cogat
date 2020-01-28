@@ -111,7 +111,6 @@ class ConceptAPI(NodeAPI):
     name_field = 'term_name'
 
     def get(self, request, format=None):
-        fields = {}
         id = request.GET.get("id", "")
         name = request.GET.get("name", "")
         contrast_id = request.GET.get("contrast_id", "")
@@ -288,7 +287,7 @@ class TaskImplementationAPI(NodeAPI):
     node_class = Task
 
     def post(self, request, uid):
-        imp_id = request.POST.get('implementation_id', '')
+        request.POST.get('implementation_id', '')
         return self.make_link(request, uid, self.node_class, dataset_id,
                               Implementation, 'HASIMPLEMENTATION')
 
@@ -398,7 +397,7 @@ class BatteryBatteryAPI(NodeAPI):
     node_class = Battery
 
     def post(self, request, uid):
-        battery_id = request.POST.get('battery_id', '')
+        request.POST.get('battery_id', '')
         return self.make_link(request, uid, self.node_class, citation_id,
                               Battery, 'INBATTERY')
 

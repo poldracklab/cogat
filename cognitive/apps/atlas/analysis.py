@@ -15,7 +15,7 @@ def pagerank(relation="KINDOF"):
 
     # submit analysis to run
     url = "%s/service/mazerunner/analysis/pagerank/%s" % (DOMAIN, relation)
-    result = run_analysis(url)
+    run_analysis(url)
 
 # CLOSENESS_CENTRALITY ###################################################
 
@@ -34,7 +34,7 @@ def closeness_centrality(relation="MEASUREDBY"):
     # submit analysis to run
     url = "%s/service/mazerunner/analysis/closeness_centrality/%s" % (
         DOMAIN, relation)
-    result = run_analysis(url)
+    run_analysis(url)
 
 # BETWEENNESS_CENTRALITY #################################################
 
@@ -55,7 +55,7 @@ def betweenness_centrality(relation="MEASUREDBY"):
     # submit analysis to run
     url = "%s/service/mazerunner/analysis/betweenness_centrality/%s" % (
         DOMAIN, relation)
-    result = run_analysis(url)
+    run_analysis(url)
 
 # TRIANGLE_COUNTING ######################################################
 
@@ -74,7 +74,7 @@ def triangle_count(relation="MEASUREDBY"):
     # submit analysis to run
     url = "%s/service/mazerunner/analysis/triangle_count/%s" % (
         DOMAIN, relation)
-    result = run_analysis(url)
+    run_analysis(url)
 
 # CONNECTED_COMPONENTS ###################################################
 
@@ -93,7 +93,7 @@ def connected_components(relation="MEASUREDBY"):
     # submit analysis to run
     url = "%s/service/mazerunner/analysis/connected_components/%s" % (
         DOMAIN, relation)
-    result = run_analysis(url)
+    run_analysis(url)
 
 # STRONGLY_CONNECTED_COMPONENTS ##########################################
 
@@ -112,7 +112,7 @@ def strongly_connected_components(relation="MEASUREDBY"):
     # submit analysis to run
     url = "%s/service/mazerunner/analysis/strongly_connected_components/%s" % (
         DOMAIN, relation)
-    result = run_analysis(url)
+    run_analysis(url)
 
 
 def run_analysis(url):

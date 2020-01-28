@@ -32,7 +32,7 @@ class UserCreateForm(UserCreationForm):
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-8'
         self.helper.layout = Layout()
-        tab_holder = TabHolder()
+        TabHolder()
 
 
 class UserEditForm(UserChangeForm):
@@ -62,4 +62,4 @@ class UserEditForm(UserChangeForm):
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-8'
         self.helper.layout = Layout()
-        tab_holder = TabHolder()
+        TabHolder()

@@ -1,6 +1,6 @@
 import string
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 
 from cognitive.apps.atlas import views
@@ -9,6 +9,7 @@ from cognitive.apps.atlas.query import (Assertion, Battery, Concept, Condition,
                                         Implementation, Task, Theory, Indicator)
 from cognitive.apps.users.models import User
 from cognitive.settings import graph
+
 
 class AtlasViewTestCase(TestCase):
     def setUp(self):
@@ -135,7 +136,7 @@ class AtlasViewTestCase(TestCase):
             reverse('add_term'),
             {'term_type': 'concept', 'term_name': concept_name,
              'definition_text': definition},
-            follow = True
+            follow=True
         )
         self.assertEqual(response.status_code, 200)
         uid = response.context['concept']['id']
@@ -153,7 +154,7 @@ class AtlasViewTestCase(TestCase):
             reverse('add_term'),
             {'term_type': 'task', 'term_name': task_name,
              'definition_text': definition},
-            follow = True
+            follow=True
         )
         self.assertEqual(response.status_code, 200)
         uid = response.context['task']['id']
@@ -184,7 +185,8 @@ class AtlasViewTestCase(TestCase):
         relation = task.get_conditions(uid)
         self.assertEqual(len(relation), 1)
         self.assertEqual(relation[0]['condition_name'], 'test_add_condition')
-        con = condition.graph.find_one('condition', 'id', relation[0]['condition_id'])
+        con = condition.graph.find_one(
+            'condition', 'id', relation[0]['condition_id'])
         tsk.delete_related()
         tsk.delete()
         con.delete()
@@ -193,14 +195,17 @@ class AtlasViewTestCase(TestCase):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         concept = Concept()
-        con = concept.create('test_update_concept', {'definition_text': 'old def'})
+        con = concept.create('test_update_concept', {
+                             'definition_text': 'old def'})
         response = self.client.post(
             reverse('update_concept', kwargs={'uid': con.properties['id']}),
             {'definition_text': 'new def'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertNotEqual('old def', response.context['concept']['definition_text'])
-        self.assertEqual('new def', response.context['concept']['definition_text'])
+        self.assertNotEqual(
+            'old def', response.context['concept']['definition_text'])
+        self.assertEqual(
+            'new def', response.context['concept']['definition_text'])
         con.delete()
 
     def test_update_concept_no_def(self):
@@ -213,7 +218,8 @@ class AtlasViewTestCase(TestCase):
             {'definition_text': 'new def'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('new def', response.context['concept']['definition_text'])
+        self.assertEqual(
+            'new def', response.context['concept']['definition_text'])
         con.delete()
 
     def test_update_task(self):
@@ -226,7 +232,8 @@ class AtlasViewTestCase(TestCase):
             {'definition_text': 'new def'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('new def', response.context['task']['definition_text'])
+        self.assertEqual(
+            'new def', response.context['task']['definition_text'])
         tsk.delete()
 
     def test_update_theory(self):
@@ -240,7 +247,8 @@ class AtlasViewTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual('theory_name', response.context['theory']['name'])
-        self.assertEqual('theory_description', response.context['theory']['description'])
+        self.assertEqual('theory_description',
+                         response.context['theory']['description'])
         thry.delete()
 
     def test_update_disorder(self):
@@ -250,11 +258,13 @@ class AtlasViewTestCase(TestCase):
         dis = disorder.create('test_update_disorder', {'prop': 'prop'})
         response = self.client.post(
             reverse('update_disorder', kwargs={'uid': dis.properties['id']}),
-            {'disorder_name': 'disorder_name', 'disorder_definition': 'disorder_definition'}
+            {'disorder_name': 'disorder_name',
+                'disorder_definition': 'disorder_definition'}
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual('disorder_name', response.context['disorder']['name'])
-        self.assertEqual('disorder_definition', response.context['disorder']['definition'])
+        self.assertEqual('disorder_definition',
+                         response.context['disorder']['definition'])
         dis.delete()
 
     def test_add_concept_relation(self):
@@ -264,11 +274,14 @@ class AtlasViewTestCase(TestCase):
         con1 = concept.create('test_update_concept', {'prop': 'prop'})
         con2 = concept.create('test_update_concept', {'prop': 'prop'})
         response = self.client.post(
-            reverse('add_concept_relation', kwargs={'uid': con1.properties['id']}),
-            {'relation_type': 'PARTOF', 'concept_selection': con2.properties['id']}
+            reverse('add_concept_relation', kwargs={
+                    'uid': con1.properties['id']}),
+            {'relation_type': 'PARTOF',
+                'concept_selection': con2.properties['id']}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['concept']['relations']['PARTOF'][0]['id'], con2.properties['id'])
+        self.assertEqual(
+            response.context['concept']['relations']['PARTOF'][0]['id'], con2.properties['id'])
         con1.delete_related()
         con1.delete()
         con2.delete()
@@ -279,9 +292,12 @@ class AtlasViewTestCase(TestCase):
         task = Task()
         condition = Condition()
         tsk = task.create('test_add_task_contrast', {'prop': 'prop'})
-        cond1 = condition.create('test_add_task_contrast_cond1', {'prop': 'prop'})
-        cond2 = condition.create('test_add_task_contrast_cond2', {'prop': 'prop'})
-        cond_names = ['test_add_task_contrast_cond1', 'test_add_task_contrast_cond2'] 
+        cond1 = condition.create(
+            'test_add_task_contrast_cond1', {'prop': 'prop'})
+        cond2 = condition.create(
+            'test_add_task_contrast_cond2', {'prop': 'prop'})
+        cond_names = ['test_add_task_contrast_cond1',
+                      'test_add_task_contrast_cond2']
         task.link(tsk.properties['id'], cond1.properties['id'], 'HASCONDITION',
                   endnode_type='condition')
         task.link(tsk.properties['id'], cond2.properties['id'], 'HASCONDITION',
@@ -289,8 +305,10 @@ class AtlasViewTestCase(TestCase):
         response = self.client.get(reverse('add_task_contrast',
                                            kwargs={'uid': tsk.properties['id']}))
         self.assertEqual(response.status_code, 200)
-        self.assertIn(response.context['conditions'][0]['condition_name'], cond_names)
-        self.assertIn(response.context['conditions'][1]['condition_name'], cond_names)
+        self.assertIn(response.context['conditions']
+                      [0]['condition_name'], cond_names)
+        self.assertIn(response.context['conditions']
+                      [1]['condition_name'], cond_names)
         self.assertEqual(len(response.context['conditions']), 2)
         tsk.delete_related()
         tsk.delete()
@@ -319,9 +337,11 @@ class AtlasViewTestCase(TestCase):
             {'concept_selection': con.properties['id']}
         )
         self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('task', kwargs={'uid': tsk.properties['id']}))
+        response = self.client.get(
+            reverse('task', kwargs={'uid': tsk.properties['id']}))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['task']['relations']['ASSERTS']), 1)
+        self.assertEqual(
+            len(response.context['task']['relations']['ASSERTS']), 1)
         self.assertEqual(response.context['task']['relations']['ASSERTS'][0]['id'],
                          con.properties['id'])
         tsk.delete_related()
@@ -371,7 +391,8 @@ class AtlasViewTestCase(TestCase):
             'implementation_description': 'task imp desc'
         }
         response = self.client.post(
-            reverse('add_task_implementation', kwargs={'task_id': tsk.properties['id']}),
+            reverse('add_task_implementation', kwargs={
+                    'task_id': tsk.properties['id']}),
             data
         )
         self.assertEqual(response.status_code, 200)
@@ -392,7 +413,8 @@ class AtlasViewTestCase(TestCase):
             'dataset_name': 'add_task_dataset',
         }
         response = self.client.post(
-            reverse('add_task_dataset', kwargs={'task_id': tsk.properties['id']}),
+            reverse('add_task_dataset', kwargs={
+                    'task_id': tsk.properties['id']}),
             data
         )
         self.assertEqual(response.status_code, 200)
@@ -412,7 +434,8 @@ class AtlasViewTestCase(TestCase):
             'type': 'add_task_indicator',
         }
         response = self.client.post(
-            reverse('add_task_indicator', kwargs={'task_id': tsk.properties['id']}),
+            reverse('add_task_indicator', kwargs={
+                    'task_id': tsk.properties['id']}),
             data
         )
         self.assertEqual(response.status_code, 200)

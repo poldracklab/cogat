@@ -6,6 +6,7 @@ from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, Tab
 from crispy_forms.layout import Layout, HTML, Button, Row, Field, Hidden
 from crispy_forms.helper import FormHelper
 
+
 class UserCreateForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
@@ -32,7 +33,8 @@ class UserCreateForm(UserCreationForm):
         self.helper.field_class = 'col-lg-8'
         self.helper.layout = Layout()
         tab_holder = TabHolder()
-    
+
+
 class UserEditForm(UserChangeForm):
     email = forms.EmailField(required=True)
 
@@ -47,7 +49,7 @@ class UserEditForm(UserChangeForm):
         if commit:
             user.save()
         return user
-    
+
     def clean_password(self):
         return ""
 

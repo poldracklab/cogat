@@ -262,7 +262,6 @@ class GraphUtilsTest(TestCase):
         self.assertEqual(len(result), 1)
     '''
 
-
     ''' ignoring gist functions for now
     def test_cypher_node(self):
         pass

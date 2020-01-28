@@ -59,7 +59,6 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'crispy_forms',
-    'opbeat.contrib.django',
 ]
 #    'allauth',
 #    'allauth.account',
@@ -80,7 +79,6 @@ THIRD_PARTY_APPS = [
 INSTALLED_APPS += THIRD_PARTY_APPS
 
 MIDDLEWARE_CLASSES = [
-    'opbeat.contrib.django.middleware.OpbeatAPMMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -115,7 +113,8 @@ TEMPLATES = [
 
 
 # CUSTOM CONTEXT PROCESSORS
-TEMPLATES[0]['OPTIONS']['context_processors'].append("main.context_processors.counts_processor")
+TEMPLATES[0]['OPTIONS']['context_processors'].append(
+    "main.context_processors.counts_processor")
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -167,7 +166,6 @@ PASSWORD_HASHERS = [
 ]
 
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -200,16 +198,17 @@ STATICFILES_FINDERS = (
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 CACHES = {
-            'default': {
-                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            }
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
 }
 
 AUTH_USER_MODEL = 'users.User'
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')
 DEBUG = strtobool(os.environ.get('DJANGO_DEBUG', 'False'))
-LOGIN_REDIRECT_URL='/'
-LOGOUT_REDIRECT_URL='/logged_out/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/logged_out/'
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -224,13 +223,7 @@ REST_FRAMEWORK = {
 USE_RECAPTCHA = strtobool(os.environ.get('USE_RECAPTCHA', 'False'))
 GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')
 
-OPBEAT = {
-    'ORGANIZATION_ID': os.environ.get('ORGANIZATION_ID', ''),
-    'APP_ID': os.environ.get('APP_ID', ''),
-    'SECRET_TOKEN': os.environ.get('SECRET_TOKEN', ''),
-}
-
-NOTIFY_EMAILS = [i for i in os.environ.get("NOTIFY_EMAILS", "").split(" ")] 
+NOTIFY_EMAILS = [i for i in os.environ.get("NOTIFY_EMAILS", "").split(" ")]
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", '')
 EMAIL_PORT = os.environ.get("EMAIL_PORT", '')

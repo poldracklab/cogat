@@ -1,5 +1,6 @@
-from django.core.urlresolvers import resolve
+from django.urls import resolve
 from django.test import TestCase
+
 
 class AtlasUrlTestCase(TestCase):
     def test_all_concepts(self):
@@ -23,7 +24,7 @@ class AtlasUrlTestCase(TestCase):
         self.assertEqual(found.view_name, 'all_disorders')
 
     def test_concepts_by_letter(self):
-        
+
         found = resolve('/concepts/a/')
         self.assertEqual(found.view_name, 'concepts_by_letter')
 

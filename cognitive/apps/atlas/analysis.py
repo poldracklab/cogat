@@ -8,10 +8,12 @@ import requests
 # PageRank is used to find the relative importance of a node within a set of connected nodes.
 
 # :GET /service/mazerunner/analysis/pagerank/KNOWS
+
+
 def pagerank(relation="KINDOF"):
 
     # submit analysis to run
-    url = "%s/service/mazerunner/analysis/pagerank/%s" %(DOMAIN,relation)
+    url = "%s/service/mazerunner/analysis/pagerank/%s" % (DOMAIN, relation)
     result = run_analysis(url)
 
 # CLOSENESS_CENTRALITY ###############################################################
@@ -21,10 +23,13 @@ def pagerank(relation="KINDOF"):
 # A key node centrality measure in networks is closeness centrality (Freeman, 1978; Opsahl et al., 2010; Wasserman and Faust, 1994). It is defined as the inverse of farness, which in turn, is the sum of distances to all other nodes.
 
 # :GET /service/mazerunner/analysis/closeness_centrality/MEASUREDBY
+
+
 def closeness_centrality(relation="MEASUREDBY"):
 
     # submit analysis to run
-    url = "%s/service/mazerunner/analysis/closeness_centrality/%s" %(DOMAIN,relation)
+    url = "%s/service/mazerunner/analysis/closeness_centrality/%s" % (
+        DOMAIN, relation)
     result = run_analysis(url)
 
 # BETWEENNESS_CENTRALITY #############################################################
@@ -34,10 +39,13 @@ def closeness_centrality(relation="MEASUREDBY"):
 # Betweenness centrality is an indicator of a node's centrality in a network. It is equal to the number of shortest paths from all vertices to all others that pass through that node. A node with high betweenness centrality has a large influence on the transfer of items through the network, under the assumption that item transfer follows the shortest paths.
 
 # :GET /service/mazerunner/analysis/betweenness_centrality/MEASUREDBY
+
+
 def betweenness_centrality(relation="MEASUREDBY"):
 
     # submit analysis to run
-    url = "%s/service/mazerunner/analysis/betweenness_centrality/%s" %(DOMAIN,relation)
+    url = "%s/service/mazerunner/analysis/betweenness_centrality/%s" % (
+        DOMAIN, relation)
     result = run_analysis(url)
 
 # TRIANGLE_COUNTING ##################################################################
@@ -49,10 +57,12 @@ def betweenness_centrality(relation="MEASUREDBY"):
 # The value of triangle_count represents the count of the triangles that a node is connected to.
 # A node is part of a triangle when it has two adjacent nodes with a relationship between them. The triangle_count property provides a measure of clustering for each node.
 
+
 def triangle_count(relation="MEASUREDBY"):
 
     # submit analysis to run
-    url = "%s/service/mazerunner/analysis/triangle_count/%s" %(DOMAIN,relation)
+    url = "%s/service/mazerunner/analysis/triangle_count/%s" % (
+        DOMAIN, relation)
     result = run_analysis(url)
 
 # CONNECTED_COMPONENTS ###############################################################
@@ -64,10 +74,12 @@ def triangle_count(relation="MEASUREDBY"):
 # The value of connected_components represents the Neo4j internal node ID that has the lowest integer value for a set of connected nodes.
 # Connected components are used to find isolated clusters, that is, a group of nodes that can reach every other node in the group through a bidirectional traversal.
 
+
 def connected_components(relation="MEASUREDBY"):
 
     # submit analysis to run
-    url = "%s/service/mazerunner/analysis/connected_components/%s" %(DOMAIN,relation)
+    url = "%s/service/mazerunner/analysis/connected_components/%s" % (
+        DOMAIN, relation)
     result = run_analysis(url)
 
 # STRONGLY_CONNECTED_COMPONENTS ######################################################
@@ -79,10 +91,12 @@ def connected_components(relation="MEASUREDBY"):
 # The value of strongly_connected_components represents the Neo4j internal node ID that has the lowest integer value for a set of strongly connected nodes.
 # Strongly connected components are used to find clusters, that is, a group of nodes that can reach every other node in the group through a directed traversal.
 
+
 def strongly_connected_components(relation="MEASUREDBY"):
 
     # submit analysis to run
-    url = "%s/service/mazerunner/analysis/strongly_connected_components/%s" %(DOMAIN,relation)
+    url = "%s/service/mazerunner/analysis/strongly_connected_components/%s" % (
+        DOMAIN, relation)
     result = run_analysis(url)
 
 
@@ -94,7 +108,7 @@ def run_analysis(url):
     result = None
     if response.status_code == 200:
         result = response.json()
-    return result    
+    return result
 
 # Eg, how to get a result after submit -problems need to figure out:
 # 1) Under what context should different analyses be run for Cogat?

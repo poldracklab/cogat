@@ -12,10 +12,12 @@ Contrast = Contrast()
 
 # Return full graph visualizations
 
+
 def graph_view(request, label, uid):
     query = "MATCH (n:{}) where n.id = '{}' OPTIONAL MATCH (n)-[]-(r) return n, r"
     query = query.format(label, uid)
     return render(request, "graph/graph.html", {'query': query})
+
 
 def task_graph(request, uid):
     nodes = Task.get_graph(uid)

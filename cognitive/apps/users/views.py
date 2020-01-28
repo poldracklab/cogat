@@ -3,7 +3,7 @@ from functools import wraps
 
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import IntegrityError
 from django.http.response import (HttpResponseRedirect, JsonResponse)
 from django.shortcuts import (render, get_object_or_404, render_to_response,
@@ -16,6 +16,7 @@ from rest_framework.authtoken.models import Token
 from cognitive import settings
 from cognitive.apps.users.models import User
 from .forms import UserEditForm, UserCreateForm
+
 
 def to_json_response(response):
     status_code = response.status_code
@@ -70,13 +71,14 @@ def create_user(request, template_name='registration/signup.html'):
                     'response': recaptcha_response
                 }
                 data = urllib.parse.urlencode(values).encode()
-                req =  urllib.request.Request(url, data=data)
+                req = urllib.request.Request(url, data=data)
                 response = urllib.request.urlopen(req)
                 recaptcha_result = json.loads(response.read().decode())
             else:
                 recaptcha_result = {'success': True}
             if recaptcha_result['success'] is False:
-                messages.error(request, "Captcha failed, unable to generate new account")
+                messages.error(
+                    request, "Captcha failed, unable to generate new account")
                 return (HttpResponseRedirect(reverse("index")))
             try:
                 form.save()
@@ -119,15 +121,15 @@ def edit_user(request):
     return render(request, "registration/edit_user.html", {'form': edit_form})
 
 
-
 def login(request):
-     return render_to_response('login.html', {
-        #'plus_id': getattr(settings, 'SOCIAL_AUTH_GOOGLE_PLUS_KEY', None)
-     }, RequestContext(request))
+    return render_to_response('login.html', {
+        # 'plus_id': getattr(settings, 'SOCIAL_AUTH_GOOGLE_PLUS_KEY', None)
+    }, RequestContext(request))
+
 
 @login_required
 def get_token(request):
-    context = {'active':'home'}
+    context = {'active': 'home'}
     if request.user.is_authenticated:
         token, created = Token.objects.get_or_create(user=request.user)
         context["token"] = token.key

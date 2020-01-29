@@ -33,7 +33,9 @@ class Node(object):
         '''count returns the count :) I am ze-count! One two three...! one two... three!
         '''
         query = "MATCH (n:{}) RETURN count(*)".format(self.name)
-        return self.graph.cypher.execute(query).one
+        result = self.graph.run(query)
+        result.forward()
+        return result.current[0]
 
     def create(self, name, properties=None, property_key="id",
                request=None, unique_name=False, label=None):
@@ -49,7 +51,7 @@ class Node(object):
         uid = generate_uid(label)
         if self.graph.find_one(
                 label, property_key=property_key, property_value=uid) is None:
-            timestamp = self.graph.cypher.execute("RETURN timestamp()").one
+            timestamp = self.graph.run("RETURN timestamp()").one
             node = NeoNode(label, name=name, id=uid, creation_time=timestamp,
                            last_updated=timestamp)
             create_ret = self.graph.create(node)
@@ -92,7 +94,7 @@ class Node(object):
         self.neo_user_lookup(request)
         user = User()
         query = "MATCH ()-[rel:UPDATED]->(dest) WHERE dest.id = '{}' RETURN rel"
-        res = self.graph.cypher.execute(query)
+        res = self.graph.run(query)
         if res[0]:
             res[0]['rel'].delete()
         user.link(request.user.id, node_id, "UPDATED", endnode_type=self.name)
@@ -148,7 +150,7 @@ class Node(object):
         '''.format(self.name, relation_type, endnode_type, uid, endnode_id)
 
         try:
-            self.graph.cypher.execute(query)
+            self.graph.run(query)
             return None
         except Exception as e:
             return e
@@ -318,7 +320,7 @@ class Node(object):
 
     def api_all(self):
         query = "match (n:{}) return n".format(self.name)
-        nodes = self.graph.cypher.execute(query)
+        nodes = self.graph.run(query)
         results = [x['n'].properties for x in nodes]
         return results
 
@@ -398,7 +400,7 @@ class Node(object):
 
     def get_label(self, uid):
         query = "MATCH (x) where x.id = '{}' return x".format(uid)
-        res = self.graph.cypher.execute(query)
+        res = self.graph.run(query)
         try:
             return list(res[0].x.labels)[0]
         except (KeyError, AttributeError):
@@ -574,7 +576,7 @@ class Task(Node):
         for contrast in ret:
             query = '''MATCH (cont:contrast)<-[r:HASCONTRAST]-(cond:condition)
                        WHERE cont.id='{}' return cont, r, cond'''.format(contrast['id'])
-            results = settings.graph.cypher.execute(query)
+            results = settings.graph.run(query)
             contrast.update({
                 'conditions': [(x['cond'].properties, x['r'].properties) for x in results]
             })

@@ -1,5 +1,4 @@
-from django.shortcuts import render, render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 
 from cognitive.apps.atlas.query import Concept, Task, Disorder, Theory, Battery
 from cognitive.settings import DOMAIN
@@ -46,19 +45,3 @@ def api(request):
     context = base(request)
     context["domain"] = DOMAIN
     return render(request, 'main/api.html', context)
-
-
-# Error Pages ############################################################
-
-def handler404(request):
-    response = render_to_response('main/404.html', {},
-                                  context_instance=RequestContext(request))
-    response.status_code = 404
-    return response
-
-
-def handler500(request):
-    response = render_to_response('main/500.html', {},
-                                  context_instance=RequestContext(request))
-    response.status_code = 500
-    return response

@@ -1,9 +1,10 @@
 requests
 django
 django-crispy-forms
-py2neo<3
+py2neo
 djangorestframework
 lxml
 pandas
 psycopg2
 pymysql
+uwsgi

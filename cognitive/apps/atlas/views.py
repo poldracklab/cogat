@@ -213,7 +213,7 @@ def all_disorders(request, return_context=False):
     disorder_form = DisorderForm
 
     '''
-    dis_records = graph.cypher.execute(
+    dis_records = graph.run(
         "match (dis:disorder) where not (dis:disorder)-[:ISA]->() return dis order by dis.name"
     )
     top_level_disorders = [x['dis'] for x in dis_records]
@@ -483,7 +483,7 @@ def view_theory(request, uid, return_context=False):
         pred = pred[0]
         subj = subj[0]
         for term in [pred, subj]:
-            term_node = graph.cypher.execute(
+            term_node = graph.run(
                 "match (t) where t.id = '{}' return t".format(term['id'])
             ).one
             # we only ever create nodes with one label:
@@ -994,7 +994,7 @@ def add_disorder_task(request, uid):
     task_selection = request.POST.get('task_selection', '')
     Task.link(task_selection, disorder_id,
               relation_type, endnode_type="disorder")
-    assertion = graph.cypher.execute(
+    assertion = graph.run(
         (
             "match (t:task)<-[:PREDICATE]-(a:assertion)-[:SUBJECT]->(d:disorder)"
             " where d.id = '{}' and t.id = '{}' return a "

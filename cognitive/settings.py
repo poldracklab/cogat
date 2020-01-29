@@ -18,9 +18,7 @@ from os.path import join, abspath, dirname
 from py2neo import Graph
 
 # Just for local development - will read this from secrets
-graph = Graph("http://graphdb:7474/db/data/")
-# authenticate("127.0.0.1:7474", "neo4j", "neo4j")
-# graph = Graph()
+graph = Graph("http://graphdb:7474", auth=("neo4j", "test"))
 
 DOMAIN = "http://www.cognitiveatlas.org"
 
@@ -77,13 +75,12 @@ THIRD_PARTY_APPS = [
 
 INSTALLED_APPS += THIRD_PARTY_APPS
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

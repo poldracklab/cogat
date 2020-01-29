@@ -148,8 +148,8 @@ def do_query(query, fields, output_format="dict", drop_duplicates=True):
     '''
     if isinstance(fields, str):
         fields = [fields]
-    result = graph.cypher.execute(query)
-    df = pandas.DataFrame(result.records, columns=result.columns)
+    result = graph.run(query)
+    df = pandas.DataFrame(result.data())
     df.columns = fields
     if drop_duplicates is True:
         df = df.drop_duplicates()

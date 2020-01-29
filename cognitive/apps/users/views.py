@@ -8,9 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.db import IntegrityError
 from django.http.response import (HttpResponseRedirect, JsonResponse)
-from django.shortcuts import (render, get_object_or_404, render_to_response,
+from django.shortcuts import (render, get_object_or_404,
                               redirect)
-from django.template.context import RequestContext
 
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -124,9 +123,7 @@ def edit_user(request):
 
 
 def login(request):
-    return render_to_response('login.html', {
-        # 'plus_id': getattr(settings, 'SOCIAL_AUTH_GOOGLE_PLUS_KEY', None)
-    }, RequestContext(request))
+    return render(request, 'login.html')
 
 
 @login_required

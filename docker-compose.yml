@@ -1,15 +1,17 @@
 version: "3"
 services:
   graphdb:
-    build:
-      context: .
-      dockerfile: ./compose/graphdb/Dockerfile
+    image: neo4j:3.5
     volumes:
-      - ./compose/graphdb/data:/opt/data
+      - ./compose/graphdb/data:/var/lib/neo4j/data
       - ./compose/graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
       - ./compose/graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
+    env_file: .env
     ports:
       - "6362:6362"
+      - "7474:7474"
+      - "7473:7473"
+      - "7687:7687"
     expose:
       - "7474"
       - "1337"
@@ -23,26 +25,26 @@ services:
         aliases:
           - graphdb
 
-  graphdb_ro:
-    build:
-      context: .
-      dockerfile: ./compose/graphdb/Dockerfile
-    volumes:
-      - ./compose/graphdb/data_ro:/opt/data
-      - ./compose/graphdb/neo4j/ro_conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
-      - ./compose/graphdb/neo4j/ro_conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
-      - ./compose/graphdb/neo4j/backup:/backup
-    ports:
-      - "7474:7474"
-      - "7473:7473"
-    expose:
-      - "1338"
-      - "5001"
-      - "6002"
-    networks:
-      graphs:
-        aliases:
-          - graphdb_ro
+#  graphdb_ro:
+#    build:
+#      context: .
+#      dockerfile: ./compose/graphdb/Dockerfile
+#    volumes:
+#      - ./compose/graphdb/data_ro:/opt/data
+#      - ./compose/graphdb/neo4j/ro_conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
+#      - ./compose/graphdb/neo4j/ro_conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
+#      - ./compose/graphdb/neo4j/backup:/backup
+#    ports:
+#      - "7474:7474"
+#      - "7473:7473"
+#    expose:
+#      - "1338"
+#      - "5001"
+#      - "6002"
+#    networks:
+#      graphs:
+#        aliases:
+#          - graphdb_ro
 
 
   postgres:
@@ -59,9 +61,9 @@ services:
             - postgres
 
   uwsgi:
-      image: rwblair/cogat
+      build:
+        context: ./compose/uwsgi/
       command: /code/compose/uwsgi/uwsgi.sh
-      restart: always
       env_file: .env
       volumes:
           - .:/code

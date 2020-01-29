@@ -287,8 +287,8 @@ class TaskImplementationAPI(NodeAPI):
     node_class = Task
 
     def post(self, request, uid):
-        request.POST.get('implementation_id', '')
-        return self.make_link(request, uid, self.node_class, dataset_id,
+        implementation_id, = request.POST.get('implementation_id', '')
+        return self.make_link(request, uid, self.node_class, implementation_id,
                               Implementation, 'HASIMPLEMENTATION')
 
 # def add_task_dataset(request, task_id):
@@ -397,8 +397,8 @@ class BatteryBatteryAPI(NodeAPI):
     node_class = Battery
 
     def post(self, request, uid):
-        request.POST.get('battery_id', '')
-        return self.make_link(request, uid, self.node_class, citation_id,
+        battery_id = request.POST.get('battery_id', '')
+        return self.make_link(request, uid, self.node_class, battery_id,
                               Battery, 'INBATTERY')
 
 # def add_battery_task(request, battery_id):

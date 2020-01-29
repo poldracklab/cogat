@@ -3,8 +3,7 @@ from py2neo import Graph
 from django.test import TestCase
 
 from cognitive.apps.atlas.query import (
-    Node, Task, Condition, Concept, Contrast, search, get, cypher_node,
-    cypher_relation
+    Node, Task, Condition, Concept, Contrast, search
 )
 
 
@@ -66,7 +65,7 @@ class NodeTest(TestCase):
         self.node2 = self.node.create(
             name=self.node_name,
             properties=self.node_properties)
-        relation = self.node.link(
+        self.node.link(
             self.node1.properties['id'],
             self.node2.properties['id'],
             "GENERIC")
@@ -81,7 +80,7 @@ class NodeTest(TestCase):
         self.node2 = self.node.create(
             name=self.node_name,
             properties=self.node_properties)
-        relation = self.node.link(
+        self.node.link(
             self.node1.properties['id'],
             self.node2.properties['id'],
             "GENERIC")

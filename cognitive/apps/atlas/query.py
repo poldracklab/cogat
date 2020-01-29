@@ -636,9 +636,11 @@ class Task(Node):
     # the relationship itself contains data that should be presented in api
     # no functions right now for getting end node and relation properties
 
+    ''' was never fully implemented
     def api_get_indicators(self, task_id):
-        query = '''MATCH (t:task)-[rel:HASINDICATOR]->(i:indicator)
-                   WHERE t.id = '{}' return rel, c)'''
+        MATCH (t:task)-[rel:HASINDICATOR]->(i:indicator)
+            WHERE t.id = '{}' return rel, c)
+    '''
 
     def get_contrasts(self, task_id):
         '''get_contrasts looks up the contrasts(s) associated with a task, along with concepts
@@ -928,9 +930,9 @@ class Disambiguation(Node):
         self.name = "disambiguation"
         self.fields = ["id", "name", "description"]
         self.relations = {
-            "DISAMBIGUATES": "concepts",
-            "DISAMBIGUATES": "tasks",
-            "DISAMBIGUATES": "behavior",
+            # "DISAMBIGUATES": "concepts",
+            # "DISAMBIGUATES": "tasks",
+            # "DISAMBIGUATES": "behavior",
             "DISAMBIGUATES": "traits",
         }
 

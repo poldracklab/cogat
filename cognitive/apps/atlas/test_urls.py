@@ -108,7 +108,7 @@ class AtlasUrlTestCase(TestCase):
         found = resolve('/concepts/search')
         self.assertEqual(found.view_name, 'search_concept')
 
-    '''
+    r'''
     # Graph views
     url(r'^graph/task/(?P<uid>[\w\+%_& ]+)/$', graph.task_graph, name="task_graph"),
     url(r'^graph/concept/(?P<uid>[\w\+%_& ]+)/$', graph.concept_graph, name="concept_graph"),

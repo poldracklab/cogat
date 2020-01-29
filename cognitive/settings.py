@@ -24,11 +24,11 @@ graph = Graph("http://graphdb:7474/db/data/")
 
 DOMAIN = "http://www.cognitiveatlas.org"
 
+
 # PATH vars
-here = lambda *x: join(abspath(dirname(__file__)), *x)
-PROJECT_ROOT = here(".")
-root = lambda *x: join(abspath(PROJECT_ROOT), *x)
-sys.path.insert(0, root('apps'))
+PROJECT_ROOT = join(abspath(dirname(__file__)), ".")
+
+sys.path.insert(0, join(abspath(PROJECT_ROOT), 'apps'))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

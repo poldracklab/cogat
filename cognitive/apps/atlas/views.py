@@ -16,7 +16,7 @@ from cognitive.apps.atlas.forms import (CitationForm, DisorderForm,
                                         ImplementationForm, IndicatorForm,
                                         TaskDisorderForm, TheoryAssertionForm,
                                         TheoryForm, BatteryForm,
-                                        ConceptTaskForm, ConceptContrastForm,
+                                        ConceptTaskForm,
                                         DisorderDisorderForm, ExternalLinkForm,
                                         BatteryBatteryForm, BatteryTaskForm,
                                         ConceptForm)
@@ -1090,7 +1090,7 @@ def add_contrast(request, uid):
     if request.method == "POST":
         relation_type = "HASCONTRAST"  # condition --HASCONTRAST-> contrast
 
-        #pickle.dump(post, open('result.pkl', 'wb'))
+        # pickle.dump(post, open('result.pkl', 'wb'))
         contrast_name = request.POST.get('contrast_name', '')
         skip = ["contrast_name", "csrfmiddlewaretoken"]
 
@@ -1108,8 +1108,7 @@ def add_contrast(request, uid):
             Task.link(task_id, node.properties["id"],
                       relation_type, endnode_type="contrast")
 
-            # Make a link between contrast and conditions, specify side as
-            # property of relation
+            # Make a link between contrast and conditions, specify side as property of relation
             for condition_id, weight in conditions.items():
                 properties = {"weight": weight}
                 Condition.link(condition_id, node["id"], relation_type,
@@ -1572,7 +1571,7 @@ def update_contrast(request, uid):
                 if link_made is False:
                     error_msg = "Link could not be made between condition {} and contrast {}"
                     messages.error(request, error_msg.format(cond_id, uid))
-                    return redirect(edit_contrast, uid)
+                    return redirect(update_contrast, uid)
                 Condition.update_link_properties(cond_id, uid, "HASCONTRAST", "contrast",
                                                  {'weight': weight})
         return redirect(view_task, task['task_id'])

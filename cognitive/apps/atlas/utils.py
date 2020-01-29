@@ -151,7 +151,7 @@ def do_query(query, fields, output_format="dict", drop_duplicates=True):
     result = graph.cypher.execute(query)
     df = pandas.DataFrame(result.records, columns=result.columns)
     df.columns = fields
-    if drop_duplicates == True:
+    if drop_duplicates is True:
         df = df.drop_duplicates()
     if output_format == "df":
         return df
@@ -193,10 +193,12 @@ def do_transaction(tx=None, query=None, params=None):
 
 
 def get_transactions(query, tx=None, params=None):
-    '''get_transactions will append new transactions to a transaction object, or return a new transaction if one does not exist.
+    '''get_transactions will append new transactions to a transaction object, or return a new transaction if one does
+        not exist.
     :param query: string of cypher query
     :param tx: a transaction object (optional)
-    :param params: a list of dictionaries, each dictionary with keys as values to sub in the query, and values as the thing to substitute. Eg: [{"A":name,"B":classification}]
+    :param params: a list of dictionaries, each dictionary with keys as values to sub in the query, and values as the
+        thing to substitute. Eg: [{"A":name,"B":classification}]
     '''
     # Combine queries into transaction
     if tx is None:

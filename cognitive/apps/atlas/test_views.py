@@ -3,9 +3,8 @@ import string
 from django.urls import reverse
 from django.test import TestCase
 
-from cognitive.apps.atlas.query import (Assertion, Battery, Concept, Condition,
-                                        Contrast, Disorder, ExternalDataset,
-                                        Implementation, Task, Theory, Indicator)
+from cognitive.apps.atlas.query import (Assertion, Concept, Condition,
+                                        Contrast, Disorder, Task, Theory)
 from cognitive.apps.users.models import User
 from cognitive.settings import graph
 
@@ -123,7 +122,7 @@ class AtlasViewTestCase(TestCase):
         self.assertEqual(response.context['message'],
                          "{}{}".format("Please further define ", term_name))
 
-   # to add: test trying to contribute existing term
+    # to add: test trying to contribute existing term
 
     def test_add_term_concept(self):
         self.assertTrue(self.client.login(

@@ -64,7 +64,8 @@ def contrast_gist(request, uid, query=None, return_gist=False):
 
     contrast = Contrast.get(uid)[0]
     if query is None:
-        query = "MATCH (c:condition)-[r:HASCONTRAST]->(con:contrast) WHERE con.id='%s' RETURN c.name as condition_name,con.name as contrast_name;" % (uid)
+        query = '''MATCH (c:condition)-[r:HASCONTRAST]->(con:contrast) WHERE con.id='%s' RETURN c.name as \
+                    condition_name,con.name as contrast_name;" % (uid)'''
 
     # Join by newline
     contrast_cypher["links"] = "\n".join(contrast_cypher["links"])

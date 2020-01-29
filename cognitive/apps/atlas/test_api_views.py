@@ -4,8 +4,7 @@ from django.urls import reverse
 from django.test import TestCase
 
 
-from cognitive.apps.atlas.query import (Battery, Concept, Condition, Contrast,
-                                        Disorder, Task, Theory)
+from cognitive.apps.atlas.query import Concept, Disorder, Task
 
 
 class ConceptApiTest(TestCase):

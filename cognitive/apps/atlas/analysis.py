@@ -82,7 +82,8 @@ def triangle_count(relation="MEASUREDBY"):
 
 # Gets all nodes connected by some relationship and updates each node with the property key connected_components.
 # The value of connected_components property is an integer data type, ex. connected_components: 181.
-# The value of connected_components represents the Neo4j internal node ID that has the lowest integer value for a set of connected nodes.
+# The value of connected_components represents the Neo4j internal node ID that has the lowest integer value for a
+# set of connected nodes.
 # Connected components are used to find isolated clusters, that is, a
 # group of nodes that can reach every other node in the group through a
 # bidirectional traversal.
@@ -99,9 +100,11 @@ def connected_components(relation="MEASUREDBY"):
 
 # :GET /service/mazerunner/analysis/strongly_connected_components/MEASUREDBY
 
-# Gets all nodes connected by some relationship and updates each node with the property key strongly_connected_components.
+# Gets all nodes connected by some relationship and updates each node with the property key
+# strongly_connected_components.
 # The value of strongly_connected_components property is an integer data type, ex. strongly_connected_components: 26.
-# The value of strongly_connected_components represents the Neo4j internal node ID that has the lowest integer value for a set of strongly connected nodes.
+# The value of strongly_connected_components represents the Neo4j internal node ID that has the lowest integer value
+# for a set of strongly connected nodes.
 # Strongly connected components are used to find clusters, that is, a
 # group of nodes that can reach every other node in the group through a
 # directed traversal.

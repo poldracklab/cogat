@@ -1,11 +1,11 @@
 graphdb:
   build: .
-  dockerfile: ./compose/graphdb/Dockerfile
+  dockerfile: ./graphdb/Dockerfile
   hostname: graphdb
   volumes:
-    - ./compose/graphdb/data:/opt/data
-    - ./compose/graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
-    - ./compose/graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
+    - ./graphdb/data:/opt/data
+    - ./graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
+    - ./graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
   ports:
     - "7474:7474"
     - "1337:1337"
@@ -19,7 +19,8 @@ postgres:
         - "5432"
 
 uwsgi:
-    image: rwblair/cogat
+    build: .
+    dockerfile: ./uwsgi/Dockerfile
     command: /code/compose/uwsgi/uwsgi.sh
     restart: always
     env_file: .env
@@ -36,8 +37,8 @@ nginx:
     volumes_from:
         - uwsgi
     volumes:
-        - ./compose/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-        - ./compose/nginx/uwsgi_params.par:/etc/nginx/uwsgi_params.par:ro
+        - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+        - ./nginx/uwsgi_params.par:/etc/nginx/uwsgi_params.par:ro
     links:
         - uwsgi
     ports:

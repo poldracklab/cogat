@@ -40,7 +40,7 @@ class ConceptForm(forms.Form):
         choices=choices, label=cc_label, required=False)
 
     def __init__(self, concept_id, *args, **kwargs):
-        if not args[0].get('submit'):
+        if not args or not args[0].get('submit'):
             concept = Concept()
             con_class = concept.get_relation(concept_id, "CLASSIFIEDUNDER",
                                              label="concept_class")

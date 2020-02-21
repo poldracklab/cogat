@@ -41,7 +41,7 @@ def generate_uid(node_type):
         suffix = get_random_string(13)
         uid = "{}_{}".format(nodetypes.get(node_type, None), suffix)
         query = """start n=node(*)
-                   match n
+                   match (n)
                    where n.id = '%s'
                    return n.id""" % (uid)
         result = do_query(query, fields=["n.id"])
@@ -149,8 +149,9 @@ def do_query(query, fields, output_format="dict", drop_duplicates=True):
     if isinstance(fields, str):
         fields = [fields]
     result = graph.run(query)
-    df = pandas.DataFrame(result.data())
-    df.columns = fields
+    df = result.to_data_frame()
+    if fields is not None and not df.empty:
+        df.columns = fields
     if drop_duplicates is True:
         df = df.drop_duplicates()
     if output_format == "df":

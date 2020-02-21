@@ -114,7 +114,7 @@ TEMPLATES[0]['OPTIONS']['context_processors'].append(
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    # 'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 WSGI_APPLICATION = 'cognitive.wsgi.application'

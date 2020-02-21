@@ -1,6 +1,7 @@
 ''' This file contains classes that are used to query and update the neo4j
     graph.'''
 import re
+import time
 
 from py2neo import Node as NeoNode, Relationship
 import pandas
@@ -49,17 +50,18 @@ class Node(object):
         node = None
         # creation also checks for existence of uid
         uid = generate_uid(label)
-        if self.graph.find_one(
-                label, property_key=property_key, property_value=uid) is None:
-            timestamp = self.graph.run("RETURN timestamp()").one
+        # if self.graph.find_one(
+        #        label, property_key=property_key, property_value=uid) is None:
+        # what if property key isn't id?
+        if self.graph.nodes.match(label, **{property_key: uid}).first() is None:
+            timestamp = int(time.time())
             node = NeoNode(label, name=name, id=uid, creation_time=timestamp,
                            last_updated=timestamp)
-            create_ret = self.graph.create(node)
             if properties is not None:
                 for property_name in properties.keys():
-                    node.properties[property_name] = properties[property_name]
-                node.push()
-            if request and (len(create_ret) > 0):
+                    node[property_name] = properties[property_name]
+            self.graph.create(node)
+            if request and self.graph.exists(node):
                 self.log_create(request, uid, label)
         return node
 
@@ -69,8 +71,9 @@ class Node(object):
             audit of changes made to other nodes.
         '''
         user_id = request.user.id
-        neo_user = self.graph.find_one("user", property_key="id",
-                                       property_value=user_id)
+        # neo_user = self.graph.find_one("user", property_key="id",
+        #                               property_value=user_id)
+        neo_user = self.graph.nodes.match("user", id=user_id)
         user = User()
         if not neo_user:
             user.create(user_id, properties={'username': request.user.username,
@@ -114,24 +117,19 @@ class Node(object):
             label = self.name
         if endnode_type is None:
             endnode_type = self.name
-        startnode = self.graph.find_one(
-            label, property_key='id', property_value=uid)
-        endnode = self.graph.find_one(
-            endnode_type, property_key='id', property_value=endnode_id)
+        startnode = self.graph.nodes.match(label, id=uid).first()
+        endnode = self.graph.nodes.match(endnode_type, id=endnode_id).first()
 
         if startnode is not None and endnode is not None:
             # If the relation_type is allowed for the node type
             if relation_type not in self.relations:
                 raise InvalidNodeOperation(
                     "Relationship type not used by this node type")
-            if self.graph.match_one(start_node=startnode,
-                                    rel_type=relation_type, end_node=endnode) is None:
+            if self.graph.match_one((startnode, endnode), r_type=relation_type) is None:
                 relation = Relationship(startnode, relation_type, endnode)
-                self.graph.create(relation)
                 if properties is not None:
-                    for property_name in properties.keys():
-                        relation.properties[property_name] = properties[property_name]
-                    relation.push()
+                    relation.update(properties)
+                self.graph.create(relation)
                 return relation
             else:
                 return True
@@ -162,11 +160,11 @@ class Node(object):
         '''
         if label is None:
             label = self.name
-        node = self.graph.find_one(label, 'id', uid)
+        node = self.graph.nodes.match(label, id=uid).first()
         if node is not None:
             for field, update in updates.items():
                 node[field] = update
-            node.push()
+            self.graph.push(node)
 
     def update_link_properties(self, uid, endnode_id, relation_type,
                                endnode_type, properties, label=None):
@@ -174,16 +172,14 @@ class Node(object):
             label = self.name
         if endnode_type is None:
             endnode_type = self.name
-        start_node = self.graph.find_one(
-            label, property_key='id', property_value=uid)
-        end_node = self.graph.find_one(
-            endnode_type, property_key='id', property_value=endnode_id)
+        start_node = self.graph.nodes.match(label, id=uid).first()
+        end_node = self.graph.nodes.match(label, id=endnode_id).first()
 
         relation = self.graph.match_one(start_node, relation_type, end_node)
         if properties is not None:
             for property_name in properties.keys():
                 relation.properties[property_name] = properties[property_name]
-            relation.push()
+            self.graph.push(relation)
 
     def cypher(self, uid, lookup=None, return_lookup=False):
         ''' cypher returns a data structure with nodes and relations for an
@@ -206,7 +202,7 @@ class Node(object):
         if base["id"] not in lookup[self.name]:
             lookup[self.name].append(base["id"])
             nodes.append(cypher_node(
-                base["id"], self.name, base["name"], base["_id"]))
+                base["id"], self.name, base["name"], base["id"]))
             # id is the cognitive atlas id, _id is the graph id
 
         if "relations" in base:
@@ -218,9 +214,9 @@ class Node(object):
                     if relation["id"] not in lookup[node_type]:
                         lookup[node_type].append(relation["id"])
                         nodes.append(cypher_node(relation["id"], node_type, relation["relationship_type"],
-                                                 relation["_id"]))
+                                                 relation["id"]))
                         links.append(cypher_relation(
-                            relation_type, base["_id"], relation["_id"]))
+                            relation_type, base["id"], relation["id"]))
 
         result = {"nodes": nodes, "links": links}
         if return_lookup is True:
@@ -321,7 +317,7 @@ class Node(object):
     def api_all(self):
         query = "match (n:{}) return n".format(self.name)
         nodes = self.graph.run(query)
-        results = [x['n'].properties for x in nodes]
+        results = [x['n'] for x in nodes]
         return results
 
     def all(self, fields=None, limit=None,
@@ -366,27 +362,28 @@ class Node(object):
         '''
         if label is None:
             label = self.name
-        parents = self.graph.find(label, field, uid)
+        match_kwarg = {field: uid}
+        parents = self.graph.nodes.match(label, **match_kwarg)
         nodes = []
         for parent in parents:
             new_node = {}
-            new_node.update(parent.properties)
-            new_node["_id"] = parent._id
+            new_node.update(parent)
+            # new_node["_id"] = parent._id
 
             if get_relations is True:
                 relation_nodes = dict()
-                new_relations = self.graph.match(parent)
+                new_relations = self.graph.match([parent])
                 for new_relation in new_relations:
                     new_relation_node = {}
-                    new_relation_node.update(new_relation.end_node.properties)
-                    new_relation_node["_id"] = new_relation.end_node._id
-                    new_relation_node["_relation_id"] = new_relation._id
-                    new_relation_node["relationship_type"] = new_relation.type
+                    new_relation_node.update(new_relation.end_node)
+                    # new_relation_node["_id"] = new_relation.end_node._id
+                    # new_relation_node["_relation_id"] = new_relation._id
+                    new_relation_node["relationship_type"] = list(new_relation.types())[0]
                     if new_relation.type in relation_nodes:
-                        relation_nodes[new_relation.type].append(
+                        relation_nodes[list(new_relation.types())[0]].append(
                             new_relation_node)
                     else:
-                        relation_nodes[new_relation.type] = [new_relation_node]
+                        relation_nodes[list(new_relation.types())[0]] = [new_relation_node]
 
                 # Does the user want a filtered set?
                 if relations is not None:
@@ -400,13 +397,14 @@ class Node(object):
 
     def get_label(self, uid):
         query = "MATCH (x) where x.id = '{}' return x".format(uid)
-        res = self.graph.run(query)
+        res = list(self.graph.run(query))
         try:
-            return list(res[0].x.labels)[0]
-        except (KeyError, AttributeError):
+            return list(res[0]['x'].labels)[0]
+        except (KeyError, AttributeError, TypeError) as e:
             return None
 
     def search_all_fields(self, params):
+        '''
         if isinstance(params, str):
             params = [params]
         return_fields = ",".join(["c.{}".format(x)
@@ -415,18 +413,18 @@ class Node(object):
             self.name, return_fields)
 
         # Combine queries into transaction
-        tx = self.graph.cypher.begin()
+        tx = self.graph.begin()
 
         for field in self.fields:
             for param in params:
-                tx.append(query.format(field, param))
+                tx.run(query.format(field, param))
 
         # Return as pandas data frame
         results = tx.commit()
-        if not results or sum(len(res) for res in results) == 0:
-            return {}
+        # if not results or sum(len(res) for res in results) == 0:
+        #     return {}
 
-        df = pandas.DataFrame(columns=self.fields + ["_id"])
+        df = results.to_data_frame(columns=self.fields + ["_id"])
         i = 0
         for result in results:
             for record in result.records:
@@ -437,6 +435,7 @@ class Node(object):
                 df.loc[i] = attr_values
                 i += 1
         return df.to_dict(orient="records")
+        '''
 
     def get_relation(self, id, relation, label=None):
         ''' get nodes that are related to a given task
@@ -451,7 +450,7 @@ class Node(object):
                    WHERE p.id = '{}'
                    RETURN r'''.format(self.name, relation, label_substr, id)
         relations = do_query(query, "null", "list")
-        relations = [x[0].properties for x in relations]
+        relations = [x[0] for x in relations]
         for rel in relations:
             rel['relationship'] = relation
         return relations
@@ -469,19 +468,19 @@ class Node(object):
         query = '''MATCH (p{})-[:{}]->(s:{})
                    WHERE s.id = '{}'
                    RETURN p'''.format(label_substr, relation, self.name, id)
-        relations = do_query(query, "null", "list")
-        relations = [x[0].properties for x in relations]
+        relations = do_query(query, None, "list")
+        relations = [x[0] for x in relations]
         for rel in relations:
             rel['relationship'] = relation
         return relations
 
     def get_full(self, value, field):
         ret = {'type': self.name}
-        node = self.graph.find_one(self.name, field, value)
+        node = self.graph.nodes.match(self.name, **{field: value}).first()
         if not node:
             return None
-        ret = {**node.properties, **ret}
-        node_id = node.properties['id']
+        ret = {**node, **ret}
+        node_id = node['id']
 
         for rel in self.relations:
             ret[self.relations[rel]] = self.get_relation(node_id, rel)
@@ -565,20 +564,20 @@ class Task(Node):
             if contrasts:
                 for contrast in contrasts:
                     concept['contrasts'] = (
-                        contrast[0].properties['id'], contrast[0].properties['name'])
+                        contrast[0]['id'], contrast[0]['name'])
         return concepts
 
     def api_get_contrasts(self, task_id):
         query = '''MATCH (t:task)-[:HASCONTRAST]->(c:contrast) WHERE t.id='{}'
                    RETURN c'''.format(task_id)
         contrasts = do_query(query, "null", "list")
-        ret = [dict(x[0].properties) for x in contrasts]
+        ret = [dict(x[0]) for x in contrasts]
         for contrast in ret:
             query = '''MATCH (cont:contrast)<-[r:HASCONTRAST]-(cond:condition)
                        WHERE cont.id='{}' return cont, r, cond'''.format(contrast['id'])
             results = settings.graph.run(query)
             contrast.update({
-                'conditions': [(x['cond'].properties, x['r'].properties) for x in results]
+                'conditions': [(x['cond'], x['r']) for x in results]
             })
         return ret
 
@@ -591,15 +590,15 @@ class Task(Node):
         for disorder in disorders:
             node = disorder[0]
             rel = disorder[1]
-            # ret_disorders.append({**node.properties, 'id_disorder': node.properties.id})
+            # ret_disorders.append({**node, 'id_disorder': node['id']})
             ret_disorders.append({
-                'id': rel.properties['id'],
-                'name': rel.properties['name'],
-                'id_user': node.properties['id_user'],
+                'id': rel['id'],
+                'name': rel['name'],
+                'id_user': node['id_user'],
                 'id_disorder': node['properties.id'],
                 'id_task': task_id,
-                'id_contrast': rel.properties['id_contrast'],
-                'event_stamp': rel.properties['event_stamp']
+                'id_contrast': rel['id_contrast'],
+                'event_stamp': rel['event_stamp']
             })
         return ret_disorders
 
@@ -614,18 +613,15 @@ class Task(Node):
             pheno = node[0]
             rel = node[1]
             contrast = node[2]
-            print(pheno)
-            print(rel)
-            print(contrast)
             ret_nodes.append({
-                'id': rel.properties['id'],
-                'name': rel.properties['name'],
-                'id_user': pheno.properties['id_user'],
-                pheno_key: pheno['properties.id'],
+                'id': rel['id'],
+                'name': rel['name'],
+                'id_user': phenoproperties['id_user'],
+                pheno_key: pheno['id'],
                 'id_task': task_id,
-                'id_contrast': contrast.properties['id'],
-                'contrast_name': contrast.properties['name'],
-                'event_stamp': rel.properties['event_stamp']
+                'id_contrast': contrast['id'],
+                'contrast_name': contrast['name'],
+                'event_stamp': rel['event_stamp']
             })
         return ret_nodes
 
@@ -955,7 +951,7 @@ def search(searchstring, fields=["name", "id"], node_type=None):
     searchstring = re.escape(searchstring)
 
     query = '''MATCH (n%s)
-               WHERE str(n.name) =~ '(?i).*%s.*'
+               WHERE toString(n.name) =~ '(?i).*%s.*'
                AND (n:concept
                OR n:task
                OR n:theory
@@ -963,12 +959,15 @@ def search(searchstring, fields=["name", "id"], node_type=None):
                OR n:disorder
                OR n:trait
                OR n:behavior
-               OR n:contrast)
+               OR n:contrast
+               OR n:condition)
                RETURN %s, labels(n)
                ORDER BY n.name;''' % (node_type, searchstring.__repr__()[1:-1], return_fields)
     fields = fields + ["_id", "label"]
     result = do_query(query, fields=fields,
                       drop_duplicates=False, output_format="df")
+    if result.empty:
+        return {}
     result["label"] = [r[0] for r in result['label']]
     result = result.drop_duplicates()
     return result.to_dict(orient="records")

@@ -5,7 +5,7 @@ python /code/manage.py makemigrations
 python /code/manage.py migrate
 python /code/manage.py collectstatic --noinput
 # Must be run manually, otherwise will redo each time docker-compose restart uwsgi
-#python /code/scripts/migrate_database.py
+# python /code/scripts/migrate_database.py
 
 if [ "$MAKE_DEFAULT_USER" = True ]; then
     /code/manage.py shell < /code/scripts/create_superuser.py

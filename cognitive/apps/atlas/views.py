@@ -52,7 +52,7 @@ def rank_check(user, rank):
         permissions to make changes. '''
     try:
         return int(user.rank) > rank
-    except ValueError:
+    except (ValueError, AttributeError):
         return False
 
 
@@ -66,11 +66,10 @@ def is_contrib(user):
 
 def owns(func):
     def check_ownership(request, *args, **kwargs):
-        print("check ownership")
         user = request.user
         label = Node.get_label(kwargs['uid'])
         owner_id = get_creator(kwargs['uid'], label, by_uid=True)
-        if owner_id == user.id:
+        if owner_id is not None and owner_id == user.id:
             return func(request, *args, **kwargs)
         else:
             raise PermissionDenied(
@@ -95,7 +94,7 @@ def owner_or_admin(user, term_id, label=None):
     if is_admin(user):
         return True
     owner_id = get_creator(term_id, label, by_uid=True)
-    if owner_id == user.id:
+    if owner_id is not None and owner_id == user.id:
         return True
     return False
 
@@ -116,7 +115,7 @@ def get_creator(uid, label, by_uid=False):
         if by_uid:
             return creator_node["id"]
         creator = get_display_name(creator_node["id"])
-    except IndexError:
+    except (IndexError, AttributeError) as e:
         creator = None
     return creator
 
@@ -200,10 +199,10 @@ def disorder_populate(disorders):
         return None
     ret = OrderedDict()
     for dis in disorders:
-        key = (str(dis.properties['id']), str(dis.properties['name']))
+        key = (str(dis['id']), str(dis['name']))
         children = [x.start_node for x in dis.match_incoming(rel_type="ISA")]
         if children:
-            children.sort(key=lambda x: str.lower(x.properties['name']))
+            children.sort(key=lambda x: str.lower(x['name']))
         ret[key] = disorder_populate(children)
     return ret
 
@@ -217,7 +216,7 @@ def all_disorders(request, return_context=False):
         "match (dis:disorder) where not (dis:disorder)-[:ISA]->() return dis order by dis.name"
     )
     top_level_disorders = [x['dis'] for x in dis_records]
-    top_level_disorders.sort(key=lambda x: str.lower(x.properties['name']))
+    top_level_disorders.sort(key=lambda x: str.lower(x['name']))
     disorders = disorder_populate(top_level_disorders)
     '''
     disorders = Disorder.all(order_by="name")
@@ -671,11 +670,11 @@ def add_phenotype(request):
                 cleaned_data['type']))
             return all_disorders(request)
         if label == 'disorder':
-            return view_disorder(request, new_pheno.properties["id"])
+            return view_disorder(request, new_pheno["id"])
         elif label == 'trait':
-            return view_trait(request, new_pheno.properties["id"])
+            return view_trait(request, new_pheno["id"])
         elif label == 'behavior':
-            return view_behavior(request, new_pheno.properties["id"])
+            return view_behavior(request, new_pheno["id"])
     else:
         # if form is not valid, regenerate context and use validated form
         context = all_disorders(request, return_context=True)
@@ -703,7 +702,7 @@ def contribute_disorder(request):
             context['disorder_form'] = disorder_form
             return render(request, "atlas/all_disorders.html", context)
     # redirect back to task/id?
-    return view_disorder(request, new_dis.properties["id"])
+    return view_disorder(request, new_dis["id"])
 
 
 @login_required
@@ -782,10 +781,11 @@ def update_concept(request, uid):
     if concept_form.is_valid():
         cleaned_data = concept_form.cleaned_data
         con_class_id = cleaned_data.pop('concept_class')
-        for rel in Concept.get_relation(
-                uid, "CLASSIFIEDUNDER", label="concept_class"):
-            Concept.unlink(uid, rel['id'], "CLASSIFIEDUNDER", "concept_class")
-        Concept.link(uid, con_class_id, "CLASSIFIEDUNDER", "concept_class")
+        if con_class_id:
+            for rel in Concept.get_relation(
+                    uid, "CLASSIFIEDUNDER", label="concept_class"):
+                Concept.unlink(uid, rel['id'], "CLASSIFIEDUNDER", "concept_class")
+            Concept.link(uid, con_class_id, "CLASSIFIEDUNDER", "concept_class")
         Concept.update(uid, cleaned_data)
         return redirect('concept', uid)
     else:
@@ -1003,9 +1003,9 @@ def add_disorder_task(request, uid):
     if assertion.records == []:
         asrt = Assertion.create("", request=request)
         Assertion.link(
-            asrt.properties['id'], disorder_id, "SUBJECT", endnode_type='disorder')
+            asrt['id'], disorder_id, "SUBJECT", endnode_type='disorder')
         Assertion.link(
-            asrt.properties['id'], task_selection, "PREDICATE", endnode_type='task')
+            asrt['id'], task_selection, "PREDICATE", endnode_type='task')
 
     return redirect('disorder', disorder_id)
 
@@ -1071,11 +1071,11 @@ def concept_task_contrast_assertion(request, concept_id, task_id, contrast_id):
         assocaited with it. Link function will not create duplicate links if
         they already exist.'''
     asrt = Assertion.create("", request=request)
-    Assertion.link(asrt.properties['id'], concept_id,
+    Assertion.link(asrt['id'], concept_id,
                    "SUBJECT", endnode_type='concept')
-    Assertion.link(asrt.properties['id'], task_id,
+    Assertion.link(asrt['id'], task_id,
                    "PREDICATE", endnode_type='task')
-    Assertion.link(asrt.properties['id'], contrast_id,
+    Assertion.link(asrt['id'], contrast_id,
                    "PREDICATE_DEF", endnode_type='contrast')
 
 
@@ -1105,7 +1105,7 @@ def add_contrast(request, uid):
         if contrast_name != "" and len(conditions) > 0:
             node = Contrast.create(name=contrast_name, request=request)
             # Associate task and contrast so we can look it up for task view
-            Task.link(task_id, node.properties["id"],
+            Task.link(task_id, node["id"],
                       relation_type, endnode_type="contrast")
 
             # Make a link between contrast and conditions, specify side as property of relation
@@ -1211,7 +1211,7 @@ def add_disambiguation(request, label, uid):
                            {"definition_text":
                                cleaned_data['term2_definition']},
                            label=label, request=request)
-    new_id = new_node.properties['id']
+    new_id = new_node['id']
 
     # update orig term name
     new_node_name = "{} ({})".format(
@@ -1227,7 +1227,7 @@ def add_disambiguation(request, label, uid):
     )
     # new disambiguation node
     disam = Disambiguation.create(cleaned_data['term1_name'], request=request)
-    disam_id = disam.properties['id']
+    disam_id = disam['id']
 
     # link terms to disambig
     Disambiguation.link(disam_id, new_id, "DISAMBIGUATES", label)
@@ -1292,10 +1292,10 @@ def make_link(request, src_id, src_label, dest_label, form_class, name_field,
         return view(request, src_id)
 
     if reverse is False:
-        link_made = src_label.link(src_id, dest_node.properties['id'],
+        link_made = src_label.link(src_id, dest_node['id'],
                                    rel, endnode_type=dest_label.name)
     elif reverse is True:
-        link_made = dest_label.link(dest_node.properties['id'], src_id,
+        link_made = dest_label.link(dest_node['id'], src_id,
                                     rel, endnode_type=src_label.name)
 
     if link_made is False:
@@ -1434,7 +1434,7 @@ def add_theory(request):
         cleaned_data = theory_form.cleaned_data
         name = cleaned_data['name']
         new_theory = Theory.create(name, request=request)
-        return view_theory(request, new_theory.properties['id'])
+        return view_theory(request, new_theory['id'])
     else:
         context = all_collections(request, return_context=True)
         context['theory_form'] = theory_form
@@ -1452,7 +1452,7 @@ def add_battery(request):
         cleaned_data = battery_form.cleaned_data
         name = cleaned_data['name']
         new_battery = Battery.create(name, request=request)
-        return view_battery(request, new_battery.properties['id'])
+        return view_battery(request, new_battery['id'])
     else:
         context = all_collections(request, return_context=True)
         context['battery_form'] = battery_form

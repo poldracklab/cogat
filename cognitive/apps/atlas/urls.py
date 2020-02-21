@@ -111,7 +111,7 @@ urlpatterns = [
         name="add_task_dataset"
     ),
     url(
-        r'^task/add/indicator/(?P<task_id>[\w\+%_& ]+)/$',
+        r'^task/add/indicator/(?P<uid>[\w\+%_& ]+)/$',
         views.add_task_indicator,
         name="add_task_indicator"
     ),

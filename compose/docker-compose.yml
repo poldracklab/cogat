@@ -2,11 +2,10 @@ version: "3"
 services:
   graphdb:
     image: neo4j:3.5
-    volumes:
-      - ./compose/graphdb/data:/var/lib/neo4j/data
-      - ./compose/graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
-      - ./compose/graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
     env_file: .env
+    volumes:
+      - ./graphdb/neo4j/conf/neo4j-server.properties:/var/lib/neo4j/conf/neo4j-server.properties 
+      - ./graphdb/neo4j/conf/neo4j.properties:/var/lib/neo4j/conf/neo4j.properties 
     ports:
       - "6362:6362"
       - "7474:7474"
@@ -51,8 +50,8 @@ services:
       image: postgres:9.4
       env_file: .env
       volumes:
-        - ./compose/postgres/data:/var/lib/postgresql/data
-        - ./compose/postgres/backup:/pg_backup
+        - ./postgres/data:/var/lib/postgresql/data
+        - ./postgres/backup:/pg_backup
       expose:
           - "5432"
       networks:
@@ -62,12 +61,12 @@ services:
 
   uwsgi:
       build:
-        context: ./compose/uwsgi/
+        context: ./uwsgi/
       command: /code/compose/uwsgi/uwsgi.sh
       env_file: .env
       volumes:
-          - .:/code
-          - ./static:/var/www/static
+          - ..:/code
+          - ../static:/var/www/static
       networks:
         web:
           aliases:
@@ -77,8 +76,8 @@ services:
       restart: always
       image: nginx
       volumes:
-          - ./compose/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-          - ./compose/nginx/uwsgi_params.par:/etc/nginx/uwsgi_params.par:ro
+          - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+          - ./nginx/uwsgi_params.par:/etc/nginx/uwsgi_params.par:ro
           - .:/code
           - ./static:/var/www/static
           - ./.certs:/etc/letsencrypt
@@ -94,6 +93,7 @@ services:
 networks:
   graphs:
   web:
+
 #hdfs:
 #  image: sequenceiq/hadoop-docker:2.4.1
 #  command: /etc/bootstrap.sh -d -bash

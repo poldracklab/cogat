@@ -7,7 +7,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-        name: python_tests
-        command: |
-          docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py makemigrations
-          docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py test
+          name: python_tests
+          command: |
+            docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py makemigrations
+            docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py test

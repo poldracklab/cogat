@@ -5,12 +5,9 @@ jobs:
       image: ubuntu-1604:201903-01
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
       - run:
-        name: "makemigrations"
-      - run:
-        name: "python_tests"
+        name: python_tests
         command: |
           docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py makemigrations
           docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py test

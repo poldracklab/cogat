@@ -1,0 +1,6 @@
+
+version: "3"
+services:
+  graphdb:
+    volumes:
+      - ./graphdb/data:/var/lib/neo4j/data

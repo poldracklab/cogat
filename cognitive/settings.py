@@ -16,20 +16,17 @@ from distutils.util import strtobool
 from os.path import join, abspath, dirname
 
 from py2neo import Graph
-from py2neo.neo4j import authenticate
 
 # Just for local development - will read this from secrets
-graph = Graph("http://graphdb:7474/db/data/")
-#authenticate("127.0.0.1:7474", "neo4j", "neo4j")
-#graph = Graph()
+graph = Graph("http://graphdb:7474", auth=("neo4j", "test"))
 
 DOMAIN = "http://www.cognitiveatlas.org"
 
+
 # PATH vars
-here = lambda *x: join(abspath(dirname(__file__)), *x)
-PROJECT_ROOT = here(".")
-root = lambda *x: join(abspath(PROJECT_ROOT), *x)
-sys.path.insert(0, root('apps'))
+PROJECT_ROOT = join(abspath(dirname(__file__)), ".")
+
+sys.path.insert(0, join(abspath(PROJECT_ROOT), 'apps'))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -59,7 +56,6 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'crispy_forms',
-    'opbeat.contrib.django',
 ]
 #    'allauth',
 #    'allauth.account',
@@ -79,14 +75,12 @@ THIRD_PARTY_APPS = [
 
 INSTALLED_APPS += THIRD_PARTY_APPS
 
-MIDDLEWARE_CLASSES = [
-    'opbeat.contrib.django.middleware.OpbeatAPMMiddleware',
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -115,11 +109,12 @@ TEMPLATES = [
 
 
 # CUSTOM CONTEXT PROCESSORS
-TEMPLATES[0]['OPTIONS']['context_processors'].append("main.context_processors.counts_processor")
+TEMPLATES[0]['OPTIONS']['context_processors'].append(
+    "main.context_processors.counts_processor")
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
+    # 'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 WSGI_APPLICATION = 'cognitive.wsgi.application'
@@ -167,7 +162,6 @@ PASSWORD_HASHERS = [
 ]
 
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -200,16 +194,17 @@ STATICFILES_FINDERS = (
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 CACHES = {
-            'default': {
-                'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            }
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
 }
 
 AUTH_USER_MODEL = 'users.User'
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY', 'verybadnotgoodsecretkeythatisntsecret')
 DEBUG = strtobool(os.environ.get('DJANGO_DEBUG', 'False'))
-LOGIN_REDIRECT_URL='/'
-LOGOUT_REDIRECT_URL='/logged_out/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/logged_out/'
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
@@ -224,13 +219,7 @@ REST_FRAMEWORK = {
 USE_RECAPTCHA = strtobool(os.environ.get('USE_RECAPTCHA', 'False'))
 GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get('GOOGLE_RECAPTCHA_SECRET_KEY', '')
 
-OPBEAT = {
-    'ORGANIZATION_ID': os.environ.get('ORGANIZATION_ID', ''),
-    'APP_ID': os.environ.get('APP_ID', ''),
-    'SECRET_TOKEN': os.environ.get('SECRET_TOKEN', ''),
-}
-
-NOTIFY_EMAILS = [i for i in os.environ.get("NOTIFY_EMAILS", "").split(" ")] 
+NOTIFY_EMAILS = [i for i in os.environ.get("NOTIFY_EMAILS", "").split(" ")]
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", '')
 EMAIL_PORT = os.environ.get("EMAIL_PORT", '')

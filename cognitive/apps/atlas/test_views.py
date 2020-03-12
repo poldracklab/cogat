@@ -1,12 +1,11 @@
 import string
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 
-from cognitive.apps.atlas import views
-from cognitive.apps.atlas.query import (Assertion, Battery, Concept, Condition,
-                                        Contrast, Disorder, ExternalDataset,
-                                        Implementation, Task, Theory, Indicator)
+from cognitive.apps.atlas.forms import ConceptForm
+from cognitive.apps.atlas.query import (Assertion, Concept, Condition,
+                                        Contrast, Disorder, Task, Theory)
 from cognitive.apps.users.models import User
 from cognitive.settings import graph
 
@@ -16,6 +15,32 @@ class AtlasViewTestCase(TestCase):
         self.user = User.objects.create_user(
             username='user', email='email@example.com', password=self.password,
             first_name="fn", last_name="ln", rank="3")
+
+    def tearDown(self):
+        graph.delete_all()
+
+    def make_task(self, name='test_task', definition='task definition'):
+        task = Task()
+        definition = 'task definition'
+        response = self.client.post(
+            reverse('add_term'),
+            {'term_type': 'task', 'term_name': name,
+             'definition_text': definition},
+            follow=True
+        )
+        return task.get_full(name, 'name')['id']
+
+    def make_concept(self, name='test_concept', definition='definition'):
+        concept = Concept()
+        post_kwargs = {'term_type': 'concept', 'term_name': name}
+        if definition:
+            post_kwargs['definition_text'] = definition
+        response = self.client.post(
+            reverse('add_term'),
+            post_kwargs,
+            follow=True
+        )
+        return concept.get_full(name, 'name')['id']
 
     ''' not currently linked
     def test_all_batteries(self):
@@ -78,40 +103,40 @@ class AtlasViewTestCase(TestCase):
     def test_view_concept(self):
         concept = Concept()
         con = concept.create("test_view_concept", {"prop": "prop"})
-        uid = con.properties['id']
+        uid = con['id']
         response = self.client.get(reverse('concept', kwargs={'uid': uid}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['concept']['id'], uid)
-        con.delete()
+        graph.delete(con)
 
     def test_view_task(self):
         task = Task()
         tsk = task.create("test_view_task",
                           {"prop": "prop", "definition": "definition"})
-        uid = tsk.properties['id']
+        uid = tsk['id']
         response = self.client.get(reverse('task', kwargs={'uid': uid}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['task']['id'], uid)
         # should also test linked concepts and contrasts
-        tsk.delete()
+        graph.delete(tsk)
 
     def test_view_theory(self):
         theory = Theory()
         thry = theory.create("test_view_theory", {"prop": "prop"})
-        uid = thry.properties['id']
+        uid = thry['id']
         response = self.client.get(reverse('theory', kwargs={'uid': uid}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['theory']['id'], uid)
-        thry.delete()
+        graph.delete(thry)
 
     def test_view_disorder(self):
         disorder = Disorder()
         dis = disorder.create("test_view_disorder", {"prop": "prop"})
-        uid = dis.properties['id']
+        uid = dis['id']
         response = self.client.get(reverse('disorder', kwargs={'uid': uid}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['disorder']['id'], uid)
-        dis.delete()
+        graph.delete(dis)
 
     def test_contribute_term(self):
         self.assertTrue(self.client.login(
@@ -123,7 +148,7 @@ class AtlasViewTestCase(TestCase):
         self.assertEqual(response.context['message'],
                          "{}{}".format("Please further define ", term_name))
 
-   # to add: test trying to contribute existing term
+    # to add: test trying to contribute existing term
 
     def test_add_term_concept(self):
         self.assertTrue(self.client.login(
@@ -135,32 +160,31 @@ class AtlasViewTestCase(TestCase):
             reverse('add_term'),
             {'term_type': 'concept', 'term_name': concept_name,
              'definition_text': definition},
-            follow = True
+            follow=True
         )
         self.assertEqual(response.status_code, 200)
         uid = response.context['concept']['id']
-        con = concept.graph.find_one('concept', 'id', uid)
+        con = graph.nodes.match('concept', id=uid).first()
         self.assertNotEqual(con, None)
-        # con.delete()
+        
 
     def test_add_term_task(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         task = Task()
-        task_name = 'test_add_term_concept'
+        task_name = 'test_add_term_task'
         definition = 'task definition'
         response = self.client.post(
             reverse('add_term'),
             {'term_type': 'task', 'term_name': task_name,
              'definition_text': definition},
-            follow = True
+            follow=True
         )
         self.assertEqual(response.status_code, 200)
         uid = response.context['task']['id']
         tsk = task.get(uid)
         self.assertEqual(len(tsk), 1)
-        tsk = task.graph.find_one('task', 'id', uid)
-        # tsk.delete()
+        
 
     ''' No URL exists
     def test_contribute_disorder(self):
@@ -172,136 +196,159 @@ class AtlasViewTestCase(TestCase):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         task = Task()
-        condition = Condition()
-        tsk = task.create("test_add_condition_task",
-                          {"prop": "prop", "definition": "definition"})
-        uid = tsk.properties['id']
+        task_name = 'test_add_term_concept'
+        definition = 'task definition'
+        uid = self.make_task(task_name, definition)
+
         response = self.client.post(
-            reverse('add_condition', kwargs={'task_id': uid}),
+            reverse('add_condition', kwargs={'uid': uid}),
             {'condition_name': 'test_add_condition'}
         )
         self.assertEqual(response.status_code, 200)
         relation = task.get_conditions(uid)
         self.assertEqual(len(relation), 1)
         self.assertEqual(relation[0]['condition_name'], 'test_add_condition')
-        con = condition.graph.find_one('condition', 'id', relation[0]['condition_id'])
-        tsk.delete_related()
-        tsk.delete()
-        con.delete()
+        graph.delete(graph.nodes.match("task", id=uid).first())
+        graph.delete(graph.nodes.match("condition").first())
 
     def test_update_concept(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
+        uid = self.make_concept('test_add_term_concept', 'old def')
         concept = Concept()
-        con = concept.create('test_update_concept', {'definition_text': 'old def'})
+        con = concept.get(uid)[0]
+        con['definition_text'] = 'new def'
         response = self.client.post(
-            reverse('update_concept', kwargs={'uid': con.properties['id']}),
-            {'definition_text': 'new def'}
+            reverse('update_concept', kwargs={'uid': uid}),
+            con, follow=True
         )
         self.assertEqual(response.status_code, 200)
-        self.assertNotEqual('old def', response.context['concept']['definition_text'])
-        self.assertEqual('new def', response.context['concept']['definition_text'])
-        con.delete()
+        self.assertNotEqual(
+            'old def', response.context['concept']['definition_text'])
+        self.assertEqual(
+            'new def', response.context['concept']['definition_text'])
+        
 
     def test_update_concept_no_def(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
+        uid = self.make_concept('test_add_term_concept', None)
         concept = Concept()
-        con = concept.create('test_update_concept', {'prop': 'prop'})
+        con = concept.get(uid)[0]
+        con['definition_text'] = 'new def'
         response = self.client.post(
-            reverse('update_concept', kwargs={'uid': con.properties['id']}),
-            {'definition_text': 'new def'}
+            reverse('update_concept', kwargs={'uid': uid}),
+            con, follow=True
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('new def', response.context['concept']['definition_text'])
-        con.delete()
+        self.assertEqual(
+            'new def', response.context['concept']['definition_text'])
+        
 
     def test_update_task(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         task = Task()
-        tsk = task.create('test_update_task', {'prop': 'prop'})
+        uid = self.make_task('add_task_dataset')
         response = self.client.post(
-            reverse('update_task', kwargs={'uid': tsk.properties['id']}),
+            reverse('update_task', kwargs={'uid': uid}),
             {'definition_text': 'new def'}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual('new def', response.context['task']['definition_text'])
-        tsk.delete()
+        self.assertEqual(
+            'new def', response.context['task']['definition_text'])
+        
 
     def test_update_theory(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         theory = Theory()
-        thry = theory.create('test_update_theory', {'prop': 'prop'})
         response = self.client.post(
-            reverse('update_theory', kwargs={'uid': thry.properties['id']}),
-            {'theory_name': 'theory_name', 'theory_description': 'theory_description'}
+            reverse('add_theory'),
+            {'name': 'theory_has_a_name',
+             'collection_description': 'theory has a definition'},
+            follow=True
+        )
+        uid = theory.get('theory_has_a_name', 'name')[0]['id']
+
+        response = self.client.post(
+            reverse('update_theory', kwargs={'uid': uid}),
+            {'theory_name': 'theory_name',
+             'collection_description': 'theory_description'}
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual('theory_name', response.context['theory']['name'])
-        self.assertEqual('theory_description', response.context['theory']['description'])
-        thry.delete()
+        self.assertEqual('theory_description',
+                         response.context['theory']['collection_description'])
 
     def test_update_disorder(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         disorder = Disorder()
-        dis = disorder.create('test_update_disorder', {'prop': 'prop'})
         response = self.client.post(
-            reverse('update_disorder', kwargs={'uid': dis.properties['id']}),
-            {'disorder_name': 'disorder_name', 'disorder_definition': 'disorder_definition'}
+            reverse('contribute_disorder'),
+            {'name': 'disorder_name',
+             'definition': 'disorder_definition'},
+            follow=True
+        )
+        uid = disorder.get('disorder_name', 'name')[0]['id']
+
+
+        response = self.client.post(
+            reverse('update_disorder', kwargs={'uid': uid}),
+            {'disorder_name': 'disorder_name',
+                'disorder_definition': 'disorder_definition'}
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual('disorder_name', response.context['disorder']['name'])
-        self.assertEqual('disorder_definition', response.context['disorder']['definition'])
-        dis.delete()
+        self.assertEqual('disorder_definition',
+                         response.context['disorder']['definition'])
+        
 
     def test_add_concept_relation(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         concept = Concept()
-        con1 = concept.create('test_update_concept', {'prop': 'prop'})
-        con2 = concept.create('test_update_concept', {'prop': 'prop'})
+        con1_uid = self.make_concept()
+        con2_uid = self.make_concept()
         response = self.client.post(
-            reverse('add_concept_relation', kwargs={'uid': con1.properties['id']}),
-            {'relation_type': 'PARTOF', 'concept_selection': con2.properties['id']}
+            reverse('add_concept_relation', kwargs={
+                    'uid': con1_uid}),
+            {'relation_type': 'PARTOF',
+                'concept_selection': con2_uid}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['concept']['relations']['PARTOF'][0]['id'], con2.properties['id'])
-        con1.delete_related()
-        con1.delete()
-        con2.delete()
+        self.assertEqual(
+            response.context['concept']['relations']['PARTOF'][0]['id'], con2_uid)
+        
 
+    ''' this is only testing if conditions show up as options in the form to
+        create contrast for a task. Should be extended to actually add contrast
+    '''
     def test_add_task_contrast(self):
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
-        task = Task()
-        condition = Condition()
-        tsk = task.create('test_add_task_contrast', {'prop': 'prop'})
-        cond1 = condition.create('test_add_task_contrast_cond1', {'prop': 'prop'})
-        cond2 = condition.create('test_add_task_contrast_cond2', {'prop': 'prop'})
-        cond_names = ['test_add_task_contrast_cond1', 'test_add_task_contrast_cond2'] 
-        task.link(tsk.properties['id'], cond1.properties['id'], 'HASCONDITION',
-                  endnode_type='condition')
-        task.link(tsk.properties['id'], cond2.properties['id'], 'HASCONDITION',
-                  endnode_type='condition')
-        response = self.client.get(reverse('add_task_contrast',
-                                           kwargs={'uid': tsk.properties['id']}))
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(response.context['conditions'][0]['condition_name'], cond_names)
-        self.assertIn(response.context['conditions'][1]['condition_name'], cond_names)
-        self.assertEqual(len(response.context['conditions']), 2)
-        tsk.delete_related()
-        tsk.delete()
-        cond1.delete()
-        cond2.delete()
+        uid = self.make_task()
+        cond_names = ['test_add_task_contrast_cond1', 'test_add_task_contrast_cond2']
 
-    ''' This view sets up a task -ASSERTS-> concept link and returns task_view 
-        task view uses get_contrasts to populate the concepts context variable
-        The only way a contrast is found to be associated with a task is by way
-        of a condition.
-    '''
+        response = self.client.post(
+            reverse('add_condition', kwargs={'uid': uid}),
+            {'condition_name': cond_names[0]}
+        )
+        response = self.client.post(
+            reverse('add_condition', kwargs={'uid': uid}),
+            {'condition_name': cond_names[1]}
+        )
+
+        response = self.client.get(reverse('add_task_contrast',
+                                           kwargs={'uid': uid}))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(response.context['conditions']
+                      [0]['condition_name'], cond_names)
+        self.assertIn(response.context['conditions']
+                      [1]['condition_name'], cond_names)
+        self.assertEqual(len(response.context['conditions']), 2)
+        
 
     def test_add_task_concept(self):
         self.assertTrue(self.client.login(
@@ -312,23 +359,21 @@ class AtlasViewTestCase(TestCase):
         tsk = task.create('test_add_task_concept', {'prop': 'prop'})
         con = concept.create('test_add_task_concept', {'prop': 'prop'})
         cont = contrast.create('test_add_task_concept', {'prop': 'prop'})
-        concept.link(con.properties['id'], cont.properties['id'],
+        task.link(tsk['id'], cont['id'],
                      "HASCONTRAST", endnode_type='contrast')
         response = self.client.post(
-            reverse('add_task_concept', kwargs={'uid': tsk.properties['id']}),
-            {'concept_selection': con.properties['id']}
+            reverse('add_task_concept', kwargs={'uid': tsk['id']}),
+            {'concept_selection': con['id']}
         )
         self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('task', kwargs={'uid': tsk.properties['id']}))
+        response = self.client.get(
+            reverse('task', kwargs={'uid': tsk['id']}))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['task']['relations']['ASSERTS']), 1)
-        self.assertEqual(response.context['task']['relations']['ASSERTS'][0]['id'],
-                         con.properties['id'])
-        tsk.delete_related()
-        con.delete_related()
-        tsk.delete()
-        con.delete()
-        cont.delete()
+        self.assertEqual(
+            len(response.context['task']['relations']['HASCONTRAST']), 1)
+        self.assertEqual(response.context['task']['relations']['HASCONTRAST'][0]['id'],
+                         cont['id'])
+        
 
     ''' dispabled for the time being. Want all concept-contrast relations to happen in task view
     def test_add_concept_contrast(self):
@@ -340,107 +385,103 @@ class AtlasViewTestCase(TestCase):
         contrast = Contrast()
         cond = condition.create('test_add_concept_contrast', {'prop': 'prop'})
         cont = contrast.create('test_add_task_concept1', {'prop': 'prop'})
-        condition.link(cond.properties['id'], cont.properties['id'], "HASCONTRAST", endnode_type='contrast')
+        condition.link(cond['id'], cont['id'], "HASCONTRAST", endnode_type='contrast')
         tsk = task.create('test_add_task_concept1', {'prop': 'prop'})
-        task.link(tsk.properties['id'], cont.properties['id'], "HASCONTRAST", endnode_type='contrast')
+        task.link(tsk['id'], cont['id'], "HASCONTRAST", endnode_type='contrast')
         con = concept.create('test_add_task_concept1', {'prop': 'prop'})
-        task.link(tsk.properties['id'], con.properties['id'], "ASSERTS", endnode_type='concept')
+        task.link(tsk['id'], con['id'], "ASSERTS", endnode_type='concept')
         response = self.client.post(
-            reverse('add_concept_contrast', kwargs={'uid': tsk.properties['id']}),
-            {'contrast_selection': cont.properties['id'], 'concept_id': con.properties['id']}
+            reverse('add_concept_contrast', kwargs={'uid': tsk['id']}),
+            {'contrast_selection': cont['id'], 'concept_id': con['id']}
         )
         self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('task', kwargs={'uid': tsk.properties['id']}))
+        response = self.client.get(reverse('task', kwargs={'uid': tsk['id']}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context['task']['relations']['ASSERTS']), 1)
-        tsk.delete_related()
-        con.delete_related()
-        tsk.delete()
-        con.delete()
-        cont.delete()
+        graph.delete(tsk)
+        graph.delete(con)
+        graph.delete(cont)
     '''
 
     def test_add_task_implementation(self):
-        task = Task()
-        tsk = task.create('test_add_task_implementation', {'prop': 'prop'})
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
+        task = Task()
+        uid = self.make_task('add_task_dataset')
         data = {
             'implementation_uri': 'http://example.com',
             'implementation_name': 'add_task_implementation',
             'implementation_description': 'task imp desc'
         }
         response = self.client.post(
-            reverse('add_task_implementation', kwargs={'task_id': tsk.properties['id']}),
+            reverse('add_task_implementation', kwargs={
+                    'uid': uid}),
             data
         )
         self.assertEqual(response.status_code, 200)
-        imp = task.get_relation(tsk.properties['id'], "HASIMPLEMENTATION")
+        imp = task.get_relation(uid, "HASIMPLEMENTATION")
         self.assertEqual(len(imp), 1)
         self.assertEqual(imp[0]['name'], 'add_task_implementation')
-        tsk.delete_related()
-        tsk.delete()
-        imp = graph.find_one("implementation", "id", imp[0]['id'])
+        
 
     def test_add_task_dataset(self):
         task = Task()
-        tsk = task.create('test_add_task_dataset', {'prop': 'prop'})
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
+        uid = self.make_task('add_task_dataset')
         data = {
             'dataset_uri': 'http://example.com',
             'dataset_name': 'add_task_dataset',
         }
         response = self.client.post(
-            reverse('add_task_dataset', kwargs={'task_id': tsk.properties['id']}),
+            reverse('add_task_dataset', kwargs={
+                    'uid': uid}),
             data
         )
         self.assertEqual(response.status_code, 200)
-        ds = task.get_relation(tsk.properties['id'], "HASEXTERNALDATASET")
+        ds = task.get_relation(uid, "HASEXTERNALDATASET")
         self.assertEqual(len(ds), 1)
         self.assertEqual(ds[0]['name'], 'add_task_dataset')
-        tsk.delete_related()
-        tsk.delete()
-        ds = graph.find_one("external_dataset", "id", ds[0]['id'])
+        
 
     def test_add_task_indicator(self):
-        task = Task()
-        tsk = task.create('test_add_task_indicator', {'prop': 'prop'})
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
+        task = Task()
+        uid = self.make_task('add_task_dataset')
         data = {
             'type': 'add_task_indicator',
         }
         response = self.client.post(
-            reverse('add_task_indicator', kwargs={'task_id': tsk.properties['id']}),
+            reverse('add_task_indicator', kwargs={
+                    'uid': uid}),
             data
         )
         self.assertEqual(response.status_code, 200)
-        ind = task.get_relation(tsk.properties['id'], "HASINDICATOR")
+        ind = task.get_relation(uid, "HASINDICATOR")
         self.assertEqual(len(ind), 1)
         self.assertEqual(ind[0]['name'], 'add_task_indicator')
-        tsk.delete_related()
-        tsk.delete()
-        ind = graph.find_one("indicator", "id", ind[0]['id'])
+        
 
+    '''
     def test_add_theory_assertion(self):
         Asrt = Assertion()
         Thry = Theory()
         assertion = Asrt.create('test_add_theory_assertion')
         theory = Thry.create('test_add_theory_assertion')
         data = {
-            'assertions': assertion.properties['id']
+            'assertions': assertion['id']
         }
 
         self.assertTrue(self.client.login(
             username=self.user.username, password=self.password))
         response = self.client.post(
             reverse('add_theory_assertion',
-                    kwargs={'theory_id': theory.properties['id']}), data
+                    kwargs={'theory_id': theory['id']}), data
         )
         self.assertEqual(response.status_code, 200)
-        thry = Asrt.get_relation(assertion.properties['id'], "INTHEORY")
+        thry = Asrt.get_relation(assertion['id'], "INTHEORY")
         self.assertEqual(thry[0]['name'], 'test_add_theory_assertion')
-        assertion.delete_related()
-        assertion.delete()
-        theory.delete()
+        graph.delete(theory)
+        graph.delete(assertion)
+    '''

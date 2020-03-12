@@ -1,0 +1,22 @@
+version: "3"
+services:
+  import:
+    build:
+      context: .
+      dockerfile: ./import/Dockerfile
+    command: /code/compose/import/entrypoint.sh
+    env_file: .env
+    volumes:
+        - .:/code
+    links:
+        - postgres
+        - nginx
+        - uwsgi
+        - graphdb
+    expose:
+        - "3306"
+    networks:
+      web:
+        aliases:
+          - import
+

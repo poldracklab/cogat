@@ -1,10 +1,11 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, PasswordChangeForm
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 from cognitive.apps.users.models import User
 
-from crispy_forms.bootstrap import AppendedText, PrependedText, FormActions, TabHolder, Tab, StrictButton
-from crispy_forms.layout import Layout, HTML, Button, Row, Field, Hidden
+from crispy_forms.bootstrap import TabHolder
+from crispy_forms.layout import Layout
 from crispy_forms.helper import FormHelper
+
 
 class UserCreateForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -31,8 +32,9 @@ class UserCreateForm(UserCreationForm):
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-8'
         self.helper.layout = Layout()
-        tab_holder = TabHolder()
-    
+        TabHolder()
+
+
 class UserEditForm(UserChangeForm):
     email = forms.EmailField(required=True)
 
@@ -47,7 +49,7 @@ class UserEditForm(UserChangeForm):
         if commit:
             user.save()
         return user
-    
+
     def clean_password(self):
         return ""
 
@@ -60,4 +62,4 @@ class UserEditForm(UserChangeForm):
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-8'
         self.helper.layout = Layout()
-        tab_holder = TabHolder()
+        TabHolder()

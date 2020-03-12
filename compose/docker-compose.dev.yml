@@ -1,0 +1,9 @@
+version: "3"
+services:
+  uwsgi:
+      build:
+        context: ./uwsgi/
+      command: bash -c "sleep 15 && python ./manage.py runserver 0.0.0.0:8000"
+      ports:
+        - "8000:8000"
+

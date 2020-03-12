@@ -78,6 +78,7 @@ target/
 # database files
 *.db
 *.sql
+*.tar.gz
 compose/graphdb/data/*
 
 # only allow changes to .env manually

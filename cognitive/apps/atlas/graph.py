@@ -12,10 +12,12 @@ Contrast = Contrast()
 
 # Return full graph visualizations
 
+
 def graph_view(request, label, uid):
     query = "MATCH (n:{}) where n.id = '{}' OPTIONAL MATCH (n)-[]-(r) return n, r"
     query = query.format(label, uid)
     return render(request, "graph/graph.html", {'query': query})
+
 
 def task_graph(request, uid):
     nodes = Task.get_graph(uid)
@@ -62,7 +64,8 @@ def contrast_gist(request, uid, query=None, return_gist=False):
 
     contrast = Contrast.get(uid)[0]
     if query is None:
-        query = "MATCH (c:condition)-[r:HASCONTRAST]->(con:contrast) WHERE con.id='%s' RETURN c.name as condition_name,con.name as contrast_name;" % (uid)
+        query = '''MATCH (c:condition)-[r:HASCONTRAST]->(con:contrast) WHERE con.id='%s' RETURN c.name as \
+                    condition_name,con.name as contrast_name;" % (uid)'''
 
     # Join by newline
     contrast_cypher["links"] = "\n".join(contrast_cypher["links"])
@@ -108,7 +111,7 @@ def task_gist(request, uid, query=None, return_gist=False):
 
 
 def download_task_gist(request, uid, query=None):
-    '''download_task_gist generates the equivalent task gist, but instead downloads 
+    '''download_task_gist generates the equivalent task gist, but instead downloads
     it as a .gist file for the user to save locally
     :param uid: the uid for the task
     :param query: a custom query. If not defined, will show a table of concepts asserted.

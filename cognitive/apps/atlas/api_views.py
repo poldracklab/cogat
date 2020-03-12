@@ -1,10 +1,8 @@
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 
-from cognitive.settings import graph
 import cognitive.apps.atlas.query as query
 from .forms import (TaskForm, ConceptForm, ContrastForm, ConditionForm,
                     DisorderForm, TaskDisorderForm)
@@ -22,6 +20,7 @@ Implementation = query.Implementation()
 Indicator = query.Indicator()
 Task = query.Task()
 Theory = query.Theory()
+
 
 class NodeAPI(APIView):
     node_class = ...
@@ -41,9 +40,9 @@ class NodeAPI(APIView):
                                           get_relations=False)
         if len(name_exists) > 1:
             error_key = "Name {} already exists".format(
-                    node_data[self.name_field])
+                node_data[self.name_field])
             error_value = "nodes with this name: {}".format(
-                    [i['id'] for i in name_exists])
+                [i['id'] for i in name_exists])
             error = {error_key: error_value}
             return Response(error, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         name = node_data[self.name_field]
@@ -82,7 +81,6 @@ class NodeAPI(APIView):
         return self.get(request)
 
 
-       
 class ContrastAPI(NodeAPI):
     node_class = Contrast
     form_class = ContrastForm
@@ -93,6 +91,7 @@ class ContrastAPI(NodeAPI):
         id = ret.data['id']
         return self.make_link(request, uid, Task, id,
                               Contrast, 'HASCONTRAST')
+
 
 class ConditionAPI(NodeAPI):
     node_class = Condition
@@ -105,13 +104,13 @@ class ConditionAPI(NodeAPI):
         return self.make_link(request, self.kwargs['uid'], Task, id,
                               Condition, 'HASCONDITION')
 
+
 class ConceptAPI(NodeAPI):
     node_class = Concept
     form_class = ConceptForm
     name_field = 'term_name'
 
     def get(self, request, format=None):
-        fields = {}
         id = request.GET.get("id", "")
         name = request.GET.get("name", "")
         contrast_id = request.GET.get("contrast_id", "")
@@ -149,6 +148,7 @@ class TaskAPI(NodeAPI):
             raise NotFound('Task not found')
         return Response(task)
 
+
 class DisorderAPI(NodeAPI):
     node_class = Disorder
     form_class = DisorderForm
@@ -184,6 +184,8 @@ class SearchAPI(APIView):
 
 # def add_concept_relation(request, uid):
 # def make_link(self, request, src_id, src_label, dest_id, dest_label, rel,
+
+
 class ConceptRelAPI(NodeAPI):
     node_class = Concept
     form_class = None
@@ -192,7 +194,7 @@ class ConceptRelAPI(NodeAPI):
     def post(self, request):
         # Need some sort of validation.
         src_id = request.POST.get('src_id', None)
-        dest_id = request.POST.get('dest_id', None) 
+        dest_id = request.POST.get('dest_id', None)
         rel_type = request.POST.get('rel_type', None)
         return self.make_link(request, src_id, self.node_class, dest_id,
                               self.node_class, rel_type)
@@ -214,20 +216,26 @@ class ConceptRelAPI(NodeAPI):
 # def update_disorder(request, uid):
 
 # def add_task_concept(request, uid):
+
+
 class TaskConceptAPI(NodeAPI):
     node_class = Task
 
     def post(self, request, uid):
         concept_id = request.POST.get('concept_id', '')
-        return self.make_link(request, uid, self.node_class, concept_id, Concept, 'ASSERTS')
+        return self.make_link(request, uid, self.node_class,
+                              concept_id, Concept, 'ASSERTS')
 
 # def add_disorder_task(request, uid):
+
+
 class DisorderTask(NodeAPI):
     node_class = Task
 
     def post(self, request, uid):
         disorder_id = request.POST.get('disorder_id', '')
-        return self.make_link(request, uid, self.node_class, disorder_id, Disorder, 'ASSERTS')
+        return self.make_link(request, uid, self.node_class,
+                              disorder_id, Disorder, 'ASSERTS')
 
 
 # def add_task_disorder(request, task_id):
@@ -240,7 +248,8 @@ class TaskDisorderAPI(NodeAPI):
             cleaned_data = form.cleaned_data
             disorder_id = cleaned_data['disorders']
             cont_id = cleaned_data['contrasts']
-            Contrast.link(cont_id, disorder_id, "HASDIFFERENCE", endnode_type="disorder")
+            Contrast.link(cont_id, disorder_id, "HASDIFFERENCE",
+                          endnode_type="disorder")
             request.GET = request.GET.copy()
             request.GET['id'] = uid
             return self.get(request)
@@ -249,31 +258,42 @@ class TaskDisorderAPI(NodeAPI):
                             status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 # def add_disorder_disorder(request, disorder_id):
+
+
 class DisorderDisorderAPI(NodeAPI):
     node_class = Disorder
 
     def post(self, request, uid):
         disorder_id = request.POST.get('disorder_id', '')
-        return self.make_link(request, uid, self.node_class, disorder_id, Disorder, 'ISA')
+        return self.make_link(request, uid, self.node_class,
+                              disorder_id, Disorder, 'ISA')
 
 # def add_concept_contrast(request, uid, tid):
+
+
 class ConceptContrastAPI(NodeAPI):
     pass
 # def add_concept_contrast_task(request, uid):
+
+
 class ConceptContrastTaskAPI(NodeAPI):
     pass
 # def concept_task_contrast_assertion(concept_id, task_id, contrast_id):
 
 # def add_task_implementation(request, task_id):
+
+
 class TaskImplementationAPI(NodeAPI):
     node_class = Task
 
     def post(self, request, uid):
-        imp_id = request.POST.get('implementation_id', '')
-        return self.make_link(request, uid, self.node_class, dataset_id,
+        implementation_id, = request.POST.get('implementation_id', '')
+        return self.make_link(request, uid, self.node_class, implementation_id,
                               Implementation, 'HASIMPLEMENTATION')
 
 # def add_task_dataset(request, task_id):
+
+
 class TaskDatasetAPI(NodeAPI):
     node_class = Task
 
@@ -281,17 +301,21 @@ class TaskDatasetAPI(NodeAPI):
         dataset_id = request.POST.get('dataset_id', '')
         return self.make_link(request, uid, self.node_class, dataset_id,
                               ExternalDataset, 'HASEXTERNALDATASET')
-    
+
 # def add_task_indicator(request, task_id):
+
+
 class TaskIndicatorAPI(NodeAPI):
     node_class = Task
-    
+
     def post(self, request, uid):
         indicator_id = request.POST.get('indicator_id', '')
         return self.make_link(request, uid, self.node_class, indicator_id,
                               Indicator, 'HASINDICATOR')
 
 # def add_task_citation(request, task_id):
+
+
 class TaskCitationAPI(NodeAPI):
     node_class = Task
 
@@ -301,6 +325,8 @@ class TaskCitationAPI(NodeAPI):
                               Citation, 'HASCITATION')
 
 # def add_concept_citation(request, concept_id):
+
+
 class ConceptCitationAPI(NodeAPI):
     node_class = Concept
 
@@ -310,6 +336,8 @@ class ConceptCitationAPI(NodeAPI):
                               Citation, 'HASCITATION')
 
 # def add_disorder_citation(request, disorder_id):
+
+
 class DisorderCitationAPI(NodeAPI):
     node_class = Disorder
 
@@ -317,8 +345,10 @@ class DisorderCitationAPI(NodeAPI):
         citation_id = request.POST.get('citation_id', '')
         return self.make_link(request, uid, self.node_class, citation_id,
                               Citation, 'HASCITATION')
-    
+
 # def add_disorder_external_link(request, disorder_id):
+
+
 class DisorderExternalLinkAPI(NodeAPI):
     node_class = Disorder
 
@@ -328,6 +358,8 @@ class DisorderExternalLinkAPI(NodeAPI):
                               ExternalLink, 'HASLINK')
 
 # def add_theory_citation(request, theory_id):
+
+
 class TheoryCitationAPI(NodeAPI):
     node_class = Theory
 
@@ -335,8 +367,10 @@ class TheoryCitationAPI(NodeAPI):
         citation_id = request.POST.get('citation_id', '')
         return self.make_link(request, uid, self.node_class, citation_id,
                               Citation, 'HASCITATION')
-   
+
 # def add_battery_citation(request, battery_id):
+
+
 class BatteryCitationAPI(NodeAPI):
     node_class = Battery
 
@@ -344,8 +378,10 @@ class BatteryCitationAPI(NodeAPI):
         citation_id = request.POST.get('citation_id', '')
         return self.make_link(request, uid, self.node_class, citation_id,
                               Citation, 'HASCITATION')
- 
+
 # def add_battery_indicator(request, battery_id):
+
+
 class BatteryIndicatorAPI(NodeAPI):
     node_class = Battery
 
@@ -353,17 +389,21 @@ class BatteryIndicatorAPI(NodeAPI):
         citation_id = request.POST.get('citation_id', '')
         return self.make_link(request, uid, self.node_class, citation_id,
                               Citation, 'HASCITATION')
- 
+
 # def add_battery_battery(request, battery_id):
+
+
 class BatteryBatteryAPI(NodeAPI):
     node_class = Battery
 
     def post(self, request, uid):
         battery_id = request.POST.get('battery_id', '')
-        return self.make_link(request, uid, self.node_class, citation_id,
+        return self.make_link(request, uid, self.node_class, battery_id,
                               Battery, 'INBATTERY')
- 
+
 # def add_battery_task(request, battery_id):
+
+
 class BatteryTaskAPI(NodeAPI):
     node_class = Battery
 
@@ -371,8 +411,10 @@ class BatteryTaskAPI(NodeAPI):
         task_id = request.POST.get('task_id', '')
         return self.make_link(request, uid, self.node_class, task_id,
                               Task, 'INBATTERY')
- 
+
 # def add_theory_assertion(request, theory_id):
+
+
 class TheoryAssertion(NodeAPI):
     node_class = Assertion
 
@@ -381,9 +423,13 @@ class TheoryAssertion(NodeAPI):
         return self.make_link(request, uid, self.node_class, theory_id,
                               Theory, 'INTHEORY')
 # def add_theory(request):
+
+
 class TheoryAPI(NodeAPI):
     node_class = Theory
 
 # def add_battery(request):
+
+
 class BatteryAPI(NodeAPI):
     node_class = Battery

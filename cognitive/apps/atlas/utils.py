@@ -1,14 +1,14 @@
-from datetime import datetime, date
+from datetime import date
 from urllib.parse import quote
 from urllib.request import urlopen
 
 from lxml import etree
-from py2neo import Path, Node, Relationship
 import pandas
 
 from django.utils.crypto import get_random_string
 
 from cognitive.settings import graph
+
 
 def generate_uid(node_type):
     '''generte_uid will generate a unique identifier for a new node, with first three letters
@@ -41,9 +41,9 @@ def generate_uid(node_type):
         suffix = get_random_string(13)
         uid = "{}_{}".format(nodetypes.get(node_type, None), suffix)
         query = """start n=node(*)
-                   match n
+                   match (n)
                    where n.id = '%s'
-                   return n.id""" %(uid)
+                   return n.id""" % (uid)
         result = do_query(query, fields=["n.id"])
     return uid
 
@@ -52,16 +52,17 @@ def get_relation_nodetype(relation):
     '''get_relation_nodetype will return the node type for a particular relation
     (eg --RELATION-->[NODE]
     '''
-    node_types = {"HASCONDITION":"condition",
-                  "MEASUREDBY":"contrast",
-                  "DERIVEDFROM":"task",
-                  "ASSERTS":"concept",
-                  "HASCONTRAST":"contrast",
-                  "KINDOF":"concept",
-                  "PARTOF":"concept"}
+    node_types = {"HASCONDITION": "condition",
+                  "MEASUREDBY": "contrast",
+                  "DERIVEDFROM": "task",
+                  "ASSERTS": "concept",
+                  "HASCONTRAST": "contrast",
+                  "KINDOF": "concept",
+                  "PARTOF": "concept"}
     if relation in node_types:
         return node_types[relation]
     return None
+
 
 def add_update(field, value, updates=None):
     '''add_update will update the updates dictionary only given that a value is defined (not None or '') for a field
@@ -69,11 +70,12 @@ def add_update(field, value, updates=None):
     :param value: the value to update with
     :param updates: the dictionary to update (optional)
     '''
-    if updates == None:
+    if updates is None:
         updates = dict()
     if value not in ["", None]:
         updates[field] = value
     return updates
+
 
 def clean_html(html, replacements=None):
     '''clean_html will replace newlines with <br> for rendering, along with \r characters
@@ -82,7 +84,7 @@ def clean_html(html, replacements=None):
     '''
     replace_sets = [["\n", "<br>"], ["\r", ""]]
 
-    if replacements != None:
+    if replacements is not None:
         replace_sets = replace_sets + replacements
 
     for replace_set in replace_sets:
@@ -106,6 +108,7 @@ def update_lookup(lookup, key, entry):
         lookup[key] = entry
     return lookup
 
+
 def merge_cypher(cypher1, cypher2):
     '''merge_cypher will combine two cypher objects, meaning dictionaries with lists of nodes and links
     it is assumed that there are not repeated nodes
@@ -117,23 +120,25 @@ def merge_cypher(cypher1, cypher2):
     cypher["links"] = cypher1["links"] + cypher2["links"]
     return cypher
 
+
 def color_by_relation(relation_name):
     '''color_by_relation returns node color based on relation type
     :param relation_name: the name of the relation to look up color for
     '''
-    colors = {"ASSERTS":"#3C7263", # task --asserts--> concept
-              "MEASUREDBY": "#D89013", # concept --measuredby--> contrast
-              "DERIVEDFROM": "#63506D", # task --derivedfrom--> task
-              "HASCONDITION":"#BC1079", # contrast --hascondition--> condition
-              "HASCONTRAST": "#D89013", # condition --hascontrast--> contrast
-              "PARTOF":"#3C7263",  # concept
-              "KINDOF":"#3C7263"}  # concept
+    colors = {"ASSERTS": "#3C7263",  # task --asserts--> concept
+              "MEASUREDBY": "#D89013",  # concept --measuredby--> contrast
+              "DERIVEDFROM": "#63506D",  # task --derivedfrom--> task
+              "HASCONDITION": "#BC1079",  # contrast --hascondition--> condition
+              "HASCONTRAST": "#D89013",  # condition --hascontrast--> contrast
+              "PARTOF": "#3C7263",  # concept
+              "KINDOF": "#3C7263"}  # concept
 
     if relation_name in colors:
         return colors[relation_name]
     return "#FFFFFF"
 
 # Query helper functions ######################################################
+
 
 def do_query(query, fields, output_format="dict", drop_duplicates=True):
     ''' do_query will return the result of a cypher query in the format
@@ -143,10 +148,11 @@ def do_query(query, fields, output_format="dict", drop_duplicates=True):
     '''
     if isinstance(fields, str):
         fields = [fields]
-    result = graph.cypher.execute(query)
-    df = pandas.DataFrame(result.records, columns=result.columns)
-    df.columns = fields
-    if drop_duplicates == True:
+    result = graph.run(query)
+    df = result.to_data_frame()
+    if fields is not None and not df.empty:
+        df.columns = fields
+    if drop_duplicates is True:
         df = df.drop_duplicates()
     if output_format == "df":
         return df
@@ -154,6 +160,7 @@ def do_query(query, fields, output_format="dict", drop_duplicates=True):
         return df.values.tolist()
     elif output_format == "dict":
         return df.to_dict(orient="records")
+
 
 def do_transaction(tx=None, query=None, params=None):
     ''' do_transaction will return the result of a cypher transaction in the
@@ -172,7 +179,7 @@ def do_transaction(tx=None, query=None, params=None):
     if tx is None and query is None:
         print("Please define either transaction or query.")
         return None
-    if query != None:
+    if query is not None:
         tx = get_transactions(query, tx=tx, params=params)
     # Return as pandas data frame
     results = tx.commit()
@@ -185,11 +192,14 @@ def do_transaction(tx=None, query=None, params=None):
         df.loc[r] = [x for x in results[r].one]
     return df
 
+
 def get_transactions(query, tx=None, params=None):
-    '''get_transactions will append new transactions to a transaction object, or return a new transaction if one does not exist.
+    '''get_transactions will append new transactions to a transaction object, or return a new transaction if one does
+        not exist.
     :param query: string of cypher query
     :param tx: a transaction object (optional)
-    :param params: a list of dictionaries, each dictionary with keys as values to sub in the query, and values as the thing to substitute. Eg: [{"A":name,"B":classification}]
+    :param params: a list of dictionaries, each dictionary with keys as values to sub in the query, and values as the
+        thing to substitute. Eg: [{"A":name,"B":classification}]
     '''
     # Combine queries into transaction
     if tx is None:
@@ -201,22 +211,27 @@ def get_transactions(query, tx=None, params=None):
         tx.append(query)
     return tx
 
+
 class InvalidDoiException(Exception):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
 def get_paper_properties(doi):
     xmlurl = 'http://doi.crossref.org/servlet/query'
-    xmlpath = xmlurl + '?pid=k.j.gorgolewski@sms.ed.ac.uk&format=unixref&id=' + quote(doi)
+    xmlpath = xmlurl + \
+        '?pid=k.j.gorgolewski@sms.ed.ac.uk&format=unixref&id=' + quote(doi)
     print(xmlpath)
     xml_str = urlopen(xmlpath).read()
     doc = etree.fromstring(xml_str)
-    if len(doc.getchildren()) == 0 or len(doc.findall('.//crossref/error')) > 0:
+    if len(doc.getchildren()) == 0 or len(
+            doc.findall('.//crossref/error')) > 0:
         raise InvalidDoiException("DOI %s was not found" % doi)
-    journal_name = doc.findall(".//journal/journal_metadata/full_title")[0].text
+    journal_name = doc.findall(
+        ".//journal/journal_metadata/full_title")[0].text
     title = doc.findall('.//title')[0].text
     authors = [author.findall('given_name')[0].text + " " + author.findall('surname')[0].text
-            for author in doc.findall('.//contributors/person_name')]
+               for author in doc.findall('.//contributors/person_name')]
     if len(authors) > 1:
         authors = ", ".join(authors[:-1]) + " and " + authors[-1]
     else:

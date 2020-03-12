@@ -1,4 +1,4 @@
-version: 2.1
+version: 2
 jobs:
   build:
     machine:
@@ -8,8 +8,9 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
-        name: makemigrations
-        command: docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py makemigrations
+        name: "makemigrations"
       - run:
-        name: python_tests
-        command: docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py test
+        name: "python_tests"
+        command: |
+          docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py makemigrations
+          docker-compose -f /home/ubuntu/cogat/compose/docker-compose-circle.yml run uwsgi python manage.py test

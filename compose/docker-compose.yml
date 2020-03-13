@@ -62,6 +62,9 @@ services:
   uwsgi:
       build:
         context: ./uwsgi/
+      depends_on:
+        - graphdb
+        - postgres
       command: /code/compose/uwsgi/uwsgi.sh
       env_file: .env
       volumes:

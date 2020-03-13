@@ -8,5 +8,4 @@ jobs:
       - run:
           name: python_tests
           command: |
-            docker-compose -f /home/circleci/project/cogat/compose/docker-compose.circle.yml run uwsgi python manage.py makemigrations
-            docker-compose -f /home/circleci/project/cogat/compose/docker-compose.circle.yml run uwsgi python manage.py test
+              docker-compose -f /home/circleci/project/compose/docker-compose.yml run uwsgi bash -c "sleep 15 && python manage.py makemigrations && python manage.py test"

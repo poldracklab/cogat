@@ -1,3 +1,6 @@
+'''
+Script used to move from mysql database to neo4j database.
+'''
 import html
 import os
 import re

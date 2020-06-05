@@ -10,7 +10,7 @@ chardet==3.0.4            # via requests
 click==7.0                # via py2neo
 colorama==0.4.3           # via py2neo
 django-crispy-forms==1.8.1  # via -r requirements.in
-django==3.0.3             # via -r requirements.in, djangorestframework
+django==3.0.7             # via -r requirements.in, djangorestframework
 djangorestframework==3.11.0  # via -r requirements.in
 idna==2.8                 # via requests
 lxml==4.5.0               # via -r requirements.in

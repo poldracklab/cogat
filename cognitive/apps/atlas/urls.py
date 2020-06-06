@@ -291,6 +291,7 @@ api_urls = [
         api_views.BatteryAPI.as_view(), name="battery_list_api"),
 
     url(r'^api/theory$', api_views.TheoryAPI.as_view(), name="theory_list_api"),
+    url(r'^api/user$', api_views.UserAPI.as_view(), name="user_list_api"),
     url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/assertion/$',
         api_views.TheoryAssertion.as_view(), name="add_theory_assertion_api"),
     url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/citation/$',

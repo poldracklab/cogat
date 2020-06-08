@@ -1,0 +1,19 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block head %}
+{% endblock %}
+
+{% block branding %}
+  {% include 'atlas/branding.html'%}
+  {% block navigation %}
+    {% include "atlas/middle_navigation.html" %}
+  {% endblock %}
+{% endblock %}
+
+{% block content %}
+
+<script async src="https://cse.google.com/cse.js?cx=016952313242172063987:-cscu2pqmze"></script>
+<div class="gcse-search" enableAutoComplete="true"></div>
+
+{% endblock %}

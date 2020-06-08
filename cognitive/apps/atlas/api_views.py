@@ -20,14 +20,18 @@ Implementation = query.Implementation()
 Indicator = query.Indicator()
 Task = query.Task()
 Theory = query.Theory()
+User = query.User()
 
 
 class NodeAPI(APIView):
-    node_class = ...
-    form_class = ...
-    name_field = ...
+    node_class = None
+    form_class = None
+    name_field = None
 
     def post(self, request, format=None):
+        if form_class is None or name_field is None:
+            return Response('Not available via api',
+                            status=status.HTTP_501_NOT_IMPLEMENTED)
         form = self.form_class(request.data)
         if not form.is_valid():
             return Response(form.errors,
@@ -52,7 +56,7 @@ class NodeAPI(APIView):
         request.GET['id'] = node.properties['id']
         return self.get(request)
 
-    def get(self, request, format=None):
+    def get(self, request, format=None, uid=None):
         id = request.GET.get('id', None)
         if id:
             return Response(self.node_class.get_full(request.GET['id'], 'id'))
@@ -433,3 +437,6 @@ class TheoryAPI(NodeAPI):
 
 class BatteryAPI(NodeAPI):
     node_class = Battery
+
+class UserAPI(NodeAPI):
+    node_class = User

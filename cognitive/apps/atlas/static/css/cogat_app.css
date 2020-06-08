@@ -2039,6 +2039,11 @@ div .clear_right {
     font-size: 1em
 }
 
+#search-form-box {
+    min-width: 287px;
+    width: 33%;
+}
+
 .homepage .login-box input[type=text],
 .homepage .login-box input[type=password] {
     width: 245px

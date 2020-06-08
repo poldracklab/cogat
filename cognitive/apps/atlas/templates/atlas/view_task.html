@@ -90,7 +90,7 @@
         <a target="_blank" href="http://neurovault.org/tasks/{{ task.id }}"><button>neurovault</button></a>
         </div><!-- .defn -->
 
-    {% if user.owner_or_admin %}
+    {% if owner_or_admin %}
     <!-- Update definition -->
     <div id="update_definition" class="hidden">
         <form method="POST" action="{% url 'update_task' task.id %}">
@@ -416,6 +416,11 @@
 <div id="block-biblio" class="block-bits block-back container">
     <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
     {% for citation in citations %}
+        {% if owner_or_admin %}
+                <a class="reviewbutton" href="{% url 'unlink_citation' 'task' task.id citation.id%}" style="float:right">
+                  Remove
+                </a>
+        {% endif %}
         <div id="{{ citation.id }}">
             <span class="citation">
                 <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>

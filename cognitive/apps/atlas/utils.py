@@ -140,7 +140,7 @@ def color_by_relation(relation_name):
 # Query helper functions ######################################################
 
 
-def do_query(query, fields, output_format="dict", drop_duplicates=True):
+def do_query(query, fields, output_format="dict", drop_duplicates=True, parameters={}):
     ''' do_query will return the result of a cypher query in the format
         specified (default is dict)
     :param query: string of cypher query
@@ -148,7 +148,7 @@ def do_query(query, fields, output_format="dict", drop_duplicates=True):
     '''
     if isinstance(fields, str):
         fields = [fields]
-    result = graph.run(query)
+    result = graph.run(query, parameters)
     df = result.to_data_frame()
     if fields is not None and not df.empty:
         df.columns = fields

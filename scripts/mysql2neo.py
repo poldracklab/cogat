@@ -1,3 +1,7 @@
+'''
+old version of script to move from mysql to neo4j. migratedb.py should be used instead.
+'''
+
 from py2neo import Graph, Node, Relationship
 import pymysql
 

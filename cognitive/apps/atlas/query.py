@@ -143,12 +143,12 @@ class Node(object):
 
         query = '''
             MATCH (n1:{})-[r:{}]->(n2:{})
-            WHERE n1.id = '{}' and n2.id = '{}'
+            WHERE n1.id = $n1id and n2.id = $n2id
             DELETE r
-        '''.format(self.name, relation_type, endnode_type, uid, endnode_id)
+        '''.format(self.name, relation_type, endnode_type)
 
         try:
-            self.graph.run(query)
+            self.graph.run(query, parameters={'n1id': uid, 'n2id': endnode_id})
             return None
         except Exception as e:
             return e
@@ -292,19 +292,26 @@ class Node(object):
         ::note_
 
              Currently supported filters are "starts_with"
+
+             This is only used by filter by letter view for terms and concepts.
+             Parameter jank wont work for duplicate filter names with 
+             different values. -Ross
         '''
         if fields is None:
             fields = self.fields
         return_fields = ",".join(["n.%s" % (x) for x in fields] + ["ID(n)"])
 
+        parameters = {}
         query = "MATCH (n:{})".format(self.name)
         for tup in filters:
             filter_field, filter_name, filter_value = tup
             if filter_name == "starts_with":
-                query = "{} WHERE n.{} =~ '(?i){}.*'".format(query,
-                                                             filter_field, filter_value)
+                query = "{} WHERE n.{} =~ '(?i){}.*'".format(
+                    query, filter_field, filter_value[0]
+                )
         query = "{} RETURN {}".format(query, return_fields)
         if order_by is not None:
+            parameters['order_by'] = order_by
             if order_by == 'name':
                 query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
             else:
@@ -332,12 +339,15 @@ class Node(object):
         if fields is None:
             fields = self.fields
 
-        return_fields = ",".join(["n.{}".format(x)
-                                  for x in fields] + ["ID(n)"])
-        query = "MATCH (n:{}) RETURN {}".format(self.name, return_fields)
+        return_fields = [field for field in fields if field in self.fields]
+        return_fields_str = ",".join(["n.{}".format(x)
+                                  for x in return_fields] + ["ID(n)"])
+        query = "MATCH (n:{}) RETURN {}".format(self.name, return_fields_str)
 
         if order_by is not None:
-            if order_by == 'name':
+            if order_by not in self.fields:
+                pass
+            elif order_by == 'name':
                 query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
             else:
                 query = "{} ORDER BY n.{}".format(query, order_by)
@@ -365,6 +375,7 @@ class Node(object):
         match_kwarg = {field: uid}
         parents = self.graph.nodes.match(label, **match_kwarg)
         nodes = []
+
         for parent in parents:
             new_node = {}
             new_node.update(parent)
@@ -372,8 +383,9 @@ class Node(object):
 
             if get_relations is True:
                 relation_nodes = dict()
-                new_relations = self.graph.match([parent])
-                for new_relation in new_relations:
+                for new_relation in self.graph.match([parent]):
+                    # cursor is lazily evaluated, print is easy way to force valuation
+                    print(new_relation)
                     new_relation_node = {}
                     new_relation_node.update(new_relation.end_node)
                     # new_relation_node["_id"] = new_relation.end_node._id
@@ -396,8 +408,8 @@ class Node(object):
         return nodes
 
     def get_label(self, uid):
-        query = "MATCH (x) where x.id = '{}' return x".format(uid)
-        res = list(self.graph.run(query))
+        query = "MATCH (x) where x.id = $id return x"
+        res = list(self.graph.run(query, {'id': uid}))
         try:
             return list(res[0]['x'].labels)[0]
         except (KeyError, AttributeError, TypeError) as e:
@@ -442,14 +454,15 @@ class Node(object):
             :param task_id: id of node to look for relations from
             :relation: neo style relationship label ex. "ASSERTS"
             :fields: fields to retrieve from nodes related to task_id'''
+
         if label:
             label_substr = ':{}'.format(label)
         else:
             label_substr = ''
         query = '''MATCH (p:{})-[:{}]->(r{})
-                   WHERE p.id = '{}'
-                   RETURN r'''.format(self.name, relation, label_substr, id)
-        relations = do_query(query, "null", "list")
+                   WHERE p.id = $id
+                   RETURN r'''.format(self.name, relation, label_substr)
+        relations = do_query(query, "null", "list", parameters={'id': id})
         relations = [x[0] for x in relations]
         for rel in relations:
             rel['relationship'] = relation
@@ -466,9 +479,9 @@ class Node(object):
         else:
             label_substr = ''
         query = '''MATCH (p{})-[:{}]->(s:{})
-                   WHERE s.id = '{}'
-                   RETURN p'''.format(label_substr, relation, self.name, id)
-        relations = do_query(query, None, "list")
+                   WHERE s.id = $id
+                   RETURN p'''.format(label_substr, relation, self.name)
+        relations = do_query(query, None, "list", parameters={'id': id})
         relations = [x[0] for x in relations]
         for rel in relations:
             rel['relationship'] = relation
@@ -558,9 +571,10 @@ class Task(Node):
             concept['concept_id'] = concept.pop('id')
             query = ("MATCH (con:contrast)<-[:HASCONTRAST]-(t:task)-[:ASSERTS]->"
                      "(c:concept)-[:MEASUREDBY]->(con:contrast) "
-                     "WHERE c.id = '{}' AND t.id = '{}' "
-                     "RETURN con").format(concept['concept_id'], task_id)
-            contrasts = do_query(query, "null", "list")
+                     "WHERE c.id = $cid AND t.id = $tid "
+                     "RETURN con")
+            parameters = {'cid': concept['concept_id'], 'tid': task_id}
+            contrasts = do_query(query, "null", "list", parameters=parameters)
             if contrasts:
                 for contrast in contrasts:
                     concept['contrasts'] = (
@@ -568,14 +582,14 @@ class Task(Node):
         return concepts
 
     def api_get_contrasts(self, task_id):
-        query = '''MATCH (t:task)-[:HASCONTRAST]->(c:contrast) WHERE t.id='{}'
-                   RETURN c'''.format(task_id)
-        contrasts = do_query(query, "null", "list")
+        query = '''MATCH (t:task)-[:HASCONTRAST]->(c:contrast) WHERE t.id=$id
+                   RETURN c'''
+        contrasts = do_query(query, "null", "list", parameters={'id': task_id})
         ret = [dict(x[0]) for x in contrasts]
         for contrast in ret:
             query = '''MATCH (cont:contrast)<-[r:HASCONTRAST]-(cond:condition)
-                       WHERE cont.id='{}' return cont, r, cond'''.format(contrast['id'])
-            results = settings.graph.run(query)
+                       WHERE cont.id=$id  return cont, r, cond'''
+            results = settings.graph.run(query, parameters= {'id': contrast['id']})
             contrast.update({
                 'conditions': [(x['cond'], x['r']) for x in results]
             })
@@ -584,8 +598,8 @@ class Task(Node):
     def api_get_disorders(self, task_id):
         query = '''
             MATCH (t:task)-[:HASCONTRAST]->(c:contrast)-[dif:HASDIFFERENCE]->(d:disorder)
-            WHERE t.id='{}' RETURN dif, d'''.format(task_id)
-        disorders = do_query(query, ["null", "null2"], "list")
+            WHERE t.id=$id RETURN dif, d'''
+        disorders = do_query(query, ["null", "null2"], "list", parameters={'id': task_id})
         ret_disorders = []
         for disorder in disorders:
             node = disorder[0]
@@ -605,8 +619,9 @@ class Task(Node):
     def _api_get_phenotypes(self, task_id, label):
         query = '''
             MATCH (t:task)-[:HASCONTRAST]->(c:contrast)<-[rel:MEASUREDBY]-(node:{})
-            WHERE t.id='{}' RETURN rel, node, c'''.format(label, task_id)
-        nodes = do_query(query, ["null", "null2", "null3"], "list")
+            WHERE t.id=$id RETURN rel, node, c'''.format(label)
+        nodes = do_query(query, ["null", "null2", "null3"], "list",
+                         parameters={'id': task_id})
         ret_nodes = []
         pheno_key = ''.join(['id_', label])
         for node in nodes:
@@ -649,17 +664,17 @@ class Task(Node):
 
         return_fields = ",".join(fields)
         query = '''MATCH (t:task)-[:HASCONDITION]->(c:condition)
-                   WHERE t.id='{}'
+                   WHERE t.id=$id
                    WITH c as condition
                    MATCH (condition)-[:HASCONTRAST]->(con:contrast)
                    WITH con as contrast
-                   RETURN {}'''.format(task_id, return_fields)
+                   RETURN {}'''.format(return_fields)
 
         fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"  # consistent name for graph node id
 
-        result = do_query(query, fields=fields,
-                          drop_duplicates=False, output_format="df")
+        result = do_query(query, fields=fields, drop_duplicates=False,
+                          output_format="df", parameters={'id': task_id})
         contrast_name = [r[0] if isinstance(
             r, list) else r for r in result['contrast_name']]
         result["contrast_name"] = contrast_name
@@ -675,13 +690,13 @@ class Task(Node):
 
         return_fields = ",".join(fields)
         query = '''MATCH (t:task)-[:HASCONDITION]->(c:condition)
-                   WHERE t.id='{}'
+                   WHERE t.id=$id
                    WITH c as condition
-                   RETURN {}'''.format(task_id, return_fields)
+                   RETURN {}'''.format(return_fields)
         fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"
 
-        return do_query(query, fields=fields)
+        return do_query(query, fields=fields, parameters={'id': task_id})
 
 
 class Disorder(Node):
@@ -761,13 +776,13 @@ class Contrast(Node):
 
         return_fields = ",".join(fields)
         query = '''MATCH (condition:condition)-[r:HASCONTRAST]->(c:contrast)
-                   WHERE c.id='{}'
-                   RETURN {}'''.format(contrast_id, return_fields)
+                   WHERE c.id=$id
+                   RETURN {}'''.format(return_fields)
 
         fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"
 
-        return do_query(query, fields=fields)
+        return do_query(query, fields=fields, parameters={'id': contrast_id})
 
     def get_concepts(self, contrast_id, fields=None):
         '''get_concepts returns conditions associated with a contrast
@@ -781,13 +796,13 @@ class Contrast(Node):
 
         return_fields = ",".join(fields)
         query = '''MATCH (con:concept)-[:MEASUREDBY]->(c:contrast)
-                   WHERE c.id='{}'
+                   WHERE c.id=$id
                    WITH con as concept
-                   RETURN {}'''.format(contrast_id, return_fields)
+                   RETURN {}'''.format(return_fields)
 
         fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"
-        return do_query(query, fields=fields)
+        return do_query(query, fields=fields, parameters={'id': contrast_id})
 
     def api_get_concepts(self, contrast_id):
         concepts = self.get_reverse_relation(contrast_id, "MEASUREDBY")
@@ -809,13 +824,13 @@ class Contrast(Node):
         # condition -> [hascontrast] -> contrast
 
         return_fields = ",".join(fields)
-        query = '''MATCH (t:task)-[r:HASCONTRAST]->(c:contrast) WHERE c.id = '{}'
+        query = '''MATCH (t:task)-[r:HASCONTRAST]->(c:contrast) WHERE c.id = $id
                    WITH DISTINCT t as task
-                   RETURN {}'''.format(contrast_id, return_fields)
+                   RETURN {}'''.format(return_fields)
 
         fields = [x.replace(".", "_") for x in fields]
         fields[-1] = "_id"
-        return do_query(query, fields=fields)
+        return do_query(query, fields=fields, parameters={'id': contrast_id})
 
 
 class Battery(Node):
@@ -949,9 +964,9 @@ def search(searchstring, fields=["name", "id"], node_type=None):
         node_type = ":{}".format(node_type.lower())
 
     searchstring = re.escape(searchstring)
-
+    search_param = '(?i).*{}.*'.format(searchstring.__repr__()[1:-1])
     query = '''MATCH (n%s)
-               WHERE toString(n.name) =~ '(?i).*%s.*'
+               WHERE toString(n.name) =~ $search
                AND (n:concept
                OR n:task
                OR n:theory
@@ -962,10 +977,12 @@ def search(searchstring, fields=["name", "id"], node_type=None):
                OR n:contrast
                OR n:condition)
                RETURN %s, labels(n)
-               ORDER BY n.name;''' % (node_type, searchstring.__repr__()[1:-1], return_fields)
+               ORDER BY n.name;''' % (node_type, return_fields)
     fields = fields + ["_id", "label"]
     result = do_query(query, fields=fields,
-                      drop_duplicates=False, output_format="df")
+                      drop_duplicates=False, output_format="df",
+                      parameters={'search': search_param})
+
     if result.empty:
         return {}
     result["label"] = [r[0] for r in result['label']]
@@ -977,13 +994,18 @@ def search_contrast(searchstring):
     searchstring = re.escape(searchstring)
 
     query = '''match (t:task)-[:HASCONTRAST]->(c:contrast)
-               where str(c.name) =~ '(?i).*{0}.*' or str(t.name) =~ '(?i).*{0}.*'
+               where str(c.name) =~ '(?i).*{0}.*' or str(t.name) =~ '(?i).*$search.*'
                return t.id, t.name, c.id, c.name
                order by t.name
             '''.format(searchstring.__repr__()[1:-1])
 
-    result = do_query(query, fields=[
-                      'tid', 'tname', 'cid', 'cname'], drop_duplicates=True, output_format="df")
+    result = do_query(
+        query,
+        fields=['tid', 'tname', 'cid', 'cname'],
+        drop_duplicates=True, output_format="df",
+        parameters={'search': searchstring}
+    )
+
     return result.to_dict(orient="records")
 
 
@@ -992,10 +1014,10 @@ def get(nodeid, fields=["name", "id"]):
     if isinstance(fields, str):
         fields = [fields]
     return_fields = ",".join(["n.%s" % x for x in fields] + ["ID(n)"])
-    query = '''MATCH (n) WHERE str(n.name) =~ '(?i).*%s.*' RETURN %s;''' % (
-        nodeid, return_fields)
+    query = '''MATCH (n) WHERE str(n.name) =~ '(?i).*$search.*' RETURN %s;''' % (
+        return_fields)
     fields = fields + ["_id"]
-    return do_query(query, fields=fields)
+    return do_query(query, fields=fields, parameters={'search': nodeid})
 
 
 # Functions to generate cypher queries for nodes and relations

@@ -191,6 +191,12 @@ urlpatterns = [
         name="add_citation_doi"
     ),
     url(
+        r'^(?P<label>[\w]+)/unlink/doi/(?P<uid>[\w\+%_& ]+)/(?P<cid>[\w\+%_& ]+)/$',
+        views.unlink_citation,
+        name="unlink_citation"
+    ),
+
+    url(
         r'^disambiguation/link/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
         views.link_disam,
         name="link_disam"
@@ -291,6 +297,7 @@ api_urls = [
         api_views.BatteryAPI.as_view(), name="battery_list_api"),
 
     url(r'^api/theory$', api_views.TheoryAPI.as_view(), name="theory_list_api"),
+    url(r'^api/user$', api_views.UserAPI.as_view(), name="user_list_api"),
     url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/assertion/$',
         api_views.TheoryAssertion.as_view(), name="add_theory_assertion_api"),
     url(r'^api/theory/(?P<uid>[\w\+%_& ]+)/citation/$',

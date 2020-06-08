@@ -1,5 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <html lang="en" class="">
 <head>
     <!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]-->
@@ -143,6 +144,7 @@ $(document).ready(function() {
         return $('<a class="searchLink" href="/' + term.label + '/id/' + term.id +'">' + term.text + '</a>');
     }
 
+    {% comment %}
     $(function() {
         $('#searchterm').select2({
             width: '287px',
@@ -179,6 +181,7 @@ $(document).ready(function() {
     $('#searchterm').on('select2:select', function(e) {
         window.location.href = '/' + e.params.data.label + '/id/' + e.params.data.id;
     });
+    {% endcomment %}
 });
 
     </script>

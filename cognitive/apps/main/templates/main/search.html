@@ -3,7 +3,20 @@
     <div id="searchformwrap">
         <div class="ui-widget">
             {% csrf_token %}
+            {# Style done in file to override style sourced by google js #}
+            <script async src="https://cse.google.com/cse.js?cx=016952313242172063987:-cscu2pqmze"></script>
+            <style type="text/css">
+              .cse .gsc-control-cse, 
+              .gsc-control-cse {
+              padding: 0px;
+              background: transparent;
+              border: 0px;
+              }
+            </style>
+            <div class="gcse-search" enableAutoComplete="true"></div>
+            <!--
             <select id="searchterm" name="searchterm"></select>
+            -->
         </div>
     </div>
 </div><!--/#search-form-box -->

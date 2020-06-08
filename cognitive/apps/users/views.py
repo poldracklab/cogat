@@ -103,7 +103,7 @@ def create_user(request, template_name='registration/signup.html'):
 
 def view_profile(request, username=None):
     if not username:
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return redirect('%s?next=%s' % (reverse('login'), request.path))
         else:
             user = request.user

@@ -96,7 +96,6 @@ def add_item(item, fields, graph, id='id'):
             graph.add((ref, field[0], Literal(item[field[1]])))
         except KeyError as e:
             print(ref + ' doesnt have ' + field[1])
-            exit()
 
 
 def add_concepts_to_graph(graph):

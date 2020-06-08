@@ -8,3 +8,4 @@ pandas
 psycopg2
 pymysql
 uwsgi
+rdflib

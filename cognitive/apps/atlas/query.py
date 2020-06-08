@@ -964,9 +964,9 @@ def search(searchstring, fields=["name", "id"], node_type=None):
         node_type = ":{}".format(node_type.lower())
 
     searchstring = re.escape(searchstring)
-
+    search_param = '(?i).*{}.*'.format(searchstring.__repr__()[1:-1])
     query = '''MATCH (n%s)
-               WHERE toString(n.name) =~ '(?i).*$search.*'
+               WHERE toString(n.name) =~ $search
                AND (n:concept
                OR n:task
                OR n:theory
@@ -981,7 +981,7 @@ def search(searchstring, fields=["name", "id"], node_type=None):
     fields = fields + ["_id", "label"]
     result = do_query(query, fields=fields,
                       drop_duplicates=False, output_format="df",
-                      parameters={'search': searchstring.__repr__()[1:-1]})
+                      parameters={'search': search_param})
 
     if result.empty:
         return {}

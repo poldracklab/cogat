@@ -102,10 +102,14 @@ def owner_or_admin(user, term_id, label=None):
 
 
 def get_display_name(uid):
-    user = User.objects.values_list(
-        'first_name', 'last_name', 'obfuscate').get(id=uid)
-    if user[2]:
-        return "Anonymous"
+    try:
+        user = User.objects.values_list(
+            'first_name', 'last_name', 'obfuscate').get(id=uid)
+        if user[2]:
+            return "Anonymous"
+    except User.DoesNotExist:
+            return "Anonymous"
+
     return "{}{}".format(user[0][0], user[1])
 
 
@@ -1513,6 +1517,14 @@ def add_citation_doi(request, label, uid):
         return redirect(view, uid)
     return make_link(request, uid, node_class, Citation, CitationForm,
                      'citation_desc', view_func, "HASCITATION")
+
+@login_required
+@own_or_admin
+def unlink_citation(request, label, uid, cid):
+    view = "view_{}".format(label)
+    node_class = node_class_lookup(label)
+    node_class.unlink(uid, cid, "HASCITATION", "citation")
+    return redirect(view, uid)
 
 
 def view_contrast(request, uid):

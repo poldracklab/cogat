@@ -92,6 +92,11 @@
 <div id="block-biblio" class="block-bits block-back container">
     <h2>Term <strong>BIBLIOGRAPHY</strong></h2>
     {% for citation in citations %}
+        {% if owner_or_admin %}
+                <a class="reviewbutton" href="{% url 'unlink_citation' 'theory' theory.id citation.id%}" style="float:right">
+                  Remove
+                </a>
+        {% endif %}
         <div id="{{ citation.id }}">
             <span class="citation">
                 <a href="{{ citation.citation_url }}"><b>{{ citation.citation_desc }}</b></a>

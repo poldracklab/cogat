@@ -4,6 +4,7 @@ from django.template import loader, Context
 
 from cognitive.apps.atlas.query import Concept, Condition, Contrast, Task
 from cognitive.apps.atlas.utils import merge_cypher
+from cognitive.apps.atlas.views import node_class_lookup
 
 Task = Task()
 Concept = Concept()
@@ -12,10 +13,11 @@ Contrast = Contrast()
 
 # Return full graph visualizations
 
-
 def graph_view(request, label, uid):
-    query = "MATCH (n:{}) where n.id = '{}' OPTIONAL MATCH (n)-[]-(r) return n, r"
-    query = query.format(label, uid)
+    node_class = node_class_lookup(label)
+    relations = '|'.join([x for x in node_class.relations])
+    query = "MATCH (n:{}) where n.id = '{}' OPTIONAL MATCH (n)-[:{}]-(r) return n, r"
+    query = query.format(label, uid, relations)
     return render(request, "graph/graph.html", {'query': query})
 
 

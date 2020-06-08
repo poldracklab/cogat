@@ -191,6 +191,12 @@ urlpatterns = [
         name="add_citation_doi"
     ),
     url(
+        r'^(?P<label>[\w]+)/unlink/doi/(?P<uid>[\w\+%_& ]+)/(?P<cid>[\w\+%_& ]+)/$',
+        views.unlink_citation,
+        name="unlink_citation"
+    ),
+
+    url(
         r'^disambiguation/link/(?P<label>[\w]+)/(?P<uid>[\w\+%_& ]+)/$',
         views.link_disam,
         name="link_disam"

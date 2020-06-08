@@ -148,7 +148,7 @@ class Node(object):
         '''.format(self.name, relation_type, endnode_type)
 
         try:
-            self.graph.run(query, {'n1id': uid, 'n2id': endnode_id})
+            self.graph.run(query, parameters={'n1id': uid, 'n2id': endnode_id})
             return None
         except Exception as e:
             return e
@@ -305,22 +305,21 @@ class Node(object):
         query = "MATCH (n:{})".format(self.name)
         for tup in filters:
             filter_field, filter_name, filter_value = tup
-            parameters[filter_name] = filter_value
             if filter_name == "starts_with":
-                query = "{} WHERE n.${} =~ '(?i)${}.*'".format(query,
-                                                             filter_field, filter_value)
+                query = "{} WHERE n.{} =~ '(?i){}.*'".format(
+                    query, filter_field, filter_value[0]
+                )
         query = "{} RETURN {}".format(query, return_fields)
         if order_by is not None:
-            parameters.order_by = order_by
+            parameters['order_by'] = order_by
             if order_by == 'name':
-                query = "{} ORDER BY LOWER(n.${})".format(query, 'order_by')
+                query = "{} ORDER BY LOWER(n.{})".format(query, order_by)
             else:
-                query = "{} ORDER BY n.${}".format(query, 'order_by')
+                query = "{} ORDER BY n.{}".format(query, order_by)
             if desc is True:
                 query = "{} desc".format(query)
         fields = fields + ["_id"]
-        return do_query(query, output_format=format, fields=fields,
-                        parameters=parameters)
+        return do_query(query, output_format=format, fields=fields)
 
     def api_all(self):
         query = "match (n:{}) return n".format(self.name)
@@ -376,6 +375,7 @@ class Node(object):
         match_kwarg = {field: uid}
         parents = self.graph.nodes.match(label, **match_kwarg)
         nodes = []
+
         for parent in parents:
             new_node = {}
             new_node.update(parent)
@@ -383,8 +383,9 @@ class Node(object):
 
             if get_relations is True:
                 relation_nodes = dict()
-                new_relations = self.graph.match([parent])
-                for new_relation in new_relations:
+                for new_relation in self.graph.match([parent]):
+                    # cursor is lazily evaluated, print is easy way to force valuation
+                    print(new_relation)
                     new_relation_node = {}
                     new_relation_node.update(new_relation.end_node)
                     # new_relation_node["_id"] = new_relation.end_node._id

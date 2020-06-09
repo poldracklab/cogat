@@ -488,9 +488,9 @@ def view_theory(request, uid, return_context=False):
         pred = pred[0]
         subj = subj[0]
         for term in [pred, subj]:
-            term_node = graph.run(
+            term_node = list(graph.run(
                 "match (t) where t.id = '{}' return t".format(term['id'])
-            ).one
+            ))[0]['t']
             # we only ever create nodes with one label:
             node_type = [x for x in term_node.labels][0]
             url = reverse(node_type, kwargs={'uid': term['id']})

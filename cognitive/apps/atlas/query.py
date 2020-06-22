@@ -412,42 +412,34 @@ class Node(object):
         res = list(self.graph.run(query, {'id': uid}))
         try:
             return list(res[0]['x'].labels)[0]
-        except (KeyError, AttributeError, TypeError) as e:
+        except (KeyError, AttributeError, TypeError, IndexError) as e:
             return None
 
     def search_all_fields(self, params):
-        '''
         if isinstance(params, str):
             params = [params]
-        return_fields = ",".join(["c.{}".format(x)
+        return_fields = ",".join(["c.{} as {}".format(x, x)
                                   for x in self.fields] + ["ID(c)"])
-        query = "MATCH (c:%s) WHERE c.{0} =~ '(?i).*{1}.*$' RETURN %s;" % (
+        query = "MATCH (c:%s) WHERE c.{0} =~ $regex RETURN %s;" % (
             self.name, return_fields)
 
         # Combine queries into transaction
         tx = self.graph.begin()
 
+        cursors = []
         for field in self.fields:
             for param in params:
-                tx.run(query.format(field, param))
+                regex_parameter = '(?i).*{}.*$'.format(param)
+                cursors.append(tx.run(query.format(field), parameters={'regex': regex_parameter}))
 
-        # Return as pandas data frame
-        results = tx.commit()
-        # if not results or sum(len(res) for res in results) == 0:
-        #     return {}
+        tx.commit()
 
-        df = results.to_data_frame(columns=self.fields + ["_id"])
-        i = 0
-        for result in results:
-            for record in result.records:
-                attr_values = []
-                for field in self.fields + ["ID(c)"]:
-                    attr_name = "c.{}".format(field)
-                    attr_values.append(getattr(record, attr_name, ""))
-                df.loc[i] = attr_values
-                i += 1
-        return df.to_dict(orient="records")
-        '''
+        results = []
+        for cursor in cursors:
+            result = cursor.data()
+            if len(result):
+                results += result
+        return results
 
     def get_relation(self, id, relation, label=None):
         ''' get nodes that are related to a given task
